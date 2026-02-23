@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* Base styles */
+@layer base {
+  * {
+    @apply box-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-text antialiased;
+  }
+
+  /* RTL-specific overrides */
+  [dir="rtl"] body {
+    font-family: 'Cairo', 'Tajawal', sans-serif;
+  }
+
+  [dir="ltr"] body {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+/* Component classes */
+@layer components {
+  .card {
+    @apply bg-card rounded-card shadow-card transition-all duration-300 hover:shadow-card-hover;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white px-6 py-3 rounded-btn font-bold transition-all duration-300 hover:bg-primary-dark hover:-translate-y-0.5 shadow-[0_6px_24px_rgba(27, 107, 69, 0.35)] hover:shadow-[0_10px_32px_rgba(27, 107, 69, 0.45)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-outline {
+    @apply border-2 border-primary text-primary px-6 py-3 rounded-btn font-bold transition-all duration-300 hover:bg-primary-light hover:-translate-y-0.5 active:scale-[0.98];
+  }
+
+  .btn-danger {
+    @apply bg-maintenance text-white px-6 py-3 rounded-btn font-medium transition-all duration-200 hover:bg-red-600 active:scale-[0.98];
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-btn focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 bg-white;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .badge-pending {
+    @apply badge bg-yellow-100 text-yellow-800;
+  }
+
+  .badge-approved {
+    @apply badge bg-green-100 text-green-800;
+  }
+
+  .badge-rejected {
+    @apply badge bg-red-100 text-red-800;
+  }
+
+  .section-title {
+    @apply text-2xl md:text-3xl font-bold text-text;
+  }
+
+  .gradient-bg {
+    @apply bg-gradient-to-br from-primary to-primary-light;
+  }
+
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-lg border border-white/20 rounded-card shadow-card;
+  }
+}
+
+/* Leaflet map fixes */
+.leaflet-container {
+  z-index: 1;
+  border-radius: 12px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1B6B45;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #145336;
+}

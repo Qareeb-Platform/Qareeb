@@ -1,0 +1,97 @@
+import { IsString, IsOptional, IsNumber, IsEnum, IsArray, IsNotEmpty } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export enum HalqaType {
+    MEN = 'men',
+    WOMEN = 'women',
+    CHILDREN = 'children',
+    MIXED = 'mixed',
+}
+
+export class CreateHalqaDto {
+    @IsString()
+    @IsNotEmpty()
+    circle_name!: string;
+
+    @IsString()
+    @IsNotEmpty()
+    mosque_name!: string;
+
+    @IsEnum(HalqaType)
+    @IsNotEmpty()
+    halqa_type!: HalqaType;
+
+    @IsString()
+    @IsNotEmpty()
+    governorate!: string;
+
+    @IsString()
+    @IsNotEmpty()
+    city!: string;
+
+    @IsString()
+    @IsOptional()
+    district?: string;
+
+    @IsNumber()
+    @IsNotEmpty()
+    lat!: number;
+
+    @IsNumber()
+    @IsNotEmpty()
+    lng!: number;
+
+    @IsString()
+    @IsNotEmpty()
+    whatsapp!: string;
+
+    @IsString()
+    @IsOptional()
+    additional_info?: string;
+
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    media_ids?: string[];
+}
+
+export class HalqaQueryDto {
+    @IsOptional()
+    @IsNumber()
+    @Type(() => Number)
+    lat?: number;
+
+    @IsOptional()
+    @IsNumber()
+    @Type(() => Number)
+    lng?: number;
+
+    @IsOptional()
+    @IsNumber()
+    @Type(() => Number)
+    radius?: number;
+
+    @IsOptional()
+    @IsEnum(HalqaType)
+    type?: HalqaType;
+
+    @IsOptional()
+    @IsString()
+    governorate?: string;
+
+    @IsOptional()
+    @IsString()
+    city?: string;
+
+    @IsOptional()
+    @IsNumber()
+    page?: number;
+
+    @IsOptional()
+    @IsNumber()
+    limit?: number;
+
+    @IsOptional()
+    @IsString()
+    status?: string;
+}

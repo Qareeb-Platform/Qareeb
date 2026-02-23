@@ -1,0 +1,112 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateMaintenanceDto, MaintenanceQueryDto } from './dto/maintenance.dto';
+
+
+@Injectable()
+export class MaintenanceService {
+    constructor(private readonly prisma: PrismaService) { }
+
+    async findAll(query: MaintenanceQueryDto) {
+        const page = query.page || 1;
+        const limit = Math.min(query.limit || 20, 50);
+        const skip = (page - 1) * limit;
+
+        if (query.lat && query.lng) {
+            const radius = query.radius || 10000;
+            const results = await this.prisma.$queryRaw`
+        SELECT id, mosque_name, governorate, city, district,
+               latitude, longitude, maintenance_types, description,
+               estimated_cost_min, estimated_cost_max, whatsapp, status,
+               created_at, updated_at,
+               ST_Distance(location, ST_SetSRID(ST_MakePoint(${query.lng}, ${query.lat}), 4326)::geography) AS distance_meters
+        FROM maintenance_requests
+        WHERE status = 'approved'
+          AND location IS NOT NULL
+          AND ST_DWithin(location, ST_SetSRID(ST_MakePoint(${query.lng}, ${query.lat}), 4326)::geography, ${radius})
+        ORDER BY distance_meters ASC
+        LIMIT ${limit} OFFSET ${skip}
+      `;
+
+            const countResult = await this.prisma.$queryRaw<[{ count: bigint }]>`
+        SELECT COUNT(*) as count FROM maintenance_requests
+        WHERE status = 'approved'
+          AND location IS NOT NULL
+          AND ST_DWithin(location, ST_SetSRID(ST_MakePoint(${query.lng}, ${query.lat}), 4326)::geography, ${radius})
+      `;
+
+            const total = Number(countResult[0]?.count || 0);
+            return {
+                data: results,
+                meta: { page, limit, total, totalPages: Math.ceil(total / limit), hasNext: page * limit < total, hasPrev: page > 1 },
+            };
+        }
+
+        const where: { status?: any; governorate?: string; city?: string } = {
+            status: (query.status as any) || 'approved',
+        };
+        if (query.governorate) where.governorate = query.governorate;
+        if (query.city) where.city = query.city;
+
+        const [data, total] = await Promise.all([
+            this.prisma.maintenanceRequest.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' }, include: { media: true } }),
+            this.prisma.maintenanceRequest.count({ where }),
+        ]);
+
+        return {
+            data,
+            meta: { page, limit, total, totalPages: Math.ceil(total / limit), hasNext: page * limit < total, hasPrev: page > 1 },
+        };
+    }
+
+    async findOne(id: string) {
+        return this.prisma.maintenanceRequest.findUnique({ where: { id }, include: { media: true } });
+    }
+
+    async create(dto: CreateMaintenanceDto) {
+        const request = await this.prisma.maintenanceRequest.create({
+            data: {
+                mosqueName: dto.mosque_name,
+                governorate: dto.governorate,
+                city: dto.city,
+                district: dto.district,
+                latitude: dto.lat,
+                longitude: dto.lng,
+                maintenanceTypes: dto.maintenance_types as any,
+                description: dto.description,
+                estimatedCostMin: dto.estimated_cost_min,
+                estimatedCostMax: dto.estimated_cost_max,
+                whatsapp: dto.whatsapp,
+                status: 'pending',
+            },
+        });
+
+        // Sync PostGIS geography column from lat/lng
+        await this.prisma.$executeRaw`
+            UPDATE maintenance_requests
+            SET location = ST_SetSRID(ST_MakePoint(${dto.lng}, ${dto.lat}), 4326)::geography
+            WHERE id = ${request.id}::uuid
+        `;
+
+        if (dto.media_ids?.length) {
+            await this.prisma.mediaAsset.updateMany({
+                where: { id: { in: dto.media_ids } },
+                data: { entityId: request.id, entityType: 'maintenance' },
+            });
+        }
+        return request;
+    }
+
+    async approve(id: string, adminId: string) {
+        return this.prisma.maintenanceRequest.update({ where: { id }, data: { status: 'approved', adminId, rejectionReason: null } });
+    }
+
+    async reject(id: string, adminId: string, reason?: string) {
+        return this.prisma.maintenanceRequest.update({ where: { id }, data: { status: 'rejected', adminId, rejectionReason: reason } });
+    }
+
+    async remove(id: string) {
+        await this.prisma.mediaAsset.deleteMany({ where: { entityId: id, entityType: 'maintenance' } });
+        return this.prisma.maintenanceRequest.delete({ where: { id } });
+    }
+}

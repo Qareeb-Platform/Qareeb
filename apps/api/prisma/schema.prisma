@@ -1,0 +1,166 @@
+// Prisma Schema for Qareeb Platform
+// PostgreSQL + PostGIS
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────────────
+// Enums
+// ──────────────────────────────────────────────
+
+enum SubmissionStatus {
+  pending
+  approved
+  rejected
+}
+
+enum HalqaType {
+  men
+  women
+  children
+  mixed
+}
+
+enum MaintenanceType {
+  flooring
+  ac
+  plumbing
+  painting
+  furniture
+  electrical
+  other
+}
+
+enum AdminRole {
+  super_admin
+  full_reviewer
+  imam_reviewer
+  halqa_reviewer
+  maintenance_reviewer
+}
+
+// ──────────────────────────────────────────────
+// Models
+// ──────────────────────────────────────────────
+
+model Admin {
+  id            String    @id @default(uuid()) @db.Uuid
+  email         String    @unique @db.VarChar(255)
+  passwordHash  String    @map("password_hash")
+  role          AdminRole
+  isActive      Boolean   @default(true) @map("is_active")
+  createdBy     String?   @map("created_by") @db.Uuid
+  lastLoginAt   DateTime? @map("last_login_at") @db.Timestamptz()
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  creator       Admin?    @relation("AdminCreator", fields: [createdBy], references: [id])
+  createdAdmins Admin[]   @relation("AdminCreator")
+
+  reviewedImams       Imam[]
+  reviewedHalaqat     Halqa[]
+  reviewedMaintenance MaintenanceRequest[]
+
+  @@map("admins")
+}
+
+model Imam {
+  id              String           @id @default(uuid()) @db.Uuid
+  imamName        String           @map("imam_name") @db.VarChar(120)
+  mosqueName      String           @map("mosque_name") @db.VarChar(200)
+  governorate     String           @db.VarChar(100)
+  city            String           @db.VarChar(100)
+  district        String?          @db.VarChar(100)
+  // PostGIS geography field managed via raw SQL migration
+  // location     geography(Point, 4326)
+  latitude        Float
+  longitude       Float
+  whatsapp        String           @db.VarChar(20)
+  recitationUrl   String?          @map("recitation_url")
+  status          SubmissionStatus @default(pending)
+  rejectionReason String?          @map("rejection_reason")
+  submittedByIp   String?          @map("submitted_by_ip")
+  adminId         String?          @map("admin_id") @db.Uuid
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz()
+
+  admin           Admin?           @relation(fields: [adminId], references: [id])
+  media           MediaAsset[]     @relation("ImamMedia")
+
+  @@index([status])
+  @@index([governorate])
+  @@map("imams")
+}
+
+model Halqa {
+  id              String           @id @default(uuid()) @db.Uuid
+  circleName      String           @map("circle_name") @db.VarChar(200)
+  mosqueName      String           @map("mosque_name") @db.VarChar(200)
+  halqaType       HalqaType        @map("halqa_type")
+  governorate     String           @db.VarChar(100)
+  city            String           @db.VarChar(100)
+  district        String?          @db.VarChar(100)
+  latitude        Float
+  longitude       Float
+  whatsapp        String           @db.VarChar(20)
+  additionalInfo  String?          @map("additional_info")
+  status          SubmissionStatus @default(pending)
+  rejectionReason String?          @map("rejection_reason")
+  adminId         String?          @map("admin_id") @db.Uuid
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz()
+
+  admin           Admin?           @relation(fields: [adminId], references: [id])
+  media           MediaAsset[]     @relation("HalqaMedia")
+
+  @@index([halqaType])
+  @@map("halaqat")
+}
+
+model MaintenanceRequest {
+  id               String            @id @default(uuid()) @db.Uuid
+  mosqueName       String            @map("mosque_name") @db.VarChar(200)
+  governorate      String            @db.VarChar(100)
+  city             String            @db.VarChar(100)
+  district         String?           @db.VarChar(100)
+  latitude         Float
+  longitude        Float
+  maintenanceTypes MaintenanceType[] @map("maintenance_types")
+  description      String
+  estimatedCostMin Int?              @map("estimated_cost_min")
+  estimatedCostMax Int?              @map("estimated_cost_max")
+  whatsapp         String            @db.VarChar(20)
+  status           SubmissionStatus  @default(pending)
+  rejectionReason  String?           @map("rejection_reason")
+  adminId          String?           @map("admin_id") @db.Uuid
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime          @updatedAt @map("updated_at") @db.Timestamptz()
+
+  admin            Admin?            @relation(fields: [adminId], references: [id])
+  media            MediaAsset[]      @relation("MaintenanceMedia")
+
+  @@map("maintenance_requests")
+}
+
+model MediaAsset {
+  id         String   @id @default(uuid()) @db.Uuid
+  entityType String   @map("entity_type") @db.VarChar(30)
+  entityId   String   @map("entity_id") @db.Uuid
+  url        String
+  publicId   String   @map("public_id")
+  mediaType  String   @map("media_type") @db.VarChar(10)
+  sortOrder  Int      @default(0) @map("sort_order") @db.SmallInt
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  // Relations to parent entities
+  imam              Imam?              @relation("ImamMedia", fields: [entityId], references: [id], map: "fk_media_imam")
+  halqa             Halqa?             @relation("HalqaMedia", fields: [entityId], references: [id], map: "fk_media_halqa")
+  maintenanceRequest MaintenanceRequest? @relation("MaintenanceMedia", fields: [entityId], references: [id], map: "fk_media_maintenance")
+
+  @@map("media_assets")
+}

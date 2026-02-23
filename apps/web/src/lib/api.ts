@@ -1,0 +1,103 @@
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/v1';
+
+interface FetchOptions extends RequestInit {
+    token?: string;
+}
+
+async function fetchAPI<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
+    const { token, ...init } = options;
+
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...(init.headers as Record<string, string>),
+    };
+
+    const res = await fetch(`${API_URL}${endpoint}`, {
+        ...init,
+        headers,
+    });
+
+    if (!res.ok) {
+        const error = await res.json().catch(() => ({ message: 'An error occurred' })) as { message?: string };
+        throw new Error(error.message || `API Error: ${res.status}`);
+    }
+
+    return res.json() as Promise<T>;
+}
+
+// ── Public API ──
+
+export const api = {
+    // Imams
+    getImams: (params?: string) => fetchAPI<any>(`/imams${params ? `?${params}` : ''}`),
+    getImam: (id: string) => fetchAPI<any>(`/imams/${id}`),
+    createImam: (data: any) => fetchAPI<any>('/imams', { method: 'POST', body: JSON.stringify(data) }),
+
+    // Halaqat
+    getHalaqat: (params?: string) => fetchAPI<any>(`/halaqat${params ? `?${params}` : ''}`),
+    getHalqa: (id: string) => fetchAPI<any>(`/halaqat/${id}`),
+    createHalqa: (data: any) => fetchAPI<any>('/halaqat', { method: 'POST', body: JSON.stringify(data) }),
+
+    // Maintenance
+    getMaintenance: (params?: string) => fetchAPI<any>(`/maintenance${params ? `?${params}` : ''}`),
+    getMaintenanceItem: (id: string) => fetchAPI<any>(`/maintenance/${id}`),
+    createMaintenance: (data: any) => fetchAPI<any>('/maintenance', { method: 'POST', body: JSON.stringify(data) }),
+
+    // Media
+    getSignedUploadParams: () => fetchAPI<any>('/media/sign', { method: 'POST' }),
+};
+
+// ── Admin API ──
+
+export const adminApi = {
+    login: (email: string, password: string) =>
+        fetchAPI<any>('/admin/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+            credentials: 'include',
+        }),
+
+    refresh: () =>
+        fetchAPI<any>('/admin/auth/refresh', {
+            method: 'POST',
+            credentials: 'include',
+        }),
+
+    getDashboardStats: (token: string) =>
+        fetchAPI<any>('/admin/dashboard/stats', { token }),
+
+    // Imams admin
+    getAdminImams: (token: string, params?: string) =>
+        fetchAPI<any>(`/admin/imams${params ? `?${params}` : ''}`, { token }),
+    approveImam: (token: string, id: string) =>
+        fetchAPI<any>(`/admin/imams/${id}/approve`, { method: 'PATCH', token }),
+    rejectImam: (token: string, id: string, reason?: string) =>
+        fetchAPI<any>(`/admin/imams/${id}/reject`, { method: 'PATCH', token, body: JSON.stringify({ reason }) }),
+    deleteImam: (token: string, id: string) =>
+        fetchAPI<any>(`/admin/imams/${id}`, { method: 'DELETE', token }),
+
+    // Halaqat admin
+    getAdminHalaqat: (token: string, params?: string) =>
+        fetchAPI<any>(`/admin/halaqat${params ? `?${params}` : ''}`, { token }),
+    approveHalqa: (token: string, id: string) =>
+        fetchAPI<any>(`/admin/halaqat/${id}/approve`, { method: 'PATCH', token }),
+    rejectHalqa: (token: string, id: string, reason?: string) =>
+        fetchAPI<any>(`/admin/halaqat/${id}/reject`, { method: 'PATCH', token, body: JSON.stringify({ reason }) }),
+
+    // Maintenance admin
+    getAdminMaintenance: (token: string, params?: string) =>
+        fetchAPI<any>(`/admin/maintenance${params ? `?${params}` : ''}`, { token }),
+    approveMaintenance: (token: string, id: string) =>
+        fetchAPI<any>(`/admin/maintenance/${id}/approve`, { method: 'PATCH', token }),
+    rejectMaintenance: (token: string, id: string, reason?: string) =>
+        fetchAPI<any>(`/admin/maintenance/${id}/reject`, { method: 'PATCH', token, body: JSON.stringify({ reason }) }),
+
+    // Users
+    getAdminUsers: (token: string) =>
+        fetchAPI<any>('/admin/users', { token }),
+    createAdminUser: (token: string, data: any) =>
+        fetchAPI<any>('/admin/users', { method: 'POST', token, body: JSON.stringify(data) }),
+    updateAdminUser: (token: string, id: string, data: any) =>
+        fetchAPI<any>(`/admin/users/${id}`, { method: 'PATCH', token, body: JSON.stringify(data) }),
+};
