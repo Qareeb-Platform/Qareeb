@@ -1,4 +1,3 @@
-import { useTranslations } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
@@ -8,8 +7,107 @@ import ChatWidget from '@/components/chat/ChatWidget';
 
 export const revalidate = 60; // ISR: revalidate every 60 seconds
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/v1';
+
+type CollectionResponse = {
+    data?: any[];
+    meta?: { total?: number };
+};
+
+type LatestItem = {
+    id: string;
+    title: string;
+    subtitle?: string;
+    location?: string;
+    createdAt?: string;
+    link: string;
+    badge: string;
+    icon: string;
+};
+
+const sortByDate = (items?: any[]) =>
+    [...(items ?? [])].sort(
+        (a, b) => new Date(b.created_at || b.createdAt || 0).getTime() - new Date(a.created_at || a.createdAt || 0).getTime(),
+    );
+
+async function fetchCollection(path: string, limit = 6): Promise<CollectionResponse> {
+    try {
+        const url = new URL(`${API_BASE}${path}`);
+        if (!url.searchParams.get('limit')) url.searchParams.set('limit', limit.toString());
+        const res = await fetch(url.toString(), { next: { revalidate } });
+        if (!res.ok) throw new Error(`Failed to fetch ${path}: ${res.status}`);
+        return res.json();
+    } catch (error) {
+        console.error('[Home] fetchCollection error', error);
+        return { data: [], meta: { total: 0 } };
+    }
+}
+
 export default async function HomePage() {
     const locale = await getLocale();
+    const [imams, halaqat, maintenance] = await Promise.all([
+        fetchCollection('/imams'),
+        fetchCollection('/halaqat'),
+        fetchCollection('/maintenance'),
+    ]);
+
+    const numberFormatter = new Intl.NumberFormat(locale === 'ar' ? 'ar-EG' : 'en-US');
+
+    const governoratesSet = new Set<string>();
+    [imams, halaqat, maintenance].forEach((res) => {
+        res.data?.forEach((item) => {
+            if (item.governorate) governoratesSet.add(item.governorate);
+        });
+    });
+
+    const stats = [
+        { num: imams.meta?.total ?? 0, label: locale === 'ar' ? 'إمام مسجل' : 'Registered Imams' },
+        { num: halaqat.meta?.total ?? 0, label: locale === 'ar' ? 'دار تحفيظ' : 'Quran Circles' },
+        { num: maintenance.meta?.total ?? 0, label: locale === 'ar' ? 'مشروع إعمار' : 'Maintenance Projects' },
+        {
+            num: governoratesSet.size || 27,
+            label: locale === 'ar' ? 'محافظة' : 'Governorates',
+        },
+    ];
+
+    const latestImams: LatestItem[] = sortByDate(imams.data).slice(0, 3).map((item) => ({
+        id: item.id,
+        title: item.imam_name || item.imamName,
+        subtitle: item.mosque_name || item.mosqueName,
+        location: [item.governorate, item.city].filter(Boolean).join(' — '),
+        createdAt: item.created_at || item.createdAt,
+        link: `/${locale}/imams/${item.id}`,
+        badge: locale === 'ar' ? 'إمام' : 'Imam',
+        icon: '🕌',
+    }));
+
+    const latestHalaqat: LatestItem[] = sortByDate(halaqat.data).slice(0, 3).map((item) => ({
+        id: item.id,
+        title: item.circle_name || item.circleName,
+        subtitle: item.mosque_name || item.mosqueName,
+        location: [item.governorate, item.city].filter(Boolean).join(' — '),
+        createdAt: item.created_at || item.createdAt,
+        link: `/${locale}/halaqat/${item.id}`,
+        badge: locale === 'ar' ? 'حلقة' : 'Circle',
+        icon: '📖',
+    }));
+
+    const latestMaintenance: LatestItem[] = sortByDate(maintenance.data).slice(0, 3).map((item) => ({
+        id: item.id,
+        title: item.mosque_name || item.mosqueName,
+        subtitle: (item.maintenance_types || item.maintenanceTypes || []).join(' · '),
+        location: [item.governorate, item.city].filter(Boolean).join(' — '),
+        createdAt: item.created_at || item.createdAt,
+        link: `/${locale}/maintenance/${item.id}`,
+        badge: locale === 'ar' ? 'إعمار' : 'Maintenance',
+        icon: '🔧',
+    }));
+
+    const latestSections: { title: string; items: LatestItem[]; browseHref: string }[] = [
+        { title: locale === 'ar' ? 'أحدث الأئمة' : 'Latest Imams', items: latestImams, browseHref: `/${locale}/imams` },
+        { title: locale === 'ar' ? 'أحدث الحلقات' : 'Latest Circles', items: latestHalaqat, browseHref: `/${locale}/halaqat` },
+        { title: locale === 'ar' ? 'أحدث الإعمار' : 'Latest Maintenance', items: latestMaintenance, browseHref: `/${locale}/maintenance` },
+    ];
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -57,14 +155,9 @@ export default async function HomePage() {
 
                         {/* Stats block */}
                         <div className="max-w-lg mx-auto bg-white rounded-[20px] shadow-card flex overflow-hidden border border-border">
-                            {[
-                                { num: '6', label: locale === 'ar' ? 'إمام مسجل' : 'Registered Imams' },
-                                { num: '6', label: locale === 'ar' ? 'دار تحفيظ' : 'Quran Circles' },
-                                { num: '6', label: locale === 'ar' ? 'مشروع إعمار' : 'Maintenance Projects' },
-                                { num: '27', label: locale === 'ar' ? 'محافظة' : 'Governorates' },
-                            ].map((stat, i) => (
+                            {stats.map((stat, i) => (
                                 <div key={i} className={`flex-1 p-4 text-center ${i < 3 ? 'border-e border-border' : ''}`}>
-                                    <div className="text-2xl font-black text-primary">{stat.num}</div>
+                                    <div className="text-2xl font-black text-primary">{numberFormatter.format(stat.num || 0)}</div>
                                     <div className="text-[10px] md:text-[11px] text-text-muted uppercase font-bold tracking-tight">{stat.label}</div>
                                 </div>
                             ))}
@@ -109,16 +202,54 @@ export default async function HomePage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Placeholder for real data */}
-                        <div className="col-span-full py-12 text-center text-text-muted italic border-2 border-dashed border-border rounded-3xl">
-                            {locale === 'ar' ? 'سيتم عرض أحدث المساجد والحلقات هنا بمجرد تحديث البيانات...' : 'Latest mosques and circles will appear here once data is updated...'}
-                        </div>
-                    </div>
+                        {latestSections.map((section, idx) => (
+                            <div key={idx} className="bg-white rounded-3xl shadow-card border border-border p-5 flex flex-col gap-4">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-lg font-black text-dark">{section.title}</h3>
+                                    <Link href={section.browseHref} className="text-sm font-bold text-primary hover:text-primary-dark">
+                                        {locale === 'ar' ? 'استعرض الكل ←' : 'Browse All ←'}
+                                    </Link>
+                                </div>
 
-                    <div className="text-center mt-12">
-                        <Link href={`/${locale}/imams`} className="btn-primary">
-                            {locale === 'ar' ? 'استعرض الكل ←' : 'Browse All ←'}
-                        </Link>
+                                {section.items.length ? (
+                                    section.items.map((item) => (
+                                        <div key={item.id} className="rounded-2xl border border-border/60 p-4 flex flex-col gap-3 hover:-translate-y-0.5 transition-all duration-200">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black bg-primary/10 text-primary">
+                                                    <span>{item.icon}</span>
+                                                    {item.badge}
+                                                </span>
+                                                {item.createdAt && (
+                                                    <span className="text-[11px] text-text-muted font-medium">
+                                                        {new Date(item.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' })}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <h4 className="text-base font-black text-dark leading-tight">{item.title}</h4>
+                                                {item.subtitle && <p className="text-sm text-text-muted">{item.subtitle}</p>}
+                                            </div>
+
+                                            {item.location && (
+                                                <div className="flex items-center gap-2 text-sm text-text-muted bg-cream rounded-2xl px-3 py-2">
+                                                    <span>📍</span>
+                                                    <span className="font-semibold">{item.location}</span>
+                                                </div>
+                                            )}
+
+                                            <Link href={item.link} className="btn-outline text-xs font-bold text-center mt-auto">
+                                                {locale === 'ar' ? 'عرض التفاصيل' : 'View details'}
+                                            </Link>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center text-text-muted italic py-8 border-2 border-dashed border-border rounded-2xl">
+                                        {locale === 'ar' ? 'لا توجد إضافات بعد' : 'No items yet'}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 </section>
 
