@@ -83,6 +83,7 @@
         "title": "Mosque Maintenance",
         "subtitle": "Help maintain the houses of Allah",
         "mosqueName": "Mosque Name",
+        "maintenanceTypes": "Maintenance Types",
         "types": "Maintenance Type",
         "description": "Problem Description",
         "estimatedCost": "Estimated Cost",

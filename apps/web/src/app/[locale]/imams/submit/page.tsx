@@ -180,10 +180,36 @@ export default function SubmitPage() {
                                 )}
 
                                 {entityType === 'maintenance' && (
-                                    <div className="group">
-                                        <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">{tm('description')} <span className="text-red-500">*</span></label>
-                                        <textarea {...register('description', { required: true })} className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold min-h-[120px]" placeholder={locale === 'ar' ? 'اشرح بالتفصيل حالة المسجد والاحتياجات...' : 'Describe مسجد condition and needs...'} />
-                                    </div>
+                                    <>
+                                        <div className="group">
+                                            <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">{tm('maintenanceTypes')} <span className="text-red-500">*</span></label>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
+                                                {[
+                                                    { value: 'Plumbing', label: locale === 'ar' ? 'سباكة' : 'Plumbing', icon: '🚿' },
+                                                    { value: 'Electrical', label: locale === 'ar' ? 'كهرباء' : 'Electrical', icon: '💡' },
+                                                    { value: 'Carpentry', label: locale === 'ar' ? 'نجارة' : 'Carpentry', icon: '🔨' },
+                                                    { value: 'Painting', label: locale === 'ar' ? 'دهان' : 'Painting', icon: '🎨' },
+                                                    { value: 'AC_Repair', label: locale === 'ar' ? 'تكييف' : 'AC Repair', icon: '❄️' },
+                                                    { value: 'Cleaning', label: locale === 'ar' ? 'تنظيف' : 'Cleaning', icon: '🧹' },
+                                                    { value: 'Other', label: locale === 'ar' ? 'أخرى' : 'Other', icon: '📋' },
+                                                ].map((type) => (
+                                                    <label key={type.value} className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            value={type.value}
+                                                            {...register('maintenanceTypes')}
+                                                            className="w-5 h-5 rounded border-2 border-gray-300 text-primary focus:ring-primary"
+                                                        />
+                                                        <span className="text-sm font-bold">{type.icon} {type.label}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="group">
+                                            <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">{tm('description')} <span className="text-red-500">*</span></label>
+                                            <textarea {...register('description', { required: true })} className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold min-h-[120px]" placeholder={locale === 'ar' ? 'اشرح بالتفصيل حالة المسجد والاحتياجات...' : 'Describe مسجد condition and needs...'} />
+                                        </div>
+                                    </>
                                 )}
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

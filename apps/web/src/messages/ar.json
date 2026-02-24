@@ -83,6 +83,7 @@
         "title": "صيانة المساجد",
         "subtitle": "ساهم في إعمار بيوت الله",
         "mosqueName": "اسم المسجد",
+        "maintenanceTypes": "أنواع الصيانة",
         "types": "نوع الصيانة",
         "description": "وصف المشكلة",
         "estimatedCost": "التكلفة التقديرية",

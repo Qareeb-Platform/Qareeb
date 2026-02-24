@@ -25,7 +25,12 @@ export class MaintenanceController {
 
     @Post('maintenance')
     create(@Body() dto: CreateMaintenanceDto) {
-        return this.maintenanceService.create(dto);
+        try {
+            return this.maintenanceService.create(dto);
+        } catch (error) {
+            console.error('Maintenance create error:', error);
+            throw error;
+        }
     }
 
     @Get('admin/maintenance')

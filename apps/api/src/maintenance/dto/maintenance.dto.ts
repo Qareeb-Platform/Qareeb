@@ -2,13 +2,13 @@ import { IsString, IsOptional, IsNumber, IsArray, IsEnum, IsNotEmpty } from 'cla
 import { Type } from 'class-transformer';
 
 export enum MaintenanceType {
-    PLUMBING = 'Plumbing',
-    ELECTRICAL = 'Electrical',
-    CARPENTRY = 'Carpentry',
-    PAINTING = 'Painting',
-    AC_REPAIR = 'AC Repair',
-    CLEANING = 'Cleaning',
-    OTHER = 'Other',
+    Plumbing = 'Plumbing',
+    Electrical = 'Electrical',
+    Carpentry = 'Carpentry',
+    Painting = 'Painting',
+    AC_Repair = 'AC_Repair',
+    Cleaning = 'Cleaning',
+    Other = 'Other',
 }
 
 export class CreateMaintenanceDto {

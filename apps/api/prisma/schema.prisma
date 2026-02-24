@@ -28,13 +28,13 @@ enum HalqaType {
 }
 
 enum MaintenanceType {
-  flooring
-  ac
-  plumbing
-  painting
-  furniture
-  electrical
-  other
+  Plumbing
+  Electrical
+  Carpentry
+  Painting
+  AC_Repair
+  Cleaning
+  Other
 }
 
 enum AdminRole {
