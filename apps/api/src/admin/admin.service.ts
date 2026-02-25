@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class AdminService {
@@ -137,5 +138,32 @@ export class AdminService {
                 isActive: true,
             },
         });
+    }
+
+    // ── Audit Logs ──
+    async getAuditLogs(params: { entityType?: string; entityId?: string; page?: number; limit?: number }) {
+        const page = params.page || 1;
+        const limit = Math.min(params.limit || 20, 100);
+        const skip = (page - 1) * limit;
+
+        const where: Prisma.AuditLogWhereInput = {};
+        if (params.entityType) where.entityType = params.entityType;
+        if (params.entityId) where.entityId = params.entityId;
+
+        const [data, total] = await Promise.all([
+            this.prisma.auditLog.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { createdAt: 'desc' },
+                include: { admin: { select: { email: true, role: true } } },
+            }),
+            this.prisma.auditLog.count({ where }),
+        ]);
+
+        return {
+            data,
+            meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+        };
     }
 }

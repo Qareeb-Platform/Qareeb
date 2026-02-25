@@ -42,4 +42,20 @@ export class AdminController {
     ) {
         return this.adminService.updateAdmin(id, body);
     }
+
+    @Get('audit')
+    @UseGuards(RolesGuard)
+    @Roles('super_admin', 'full_reviewer')
+    getAuditLogs(
+        @Req() req: any,
+        @Req() request: any,
+    ) {
+        const { entityType, entityId, page, limit } = request.query || {};
+        return this.adminService.getAuditLogs({
+            entityType,
+            entityId,
+            page: page ? parseInt(page, 10) : undefined,
+            limit: limit ? parseInt(limit, 10) : undefined,
+        });
+    }
 }

@@ -104,4 +104,7 @@ export const adminApi = {
         fetchAPI<any>('/admin/users', { method: 'POST', token, body: JSON.stringify(data) }),
     updateAdminUser: (token: string, id: string, data: any) =>
         fetchAPI<any>(`/admin/users/${id}`, { method: 'PATCH', token, body: JSON.stringify(data) }),
+
+    getAuditLogs: (token: string, params?: string) =>
+        fetchAPI<any>(`/admin/audit${params ? `?${params}` : ''}`, { token }),
 };
