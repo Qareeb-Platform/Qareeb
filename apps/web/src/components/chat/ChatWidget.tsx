@@ -56,7 +56,7 @@ export default function ChatWidget() {
         const intent = matchIntent(input);
 
         try {
-            const chatRes = await api.chatNearest({ text: input, lat, lng });
+            const chatRes = await api.chatNearest({ text: input, lat: lat ?? undefined, lng: lng ?? undefined });
             if (chatRes?.message) {
                 addMessage('bot', chatRes.message);
             } else if (intent) {
