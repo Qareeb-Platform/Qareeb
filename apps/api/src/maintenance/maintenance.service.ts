@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMaintenanceDto, MaintenanceQueryDto } from './dto/maintenance.dto';
+import { extractLatLngFromGoogleMaps } from '../common/maps.util';
 
 
 @Injectable()
@@ -44,11 +45,12 @@ export class MaintenanceService {
             };
         }
 
-        const where: { status?: any; governorate?: string; city?: string } = {
+        const where: { status?: any; governorate?: string; city?: string; areaId?: string } = {
             status: (query.status as any) || 'approved',
         };
         if (query.governorate) where.governorate = query.governorate;
         if (query.city) where.city = query.city;
+        if (query.area_id) where.areaId = query.area_id;
 
         const [data, total] = await Promise.all([
             this.prisma.maintenanceRequest.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' }, include: { media: true } }),
@@ -66,14 +68,18 @@ export class MaintenanceService {
     }
 
     async create(dto: CreateMaintenanceDto) {
+        const coords = extractLatLngFromGoogleMaps(dto.google_maps_url) || (dto.lat && dto.lng ? { lat: dto.lat, lng: dto.lng } : null);
+        if (!coords) throw new Error('Unable to parse coordinates from Google Maps URL');
         const request = await this.prisma.maintenanceRequest.create({
             data: {
                 mosqueName: dto.mosque_name,
                 governorate: dto.governorate,
                 city: dto.city,
                 district: dto.district,
-                latitude: dto.lat,
-                longitude: dto.lng,
+                areaId: dto.area_id || null,
+                googleMapsUrl: dto.google_maps_url,
+                latitude: coords.lat,
+                longitude: coords.lng,
                 maintenanceTypes: dto.maintenance_types as any,
                 description: dto.description,
                 estimatedCostMin: dto.estimated_cost_min,

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsArray, IsEnum, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsArray, IsEnum, IsNotEmpty, IsUrl, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum MaintenanceType {
@@ -28,13 +28,23 @@ export class CreateMaintenanceDto {
     @IsOptional()
     district?: string;
 
-    @IsNumber()
+    @IsUUID()
+    @IsOptional()
+    area_id?: string;
+
+    @IsUrl()
     @IsNotEmpty()
-    lat!: number;
+    google_maps_url!: string;
 
     @IsNumber()
-    @IsNotEmpty()
-    lng!: number;
+    @IsOptional()
+    @Type(() => Number)
+    lat?: number; // legacy fallback
+
+    @IsNumber()
+    @IsOptional()
+    @Type(() => Number)
+    lng?: number; // legacy fallback
 
     @IsArray()
     @IsEnum(MaintenanceType, { each: true })
@@ -90,6 +100,10 @@ export class MaintenanceQueryDto {
     @IsOptional()
     @IsString()
     city?: string;
+
+    @IsOptional()
+    @IsUUID()
+    area_id?: string;
 
     @IsOptional()
     @IsNumber()

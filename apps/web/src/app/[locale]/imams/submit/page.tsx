@@ -27,8 +27,8 @@ export default function SubmitPage() {
         try {
             const payload = {
                 ...data,
-                lat: parseFloat(data.lat) || 30.0444,
-                lng: parseFloat(data.lng) || 31.2357,
+                lat: data.lat ? parseFloat(data.lat) : undefined,
+                lng: data.lng ? parseFloat(data.lng) : undefined,
             };
 
             if (entityType === 'imam') {
@@ -38,10 +38,12 @@ export default function SubmitPage() {
                     governorate: payload.governorate,
                     city: payload.city,
                     district: payload.district,
+                    google_maps_url: payload.googleMapsUrl,
+                    video_url: payload.videoUrl,
                     lat: payload.lat,
                     lng: payload.lng,
                     whatsapp: payload.whatsapp,
-                    recitation_url: payload.recitationUrl,
+                    recitation_url: payload.videoUrl,
                 });
             } else if (entityType === 'halqa') {
                 await api.createHalqa({
@@ -51,6 +53,8 @@ export default function SubmitPage() {
                     governorate: payload.governorate,
                     city: payload.city,
                     district: payload.district,
+                    google_maps_url: payload.googleMapsUrl,
+                    video_url: payload.videoUrl,
                     lat: payload.lat,
                     lng: payload.lng,
                     whatsapp: payload.whatsapp,
@@ -62,6 +66,7 @@ export default function SubmitPage() {
                     governorate: payload.governorate,
                     city: payload.city,
                     district: payload.district,
+                    google_maps_url: payload.googleMapsUrl,
                     lat: payload.lat,
                     lng: payload.lng,
                     maintenance_types: payload.maintenanceTypes || ['other'],
@@ -225,19 +230,19 @@ export default function SubmitPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <div className="group">
-                                        <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">
-                                            {locale === 'ar' ? 'خط العرض (اختياري)' : 'Latitude (Optional)'}
-                                        </label>
-                                        <input {...register('lat')} type="number" step="0.0001" className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold" placeholder="30.0444" />
-                                    </div>
-                                    <div className="group">
-                                        <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">
-                                            {locale === 'ar' ? 'خط الطول (اختياري)' : 'Longitude (Optional)'}
-                                        </label>
-                                        <input {...register('lng')} type="number" step="0.0001" className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold" placeholder="31.2357" />
-                                    </div>
+                                <div className="group">
+                                    <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">
+                                        {locale === 'ar' ? 'رابط خرائط جوجل (إجباري)' : 'Google Maps Link (Required)'}
+                                    </label>
+                                    <input
+                                        {...register('googleMapsUrl', { required: true })}
+                                        type="url"
+                                        className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold"
+                                        placeholder="https://maps.google.com/...?q=30.0444,31.2357"
+                                    />
+                                    <span className="text-[10px] text-text-muted mt-2 block ms-1 font-bold">
+                                        {locale === 'ar' ? 'سنستخرج الإحداثيات تلقائياً من الرابط' : 'We will extract coordinates automatically from the link'}
+                                    </span>
                                 </div>
                             </div>
 
@@ -286,12 +291,12 @@ export default function SubmitPage() {
                                     </span>
                                 </div>
 
-                                {entityType === 'imam' && (
+                                {(entityType === 'imam' || entityType === 'halqa') && (
                                     <div className="group">
                                         <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">
-                                            {locale === 'ar' ? 'رابط التلاوة (YouTube / Drive)' : 'Recitation URL'}
+                                            {locale === 'ar' ? 'رابط التلاوة / الفيديو' : 'Recitation / Video URL'}
                                         </label>
-                                        <input {...register('recitationUrl')} className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold" dir="ltr" placeholder="https://..." />
+                                        <input {...register('videoUrl')} className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold" dir="ltr" placeholder="https://..." />
                                     </div>
                                 )}
 

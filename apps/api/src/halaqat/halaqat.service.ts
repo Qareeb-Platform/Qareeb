@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateHalqaDto, HalqaQueryDto } from './dto/halqa.dto';
 import { Prisma } from '@prisma/client';
+import { extractLatLngFromGoogleMaps } from '../common/maps.util';
 
 @Injectable()
 export class HalaqatService {
@@ -55,6 +56,7 @@ export class HalaqatService {
         if (query.type) where.halqaType = query.type as any;
         if (query.governorate) where.governorate = query.governorate;
         if (query.city) where.city = query.city;
+        if (query.area_id) where.areaId = query.area_id;
 
         const [data, total] = await Promise.all([
             this.prisma.halqa.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' }, include: { media: true } }),
@@ -72,6 +74,8 @@ export class HalaqatService {
     }
 
     async create(dto: CreateHalqaDto) {
+        const coords = extractLatLngFromGoogleMaps(dto.google_maps_url) || (dto.lat && dto.lng ? { lat: dto.lat, lng: dto.lng } : null);
+        if (!coords) throw new Error('Unable to parse coordinates from Google Maps URL');
         const halqa = await this.prisma.halqa.create({
             data: {
                 circleName: dto.circle_name,
@@ -80,8 +84,11 @@ export class HalaqatService {
                 governorate: dto.governorate,
                 city: dto.city,
                 district: dto.district,
-                latitude: dto.lat,
-                longitude: dto.lng,
+                areaId: dto.area_id || null,
+                googleMapsUrl: dto.google_maps_url,
+                videoUrl: dto.video_url,
+                latitude: coords.lat,
+                longitude: coords.lng,
                 whatsapp: dto.whatsapp,
                 additionalInfo: dto.additional_info,
                 status: 'pending',

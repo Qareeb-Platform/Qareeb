@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsNumber, IsUrl, IsArray, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsUrl, IsArray, IsNotEmpty, IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateImamDto {
     @IsString()
@@ -21,13 +22,27 @@ export class CreateImamDto {
     @IsString()
     district?: string;
 
-    @IsNumber()
+    @IsUUID()
+    @IsOptional()
+    area_id?: string;
+
+    @IsUrl()
     @IsNotEmpty()
-    lat!: number;
+    google_maps_url!: string;
+
+    @IsUrl()
+    @IsOptional()
+    video_url?: string;
 
     @IsNumber()
-    @IsNotEmpty()
-    lng!: number;
+    @IsOptional()
+    @Type(() => Number)
+    lat?: number; // legacy fallback
+
+    @IsNumber()
+    @IsOptional()
+    @Type(() => Number)
+    lng?: number; // legacy fallback
 
     @IsString()
     @IsNotEmpty()
@@ -46,14 +61,17 @@ export class CreateImamDto {
 export class ImamQueryDto {
     @IsOptional()
     @IsNumber()
+    @Type(() => Number)
     lat?: number;
 
     @IsOptional()
     @IsNumber()
+    @Type(() => Number)
     lng?: number;
 
     @IsOptional()
     @IsNumber()
+    @Type(() => Number)
     radius?: number;
 
     @IsOptional()
@@ -67,6 +85,10 @@ export class ImamQueryDto {
     @IsOptional()
     @IsString()
     district?: string;
+
+    @IsOptional()
+    @IsUUID()
+    area_id?: string;
 
     @IsOptional()
     @IsNumber()

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsEnum, IsArray, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsEnum, IsArray, IsNotEmpty, IsUrl, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum HalqaType {
@@ -33,13 +33,27 @@ export class CreateHalqaDto {
     @IsOptional()
     district?: string;
 
-    @IsNumber()
+    @IsUUID()
+    @IsOptional()
+    area_id?: string;
+
+    @IsUrl()
     @IsNotEmpty()
-    lat!: number;
+    google_maps_url!: string;
+
+    @IsUrl()
+    @IsOptional()
+    video_url?: string;
 
     @IsNumber()
-    @IsNotEmpty()
-    lng!: number;
+    @IsOptional()
+    @Type(() => Number)
+    lat?: number; // legacy fallback
+
+    @IsNumber()
+    @IsOptional()
+    @Type(() => Number)
+    lng?: number; // legacy fallback
 
     @IsString()
     @IsNotEmpty()
@@ -82,6 +96,10 @@ export class HalqaQueryDto {
     @IsOptional()
     @IsString()
     city?: string;
+
+    @IsOptional()
+    @IsUUID()
+    area_id?: string;
 
     @IsOptional()
     @IsNumber()

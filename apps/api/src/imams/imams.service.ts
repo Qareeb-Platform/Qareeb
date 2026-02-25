@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateImamDto, ImamQueryDto } from './dto/imam.dto';
 import { Prisma } from '@prisma/client';
+import { extractLatLngFromGoogleMaps } from '../common/maps.util';
 
 @Injectable()
 export class ImamsService {
@@ -59,6 +60,7 @@ export class ImamsService {
         if (query.governorate) where.governorate = query.governorate;
         if (query.city) where.city = query.city;
         if (query.district) where.district = query.district;
+        if (query.area_id) where.areaId = query.area_id;
 
         const [data, total] = await Promise.all([
             this.prisma.imam.findMany({
@@ -92,6 +94,9 @@ export class ImamsService {
     }
 
     async create(dto: CreateImamDto, ip?: string) {
+        const coords = extractLatLngFromGoogleMaps(dto.google_maps_url) || (dto.lat && dto.lng ? { lat: dto.lat, lng: dto.lng } : null);
+        if (!coords) throw new Error('Unable to parse coordinates from Google Maps URL');
+
         const imam = await this.prisma.imam.create({
             data: {
                 imamName: dto.imam_name,
@@ -99,8 +104,11 @@ export class ImamsService {
                 governorate: dto.governorate,
                 city: dto.city,
                 district: dto.district,
-                latitude: dto.lat,
-                longitude: dto.lng,
+                areaId: dto.area_id || null,
+                googleMapsUrl: dto.google_maps_url,
+                videoUrl: dto.video_url,
+                latitude: coords.lat,
+                longitude: coords.lng,
                 whatsapp: dto.whatsapp,
                 recitationUrl: dto.recitation_url,
                 submittedByIp: ip,
