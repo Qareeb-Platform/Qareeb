@@ -15,8 +15,25 @@ async function bootstrap() {
     app.use(cookieParser());
 
     // CORS
+    const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
+        .split(',')
+        .map((o) => o.trim())
+        .filter(Boolean);
+
     app.enableCors({
-        origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
+        origin: (origin, callback) => {
+            // allow same-origin or non-browser requests
+            if (!origin) return callback(null, true);
+            try {
+                const host = new URL(origin).host;
+                const isExplicit = allowedOrigins.includes(origin);
+                const isVercelPreview = host.endsWith('.vercel.app');
+                if (isExplicit || isVercelPreview) return callback(null, true);
+            } catch {
+                /* ignore */
+            }
+            return callback(new Error('Not allowed by CORS'), false);
+        },
         credentials: true,
     });
 
