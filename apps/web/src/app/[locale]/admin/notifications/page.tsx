@@ -41,7 +41,7 @@ export default function NotificationsPage() {
         let pusher: Pusher | null = null;
         if (token && process.env.NEXT_PUBLIC_PUSHER_KEY && admin?.role) {
             pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
-                cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
+                cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER ?? 'mt1',
             });
             const channel = pusher.subscribe(`role-${admin.role}`);
             channel.bind('notification', (payload: any) => {
