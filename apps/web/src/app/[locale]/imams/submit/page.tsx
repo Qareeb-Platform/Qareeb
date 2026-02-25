@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import Header from '@/components/layout/Header';
@@ -20,16 +20,11 @@ export default function SubmitPage() {
     const [entityType, setEntityType] = useState<'imam' | 'halqa' | 'maintenance' | null>(null);
     const [submitted, setSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm();
+    const { register, handleSubmit, watch, setValue } = useForm();
     const [governorates, setGovernorates] = useState<any[]>([]);
     const [areas, setAreas] = useState<any[]>([]);
 
     const selectedGovernorateId = watch('governorateId');
-    const selectedGovernorate = useMemo(
-        () => governorates.find((g) => g.id === selectedGovernorateId),
-        [governorates, selectedGovernorateId],
-    );
-
     useEffect(() => {
         api.getGovernorates().then(setGovernorates).catch(console.error);
     }, []);

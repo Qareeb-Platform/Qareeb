@@ -25,7 +25,7 @@ export default function AdminLoginPage() {
             const result = await adminApi.login(email, password);
             setAuth(result.access_token, result.admin);
             router.push(`/${locale}/admin/dashboard`);
-        } catch (err: any) {
+        } catch {
             setError(locale === 'ar' ? 'بيانات الدخول غير صحيحة' : 'Invalid credentials');
         }
         setLoading(false);
