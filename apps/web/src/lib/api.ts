@@ -54,6 +54,12 @@ export const api = {
     // Chat
     chatNearest: (data: { text: string; lat?: number; lng?: number }) =>
         fetchAPI<any>('/chat/nearest', { method: 'POST', body: JSON.stringify(data) }),
+
+    // Locations admin
+    createGovernorate: (token: string, data: any) => fetchAPI<any>('/locations/governorates', { method: 'POST', token, body: JSON.stringify(data) }),
+    createArea: (token: string, data: any) => fetchAPI<any>('/locations/areas', { method: 'POST', token, body: JSON.stringify(data) }),
+    updateArea: (token: string, id: string, data: any) => fetchAPI<any>(`/locations/areas/${id}`, { method: 'PATCH', token, body: JSON.stringify(data) }),
+    deleteArea: (token: string, id: string) => fetchAPI<any>(`/locations/areas/${id}`, { method: 'DELETE', token }),
 };
 
 // ── Admin API ──

@@ -19,7 +19,6 @@ async function getImam(id: string): Promise<any> {
 
 export default async function ImamDetailPage({ params }: { params: { id: string } }) {
     const locale = await getLocale();
-    const t = await getTranslations('imams');
     const tc = await getTranslations('common');
     const imam = await getImam(params.id);
 
@@ -66,14 +65,21 @@ export default async function ImamDetailPage({ params }: { params: { id: string 
                     <div className="bg-white rounded-[32px] p-8 md:p-12 shadow-card border border-border">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                             <div className="space-y-8">
-                                <div className="p-6 bg-cream rounded-2xl border border-primary/5">
-                                    <h3 className="font-black text-primary text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <div className="p-6 bg-cream rounded-2xl border border-primary/5 space-y-2">
+                                    <h3 className="font-black text-primary text-sm uppercase tracking-wider mb-2 flex items-center gap-2">
                                         <span>📍</span> {locale === 'ar' ? 'الموقع والتواجد' : 'Location & Presence'}
                                     </h3>
                                     <p className="text-dark font-bold text-lg leading-relaxed">
-                                        {imam.governorate} — {imam.city}
+                                        {imam.area ? (locale === 'ar' ? imam.area.nameAr : imam.area.nameEn) : `${imam.governorate} — ${imam.city}`}
                                         {imam.district && <span className="block text-sm text-text-muted mt-1">{imam.district}</span>}
                                     </p>
+                                    {imam.googleMapsUrl && (
+                                        <div className="flex gap-3 text-sm font-bold text-primary underline flex-wrap">
+                                            <a href={imam.googleMapsUrl} target="_blank" rel="noreferrer">{locale === 'ar' ? 'افتح في الخرائط' : 'Open in Maps'}</a>
+                                            <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(imam.googleMapsUrl)}`} target="_blank" rel="noreferrer">{locale === 'ar' ? 'اتجاهات' : 'Directions'}</a>
+                                            <a href={imam.googleMapsUrl} target="_blank" rel="noreferrer">{locale === 'ar' ? 'مشاركة' : 'Share'}</a>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {imam.recitationUrl && (
@@ -94,6 +100,12 @@ export default async function ImamDetailPage({ params }: { params: { id: string 
                                             </div>
                                             {locale === 'ar' ? 'استمع الآن' : 'Listen Now'}
                                         </a>
+                                    </div>
+                                )}
+                                {imam.videoUrl && (
+                                    <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10">
+                                        <h3 className="font-black text-primary text-sm uppercase tracking-wider mb-2">{locale === 'ar' ? 'رابط الفيديو' : 'Video Link'}</h3>
+                                        <a href={imam.videoUrl} target="_blank" rel="noreferrer" className="text-primary font-bold underline break-all">{imam.videoUrl}</a>
                                     </div>
                                 )}
                             </div>
