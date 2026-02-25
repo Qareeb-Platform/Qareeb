@@ -64,9 +64,15 @@ export default async function MaintenanceDetailPage({ params }: { params: { id: 
                                     <h3 className="font-black text-primary text-sm uppercase tracking-wider mb-2">{locale === 'ar' ? 'الوصف والتفاصيل' : 'Description & Details'}</h3>
                                     <p className="text-dark font-medium leading-relaxed italic">" {item.description} "</p>
                                 </div>
-                                <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10">
+                                <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 space-y-2">
                                     <h3 className="font-black text-primary text-sm uppercase tracking-wider mb-2">{locale === 'ar' ? 'الموقع' : 'Location'}</h3>
-                                    <p className="text-dark font-bold text-lg">{item.governorate} — {item.city}{item.district ? ` — ${item.district}` : ''}</p>
+                                    <p className="text-dark font-bold text-lg">{item.area ? (locale === 'ar' ? item.area.nameAr : item.area.nameEn) : `${item.governorate} — ${item.city}${item.district ? ` — ${item.district}` : ''}`}</p>
+                                    {item.google_maps_url && (
+                                        <div className="flex gap-3 text-sm font-bold text-primary underline">
+                                            <a href={item.google_maps_url} target="_blank" rel="noreferrer">{locale === 'ar' ? 'افتح في الخرائط' : 'Open in Maps'}</a>
+                                            <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.google_maps_url)}`} target="_blank" rel="noreferrer">{locale === 'ar' ? 'اتجاهات' : 'Directions'}</a>
+                                        </div>
+                                    )}
                                 </div>
                                 {item.estimatedCostMin && (
                                     <div className="p-6 bg-accent/5 rounded-2xl border border-accent/10">
@@ -79,6 +85,16 @@ export default async function MaintenanceDetailPage({ params }: { params: { id: 
                                 )}
                             </div>
                             <div className="flex flex-col gap-6">
+                                {Array.isArray(item.media) && item.media.length > 0 && (
+                                    <div>
+                                        <h3 className="text-sm font-black text-text-muted mb-3 uppercase">{locale === 'ar' ? 'الصور' : 'Images'}</h3>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {item.media.map((m: any) => (
+                                                <img key={m.id} src={m.url} alt="maintenance" className="w-full h-36 object-cover rounded-2xl border border-border" />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="p-8 bg-gradient-to-br from-[#1B6B45] to-[#2D8A5E] rounded-3xl text-white shadow-btn">
                                     <h3 className="font-black text-lg mb-4">{locale === 'ar' ? 'ساهم في الإعمار' : 'Contribute to Maintenance'}</h3>
                                     <p className="text-white/80 text-sm mb-6 leading-relaxed">

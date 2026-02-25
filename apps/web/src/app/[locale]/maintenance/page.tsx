@@ -23,15 +23,29 @@ export default function MaintenancePage() {
     const { lat, lng, requestLocation } = useGeolocationStore();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [governorates, setGovernorates] = useState<any[]>([]);
+    const [areas, setAreas] = useState<any[]>([]);
+    const [governorateId, setGovernorateId] = useState<string>('');
+    const [areaId, setAreaId] = useState<string>('');
 
-    useEffect(() => { requestLocation(); }, []);
-    useEffect(() => { fetchData(); }, [lat, lng]);
+    useEffect(() => { requestLocation(); api.getGovernorates().then(setGovernorates).catch(console.error); }, []);
+    useEffect(() => {
+        if (governorateId) {
+            api.getAreas(governorateId).then(setAreas).catch(console.error);
+        } else {
+            setAreas([]);
+            setAreaId('');
+        }
+    }, [governorateId]);
+    useEffect(() => { fetchData(); }, [lat, lng, governorateId, areaId]);
 
     const fetchData = async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams();
             if (lat && lng) { params.set('lat', lat.toString()); params.set('lng', lng.toString()); params.set('radius', '15000'); }
+            if (areaId) params.set('area_id', areaId);
+            if (governorateId && !areaId) params.set('governorateId', governorateId);
             const result = await api.getMaintenance(params.toString());
             setData(result);
         } catch (err) { console.error('Error:', err); }
@@ -53,6 +67,29 @@ export default function MaintenancePage() {
                 </div>
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="bg-white rounded-[24px] p-4 flex flex-wrap gap-3 shadow-card border border-border mb-6">
+                        <select
+                            value={governorateId}
+                            onChange={(e) => setGovernorateId(e.target.value)}
+                            className="px-4 py-2.5 rounded-xl text-sm font-black bg-cream border-2 border-transparent focus:border-primary"
+                        >
+                            <option value="">{locale === 'ar' ? 'كل المحافظات' : 'All governorates'}</option>
+                            {governorates.map((g) => (
+                                <option key={g.id} value={g.id}>{locale === 'ar' ? g.nameAr : g.nameEn}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={areaId}
+                            onChange={(e) => setAreaId(e.target.value)}
+                            disabled={!governorateId}
+                            className="px-4 py-2.5 rounded-xl text-sm font-black bg-cream border-2 border-transparent focus:border-primary disabled:opacity-50"
+                        >
+                            <option value="">{locale === 'ar' ? 'كل المناطق' : 'All areas'}</option>
+                            {areas.map((a) => (
+                                <option key={a.id} value={a.id}>{locale === 'ar' ? a.nameAr : a.nameEn}</option>
+                            ))}
+                        </select>
+                    </div>
                     {loading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {[1, 2, 3, 4].map((i) => (
@@ -66,9 +103,14 @@ export default function MaintenancePage() {
                                     <div className="flex items-start justify-between mb-4">
                                         <div className="flex-1">
                                             <h3 className="font-black text-xl text-dark leading-tight group-hover:text-primary transition-colors">{item.mosque_name || item.mosqueName}</h3>
-                                            <div className="flex items-center gap-1.5 mt-2 text-text-muted font-bold text-sm">
-                                                <span className="text-primary text-lg">🕌</span>
-                                                {item.governorate} — {item.city}
+                                            <div className="flex flex-col gap-1 text-text-muted font-bold text-sm">
+                                                <span className="flex items-center gap-1.5"><span className="text-primary text-lg">🕌</span>{item.area ? (locale === 'ar' ? item.area.nameAr : item.area.nameEn) : `${item.governorate} — ${item.city}`}</span>
+                                                {item.google_maps_url && (
+                                                    <span className="flex gap-3 text-[11px] font-semibold text-primary underline">
+                                                        <a href={item.google_maps_url} target="_blank" rel="noreferrer">{locale === 'ar' ? 'افتح في الخرائط' : 'Open in Maps'}</a>
+                                                        <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.google_maps_url)}`} target="_blank" rel="noreferrer">{locale === 'ar' ? 'اتجاهات' : 'Directions'}</a>
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="flex flex-wrap justify-end gap-1.5 max-w-[150px]">

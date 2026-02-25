@@ -61,9 +61,20 @@ export default async function HalqaDetailPage({ params }: { params: { id: string
                                         {typeLabels[locale]?.[halqa.halqaType]}
                                     </span>
                                 </div>
-                                <div className="p-6 bg-cream rounded-2xl border border-primary/5">
-                                    <h3 className="font-black text-primary text-sm uppercase tracking-wider mb-2">{locale === 'ar' ? 'الموقع' : 'Location'}</h3>
-                                    <p className="text-dark font-bold text-lg">{halqa.governorate} — {halqa.city}{halqa.district ? ` — ${halqa.district}` : ''}</p>
+                                <div className="p-6 bg-cream rounded-2xl border border-primary/5 space-y-2">
+                                    <h3 className="font-black text-primary text-sm uppercase tracking-wider">{locale === 'ar' ? 'الموقع' : 'Location'}</h3>
+                                    <p className="text-dark font-bold text-lg">{halqa.area ? (locale === 'ar' ? halqa.area.nameAr : halqa.area.nameEn) : `${halqa.governorate} — ${halqa.city}${halqa.district ? ` — ${halqa.district}` : ''}`}</p>
+                                    {halqa.google_maps_url && (
+                                        <div className="flex gap-3 text-sm font-bold text-primary underline">
+                                            <a href={halqa.google_maps_url} target="_blank" rel="noreferrer">{locale === 'ar' ? 'افتح في الخرائط' : 'Open in Maps'}</a>
+                                            <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(halqa.google_maps_url)}`} target="_blank" rel="noreferrer">{locale === 'ar' ? 'اتجاهات' : 'Directions'}</a>
+                                        </div>
+                                    )}
+                                    {halqa.video_url && (
+                                        <a className="text-sm font-bold text-accent underline" href={halqa.video_url} target="_blank" rel="noreferrer">
+                                            {locale === 'ar' ? 'رابط الفيديو' : 'Video link'}
+                                        </a>
+                                    )}
                                 </div>
                                 {halqa.additionalInfo && (
                                     <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10">
