@@ -10,6 +10,8 @@ import { MaintenanceModule } from './maintenance/maintenance.module';
 import { MediaModule } from './media/media.module';
 import { AdminModule } from './admin/admin.module';
 import { LocationsModule } from './locations/locations.module';
+import { AuditModule } from './audit/audit.module';
+import { HealthController } from './health/health.controller';
 
 @Module({
     imports: [
@@ -31,6 +33,7 @@ import { LocationsModule } from './locations/locations.module';
         MediaModule,
         AdminModule,
         LocationsModule,
+        AuditModule,
     ],
     providers: [
         {
@@ -38,5 +41,6 @@ import { LocationsModule } from './locations/locations.module';
             useClass: ThrottlerGuard,
         },
     ],
+    controllers: [HealthController],
 })
 export class AppModule { }

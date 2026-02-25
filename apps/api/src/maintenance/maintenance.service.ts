@@ -2,11 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMaintenanceDto, MaintenanceQueryDto } from './dto/maintenance.dto';
 import { extractLatLngFromGoogleMaps } from '../common/maps.util';
+import { AuditService } from '../audit/audit.service';
 
 
 @Injectable()
 export class MaintenanceService {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly audit: AuditService,
+    ) { }
 
     async findAll(query: MaintenanceQueryDto) {
         const page = query.page || 1;
@@ -118,11 +122,17 @@ export class MaintenanceService {
     }
 
     async approve(id: string, adminId: string) {
-        return this.prisma.maintenanceRequest.update({ where: { id }, data: { status: 'approved', adminId, rejectionReason: null } });
+        const before = await this.prisma.maintenanceRequest.findUnique({ where: { id } });
+        const updated = await this.prisma.maintenanceRequest.update({ where: { id }, data: { status: 'approved', adminId, rejectionReason: null } });
+        await this.audit.log({ adminId, entityType: 'maintenance', entityId: id, action: 'approve', oldData: before, newData: updated });
+        return updated;
     }
 
     async reject(id: string, adminId: string, reason?: string) {
-        return this.prisma.maintenanceRequest.update({ where: { id }, data: { status: 'rejected', adminId, rejectionReason: reason } });
+        const before = await this.prisma.maintenanceRequest.findUnique({ where: { id } });
+        const updated = await this.prisma.maintenanceRequest.update({ where: { id }, data: { status: 'rejected', adminId, rejectionReason: reason } });
+        await this.audit.log({ adminId, entityType: 'maintenance', entityId: id, action: 'reject', oldData: before, newData: updated });
+        return updated;
     }
 
     async remove(id: string) {

@@ -3,10 +3,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateHalqaDto, HalqaQueryDto } from './dto/halqa.dto';
 import { Prisma } from '@prisma/client';
 import { extractLatLngFromGoogleMaps } from '../common/maps.util';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class HalaqatService {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly audit: AuditService,
+    ) { }
 
     async findAll(query: HalqaQueryDto) {
         const page = query.page || 1;
@@ -124,11 +128,17 @@ export class HalaqatService {
     }
 
     async approve(id: string, adminId: string) {
-        return this.prisma.halqa.update({ where: { id }, data: { status: 'approved', adminId, rejectionReason: null } });
+        const before = await this.prisma.halqa.findUnique({ where: { id } });
+        const updated = await this.prisma.halqa.update({ where: { id }, data: { status: 'approved', adminId, rejectionReason: null } });
+        await this.audit.log({ adminId, entityType: 'halqa', entityId: id, action: 'approve', oldData: before, newData: updated });
+        return updated;
     }
 
     async reject(id: string, adminId: string, reason?: string) {
-        return this.prisma.halqa.update({ where: { id }, data: { status: 'rejected', adminId, rejectionReason: reason } });
+        const before = await this.prisma.halqa.findUnique({ where: { id } });
+        const updated = await this.prisma.halqa.update({ where: { id }, data: { status: 'rejected', adminId, rejectionReason: reason } });
+        await this.audit.log({ adminId, entityType: 'halqa', entityId: id, action: 'reject', oldData: before, newData: updated });
+        return updated;
     }
 
     async remove(id: string) {

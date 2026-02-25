@@ -3,10 +3,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateImamDto, ImamQueryDto } from './dto/imam.dto';
 import { Prisma } from '@prisma/client';
 import { extractLatLngFromGoogleMaps } from '../common/maps.util';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class ImamsService {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly audit: AuditService,
+    ) { }
 
     async findAll(query: ImamQueryDto) {
         const page = query.page || 1;
@@ -143,17 +147,23 @@ export class ImamsService {
     }
 
     async approve(id: string, adminId: string) {
-        return this.prisma.imam.update({
+        const before = await this.prisma.imam.findUnique({ where: { id } });
+        const updated = await this.prisma.imam.update({
             where: { id },
             data: { status: 'approved', adminId, rejectionReason: null },
         });
+        await this.audit.log({ adminId, entityType: 'imam', entityId: id, action: 'approve', oldData: before, newData: updated });
+        return updated;
     }
 
     async reject(id: string, adminId: string, reason?: string) {
-        return this.prisma.imam.update({
+        const before = await this.prisma.imam.findUnique({ where: { id } });
+        const updated = await this.prisma.imam.update({
             where: { id },
             data: { status: 'rejected', adminId, rejectionReason: reason },
         });
+        await this.audit.log({ adminId, entityType: 'imam', entityId: id, action: 'reject', oldData: before, newData: updated });
+        return updated;
     }
 
     async remove(id: string) {
