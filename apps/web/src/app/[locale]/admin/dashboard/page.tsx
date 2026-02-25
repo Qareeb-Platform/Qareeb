@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useAuthStore } from '@/lib/store';
 import { adminApi } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function AdminDashboard() {
     const t = useTranslations('admin');
@@ -61,6 +62,21 @@ export default function AdminDashboard() {
             <div>
                 <h1 className="text-2xl font-bold mb-1">{t('dashboard')}</h1>
                 <p className="text-text-muted">{locale === 'ar' ? 'نظرة عامة على المنصة' : 'Platform overview'}</p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+                <Link href={`/${locale}/imams/submit`} className="btn-primary !py-3">
+                    {locale === 'ar' ? '➕ إضافة إمام' : '➕ Add Imam'}
+                </Link>
+                <Link href={`/${locale}/halaqat/submit`} className="btn-outline !py-3">
+                    {locale === 'ar' ? '➕ إضافة حلقة' : '➕ Add Halqa'}
+                </Link>
+                <Link href={`/${locale}/maintenance/submit`} className="btn-outline !py-3">
+                    {locale === 'ar' ? '➕ إضافة صيانة' : '➕ Add Maintenance'}
+                </Link>
+                <Link href={`/${locale}/admin/audit`} className="btn-outline !py-3">
+                    {locale === 'ar' ? 'سجل التدقيق' : 'Audit Log'}
+                </Link>
             </div>
 
             {/* Pending Cards */}

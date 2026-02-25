@@ -12,8 +12,8 @@ import { useGeolocationStore } from '@/lib/store';
 import { getWhatsAppUrl } from '@/lib/utils';
 
 const maintenanceLabels: Record<string, Record<string, string>> = {
-    ar: { flooring: 'أرضيات', ac: 'تكييف', plumbing: 'سباكة', painting: 'دهان', furniture: 'أثاث', electrical: 'كهرباء', other: 'أخرى' },
-    en: { flooring: 'Flooring', ac: 'AC', plumbing: 'Plumbing', painting: 'Painting', furniture: 'Furniture', electrical: 'Electrical', other: 'Other' },
+    ar: { Plumbing: 'سباكة', Electrical: 'كهرباء', Carpentry: 'نجارة', Painting: 'دهان', AC_Repair: 'تكييف', Cleaning: 'تنظيف', Other: 'أخرى' },
+    en: { Plumbing: 'Plumbing', Electrical: 'Electrical', Carpentry: 'Carpentry', Painting: 'Painting', AC_Repair: 'AC', Cleaning: 'Cleaning', Other: 'Other' },
 };
 
 export default function MaintenancePage() {
