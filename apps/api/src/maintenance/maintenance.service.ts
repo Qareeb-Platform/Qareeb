@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { NotificationType, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMaintenanceDto, MaintenanceQueryDto } from './dto/maintenance.dto';
 import { extractLatLngFromGoogleMaps, resolveLatLngFromGoogleMaps } from '../common/maps.util';

@@ -33,11 +33,11 @@ export class ChatService {
             return 'any';
         })();
 
-        const matchedArea = areas.find((a) => query.includes((a.nameAr || '').toLowerCase()) || query.includes((a.nameEn || '').toLowerCase()));
-        const matchedGov = governorates.find((g) => query.includes((g.nameAr || '').toLowerCase()) || query.includes((g.nameEn || '').toLowerCase()));
+        const matchedArea = areas.find((a: any) => query.includes((a.nameAr || '').toLowerCase()) || query.includes((a.nameEn || '').toLowerCase()));
+        const matchedGov = governorates.find((g: any) => query.includes((g.nameAr || '').toLowerCase()) || query.includes((g.nameEn || '').toLowerCase()));
         if (!matchedArea && !matchedGov) return { match: null, message: locale === 'ar' ? 'لم يتم العثور على منطقة مطابقة' : 'No matching area found' };
 
-        const areaIds = matchedArea ? [matchedArea.id] : areas.filter((a) => a.governorateId === matchedGov?.id).map((a) => a.id);
+        const areaIds = matchedArea ? [matchedArea.id] : areas.filter((a: any) => a.governorateId === matchedGov?.id).map((a: any) => a.id);
 
         const candidates = [
             ...(intent === 'maintenance' ? [] : await this.prisma.imam.findMany({ where: { areaId: { in: areaIds }, status: 'approved' }, include: { media: true } })),

@@ -29,7 +29,7 @@ export class AdminService {
             where: { status: 'approved' },
         });
 
-        const byGovernorate = imamsByGov.map((g) => ({
+        const byGovernorate = imamsByGov.map((g: { governorate: string; _count: { id: number } }) => ({
             name: g.governorate,
             count: g._count.id,
         }));
@@ -71,8 +71,8 @@ export class AdminService {
         });
 
         const typeMap = new Map<string, number>();
-        allMaintenance.forEach((m) => {
-            m.maintenanceTypes.forEach((t) => {
+        allMaintenance.forEach((m: { maintenanceTypes: string[] }) => {
+            m.maintenanceTypes.forEach((t: string) => {
                 typeMap.set(t, (typeMap.get(t) || 0) + 1);
             });
         });

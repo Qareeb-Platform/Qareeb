@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateHalqaDto, HalqaQueryDto } from './dto/halqa.dto';
-import { NotificationType, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { extractLatLngFromGoogleMaps, resolveLatLngFromGoogleMaps } from '../common/maps.util';
 import { AuditService } from '../audit/audit.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -24,8 +24,8 @@ export class HalaqatService {
         if (postgisEnabled && query.lat && query.lng) {
             const radius = query.radius || 10000;
             const typeFilter = query.type
-                ? Prisma.sql`AND halqa_type = ${query.type}::\"HalqaType\"`
-                : Prisma.sql``;
+                ? Prisma.raw(`AND halqa_type = '${query.type}'::"HalqaType"`)
+                : Prisma.raw('');
 
             const results = await this.prisma.$queryRaw`
         SELECT id, circle_name, mosque_name, halqa_type, governorate, city, district,

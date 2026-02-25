@@ -1,19 +1,18 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AdminRole, NotificationType } from '@prisma/client';
 import { pusherServer } from './pusher';
 
-const ROLE_MAP: Record<NotificationType, AdminRole[]> = {
+const ROLE_MAP = {
     imam: ['super_admin', 'full_reviewer', 'imam_reviewer'],
     halqa: ['super_admin', 'full_reviewer', 'halqa_reviewer'],
     maintenance: ['super_admin', 'full_reviewer', 'maintenance_reviewer'],
-};
+} as const;
 
 @Injectable()
 export class NotificationsService {
     constructor(private readonly prisma: PrismaService) { }
 
-    async createForType(type: NotificationType, referenceId: string, title: string, message: string, createdBy?: string) {
+    async createForType(type: 'imam' | 'halqa' | 'maintenance', referenceId: string, title: string, message: string, createdBy?: string) {
         const roles = ROLE_MAP[type];
         const recipients = await this.prisma.admin.findMany({
             where: { role: { in: roles }, isActive: true },
