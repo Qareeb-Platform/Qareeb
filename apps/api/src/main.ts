@@ -15,7 +15,7 @@ async function bootstrap() {
     app.use(cookieParser());
 
     // CORS
-    const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
+    const allowedOrigins = (process.env.CORS_ORIGIN || 'https://qareeb-web.vercel.app')
         .split(',')
         .map((o) => o.trim())
         .filter(Boolean);
