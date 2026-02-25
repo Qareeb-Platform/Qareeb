@@ -49,9 +49,8 @@ export default function Header() {
             } catch { /* ignore audio errors */ }
         };
         if (process.env.NEXT_PUBLIC_PUSHER_KEY) {
-            pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
-                cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
-            });
+            const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER ?? 'mt1';
+            pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, { cluster });
             const channel = pusher.subscribe(`role-${admin.role}`);
             channel.bind('notification', () => {
                 setUnread((c) => c + 1);
