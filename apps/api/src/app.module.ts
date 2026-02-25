@@ -12,6 +12,7 @@ import { AdminModule } from './admin/admin.module';
 import { LocationsModule } from './locations/locations.module';
 import { AuditModule } from './audit/audit.module';
 import { HealthController } from './health/health.controller';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
     imports: [
@@ -34,6 +35,7 @@ import { HealthController } from './health/health.controller';
         AdminModule,
         LocationsModule,
         AuditModule,
+        ChatModule,
     ],
     providers: [
         {
