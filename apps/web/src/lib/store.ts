@@ -204,3 +204,23 @@ export const useImamStore = createEntityStore<any>();
 export const useHalqaStore = createEntityStore<any>();
 export const useMaintenanceStore = createEntityStore<any>();
 
+interface ThemeState {
+    theme: 'light' | 'dark';
+    setTheme: (theme: 'light' | 'dark') => void;
+    toggleTheme: () => void;
+}
+
+export const useThemeStore = create<ThemeState>()(
+    persist(
+        (set, get) => ({
+            theme: 'light',
+            setTheme: (theme) => set({ theme }),
+            toggleTheme: () => set({ theme: get().theme === 'dark' ? 'light' : 'dark' }),
+        }),
+        {
+            name: 'qareeb-theme',
+            storage: createJSONStorage(() => localStorage),
+        },
+    ),
+);
+

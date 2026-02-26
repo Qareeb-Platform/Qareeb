@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import AppModal from '@/components/ui/AppModal';
 import { FaCheck, FaEye, FaPenToSquare, FaTrash, FaXmark } from 'react-icons/fa6';
 import PhoneInputField from '@/components/form/PhoneInputField';
+import { getEmbeddableVideoUrl } from '@/lib/video';
 
 function IconButton({ label, onClick, children, className = '' }: { label: string; onClick: () => void; children: React.ReactNode; className?: string }) {
     return (
@@ -163,7 +164,13 @@ export default function AdminImamsPage() {
                         {payload.videoUrl && (
                             <div className="rounded-xl border border-border p-3 bg-cream/40 space-y-2">
                                 <p className="text-xs font-bold text-text-muted">{locale === 'ar' ? 'رابط الفيديو' : 'Video link'}</p>
-                                <iframe src={payload.videoUrl} className="w-full h-64 rounded-xl border" allowFullScreen title="video" />
+                                {getEmbeddableVideoUrl(payload.videoUrl) ? (
+                                    <iframe src={getEmbeddableVideoUrl(payload.videoUrl)!} className="w-full h-64 rounded-xl border" allowFullScreen title="video" />
+                                ) : (
+                                    <p className="text-xs text-text-muted">
+                                        {locale === 'ar' ? 'لا يمكن تضمين هذا الرابط داخل الصفحة.' : 'This link cannot be embedded in-page.'}
+                                    </p>
+                                )}
                                 <div className="flex flex-wrap gap-2">
                                     <a className="btn-outline !py-1.5 !px-3 text-xs" target="_blank" rel="noreferrer" href={payload.videoUrl}>
                                         {locale === 'ar' ? 'فتح الفيديو' : 'Open video'}

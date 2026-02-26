@@ -1,6 +1,7 @@
-import { Controller, Post, Body, Res, Req, HttpCode } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, HttpCode, Patch, UseGuards } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('admin/auth')
 export class AuthController {
@@ -38,5 +39,19 @@ export class AuthController {
             return { error: 'No refresh token provided' };
         }
         return this.authService.refreshToken(refreshToken);
+    }
+
+    @Patch('change-password')
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(200)
+    async changePassword(
+        @Req() req: any,
+        @Body() body: { current_password: string; new_password: string },
+    ) {
+        return this.authService.changePassword(
+            req.user.id,
+            body.current_password,
+            body.new_password,
+        );
     }
 }

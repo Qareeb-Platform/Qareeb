@@ -17,6 +17,7 @@ export default function Header() {
     const pathname = usePathname();
     const isAdminPath = pathname.startsWith(`/${locale}/admin`);
     const otherLocale = locale === 'ar' ? 'en' : 'ar';
+
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
 
@@ -26,6 +27,7 @@ export default function Header() {
         { href: `/${locale}/halaqat`, label: t('halaqat') },
         { href: `/${locale}/maintenance`, label: t('maintenance') },
     ];
+
 
     useEffect(() => {
         if (!token || !admin?.role || !isAdminPath) return;
@@ -82,7 +84,13 @@ export default function Header() {
                             </div>
                         )}
 
-                        <Link href={`/${locale}/imams/submit`} className="hidden sm:inline-flex px-5 py-2.5 bg-accent text-white rounded-xl font-bold text-sm transition-all hover:bg-accent-dark hover:-translate-y-0.5 shadow-[0_4px_12px_rgba(201,150,42,0.35)]">{t('submit')}</Link>
+                        <Link
+                            href={`/${locale}/submit`}
+                            className="hidden sm:inline-flex px-5 py-2.5 bg-accent text-white rounded-xl font-bold text-sm transition-all hover:bg-accent-dark hover:-translate-y-0.5 shadow-[0_4px_12px_rgba(201,150,42,0.35)]"
+                        >
+                                {t('submit')}
+                        </Link>
+
                         <Link href={`/${otherLocale}`} className="px-3 py-1.5 border border-gray-200 rounded-btn text-sm font-medium text-text-muted hover:border-primary hover:text-primary transition-all">{tc('switchLang')}</Link>
 
                         <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-btn hover:bg-gray-100 transition-colors" aria-label="Menu">
@@ -99,7 +107,8 @@ export default function Header() {
                             {navLinks.map((link) => (
                                 <Link key={link.href} href={link.href} onClick={() => setIsMenuOpen(false)} className="px-4 py-3 rounded-btn text-text hover:bg-primary-light hover:text-primary transition-all font-medium">{link.label}</Link>
                             ))}
-                            <Link href={`/${locale}/imams/submit`} onClick={() => setIsMenuOpen(false)} className="btn-primary text-center mt-2">{t('submit')}</Link>
+
+                            <Link href={`/${locale}/submit`} onClick={() => setIsMenuOpen(false)} className="btn-primary text-center mt-2">{t('submit')}</Link>
                         </div>
                     </div>
                 )}

@@ -1,10 +1,11 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { api } from '@/lib/api';
 import AppModal from '@/components/ui/AppModal';
 import { useModalStore, useToastStore } from '@/lib/store';
+import { getEmbeddableVideoUrl } from '@/lib/video';
 
 type TabType = 'all' | 'imams' | 'halqa' | 'maintenance';
 
@@ -22,11 +23,13 @@ export default function PublicCardsTabs() {
             api.getImams('limit=8'),
             api.getHalaqat('limit=8'),
             api.getMaintenance('limit=8'),
-        ]).then(([im, ha, ma]) => {
-            setImams(im?.data || []);
-            setHalaqat(ha?.data || []);
-            setMaintenance(ma?.data || []);
-        }).catch(() => undefined);
+        ])
+            .then(([im, ha, ma]) => {
+                setImams(im?.data || []);
+                setHalaqat(ha?.data || []);
+                setMaintenance(ma?.data || []);
+            })
+            .catch(() => undefined);
     }, []);
 
     const shareText = async (text: string) => {
@@ -48,16 +51,29 @@ export default function PublicCardsTabs() {
             entity,
             name: item.imamName || item.circleName || item.mosqueName || item.imam_name || item.circle_name || item.mosque_name,
             mosque: item.mosqueName || item.mosque_name,
-            typeLabel: entity === 'imam' ? (locale === 'ar' ? 'إمام' : 'Imam') : entity === 'halqa' ? (locale === 'ar' ? 'حلقة' : 'Halqa') : (locale === 'ar' ? 'صيانة' : 'Maintenance'),
+            typeLabel:
+                entity === 'imam'
+                    ? locale === 'ar'
+                        ? 'إمام'
+                        : 'Imam'
+                    : entity === 'halqa'
+                      ? locale === 'ar'
+                          ? 'حلقة'
+                          : 'Halqa'
+                      : locale === 'ar'
+                        ? 'صيانة'
+                        : 'Maintenance',
             map: item.googleMapsUrl || item.google_maps_url || '',
             video: item.videoUrl || item.video_url || '',
             raw: item,
         });
+
         const all = [
             ...imams.map((x) => toCard(x, 'imam')),
             ...halaqat.map((x) => toCard(x, 'halqa')),
             ...maintenance.map((x) => toCard(x, 'maintenance')),
         ];
+
         if (tab === 'all') return all;
         if (tab === 'imams') return all.filter((x) => x.entity === 'imam');
         if (tab === 'halqa') return all.filter((x) => x.entity === 'halqa');
@@ -68,6 +84,8 @@ export default function PublicCardsTabs() {
         const text = `${card.name}\n${card.mosque || ''}\n${card.typeLabel}\n${card.map || ''}`.trim();
         await shareText(text);
     };
+
+    const embedUrl = getEmbeddableVideoUrl(payload?.video);
 
     return (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -119,7 +137,18 @@ export default function PublicCardsTabs() {
             </AppModal>
 
             <AppModal isOpen={isOpen && type === 'video'} type="video" title={locale === 'ar' ? 'عرض الفيديو' : 'Video'} onClose={closeModal}>
-                {payload?.video ? <iframe src={payload.video} className="w-full h-72 rounded-xl border" allowFullScreen title="video-modal" /> : null}
+                {payload?.video ? (
+                    embedUrl ? (
+                        <iframe src={embedUrl} className="w-full h-72 rounded-xl border" allowFullScreen title="video-modal" />
+                    ) : (
+                        <div className="space-y-3">
+                            <p className="text-sm text-text-muted">{locale === 'ar' ? 'لا يمكن تضمين هذا الرابط داخل الصفحة.' : 'This link cannot be embedded in-page.'}</p>
+                            <a className="btn-outline inline-flex" href={payload.video} target="_blank" rel="noreferrer">
+                                {locale === 'ar' ? 'فتح الفيديو' : 'Open video'}
+                            </a>
+                        </div>
+                    )
+                ) : null}
             </AppModal>
         </section>
     );

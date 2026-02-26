@@ -84,6 +84,16 @@ export const adminApi = {
             credentials: 'include',
         }),
 
+    changePassword: (token: string, currentPassword: string, newPassword: string) =>
+        fetchAPI<any>('/admin/auth/change-password', {
+            method: 'PATCH',
+            token,
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword,
+            }),
+        }),
+
     getDashboardStats: (token: string) =>
         fetchAPI<any>('/admin/dashboard/stats', { token }),
 

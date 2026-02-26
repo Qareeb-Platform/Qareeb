@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useForm } from 'react-hook-form';
+import { usePathname } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { api } from '@/lib/api';
@@ -16,9 +17,10 @@ export default function SubmitPage() {
     const th = useTranslations('halaqat');
     const tm = useTranslations('maintenance');
     const locale = useLocale();
+    const pathname = usePathname();
 
-    const [step, setStep] = useState<FormStep>('type');
-    const [entityType, setEntityType] = useState<'imam' | 'halqa' | 'maintenance' | null>(null);
+    const [step, setStep] = useState<FormStep>('info');
+    const [entityType, setEntityType] = useState<'imam' | 'halqa' | 'maintenance' | null>('imam');
     const [submitted, setSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [mediaUploads, setMediaUploads] = useState<Array<{ publicId: string; secureUrl: string }>>([]);
@@ -30,6 +32,22 @@ export default function SubmitPage() {
 
     const selectedGovernorateId = watch('governorateId');
     const isOnline = watch('isOnline');
+
+    useEffect(() => {
+        if (pathname.includes('/halaqat/submit')) {
+            setEntityType('halqa');
+            setStep('info');
+            return;
+        }
+        if (pathname.includes('/maintenance/submit')) {
+            setEntityType('maintenance');
+            setStep('info');
+            return;
+        }
+        setEntityType('imam');
+        setStep('info');
+    }, [pathname]);
+
     useEffect(() => {
         api.getGovernorates().then(setGovernorates).catch(console.error);
     }, []);
@@ -191,27 +209,6 @@ export default function SubmitPage() {
                         <h1 className="text-4xl font-black text-dark mb-3">{t('title')}</h1>
                         <p className="text-text-muted font-medium">{locale === 'ar' ? 'ساهم في بناء مجتمعنا المسلم في مصر' : 'Contribute to building our Muslim community in Egypt'}</p>
                     </div>
-
-                    {/* Step: Select Type */}
-                    {step === 'type' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 animate-fade-in">
-                            {[
-                                { type: 'imam' as const, label: t('imam'), color: 'hover:border-primary', icon: '🕌', desc: locale === 'ar' ? 'إضافة إمام مسجد' : 'Add Masjid Imam' },
-                                { type: 'halqa' as const, label: t('halqa'), color: 'hover:border-primary', icon: '📖', desc: locale === 'ar' ? 'إضافة دار تحفيظ' : 'Add Quran Center' },
-                                { type: 'maintenance' as const, label: t('maintenanceReq'), color: 'hover:border-primary', icon: '🏗️', desc: locale === 'ar' ? 'طلب إعمار' : 'Maint. Request' },
-                            ].map((item) => (
-                                <button
-                                    key={item.type}
-                                    onClick={() => { setEntityType(item.type); setStep('info'); }}
-                                    className={`bg-white rounded-[32px] p-8 text-center border-2 border-transparent shadow-card transition-all hover:-translate-y-2 group ${item.color}`}
-                                >
-                                    <span className="text-5xl mb-6 block transition-transform group-hover:scale-110">{item.icon}</span>
-                                    <span className="font-black text-dark block mb-2">{item.label}</span>
-                                    <span className="text-xs text-text-muted font-bold block">{item.desc}</span>
-                                </button>
-                            ))}
-                        </div>
-                    )}
 
                     {/* Step: Info Form */}
                     {step === 'info' && entityType && (
@@ -418,11 +415,8 @@ export default function SubmitPage() {
                                 )}
                             </div>
 
-                            <div className="flex gap-4 pt-4">
-                                <button type="button" onClick={() => setStep('type')} className="btn-outline flex-1 rounded-2xl border-2 hover:bg-cream">
-                                    {locale === 'ar' ? 'تغيير النوع' : 'Change type'}
-                                </button>
-                                <button type="submit" disabled={submitting} className="btn-primary flex-1 rounded-2xl group flex items-center justify-center">
+                            <div className="pt-4">
+                                <button type="submit" disabled={submitting} className="btn-primary w-full rounded-2xl group flex items-center justify-center">
                                     {submitting
                                         ? (locale === 'ar' ? 'جاري الإرسال...' : 'Submitting...')
                                         : (locale === 'ar' ? 'إرسال الطلب' : 'Submit Request')}

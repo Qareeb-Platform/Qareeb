@@ -1,30 +1,49 @@
-'use client';
+﻿'use client';
 
-import { useTranslations, useLocale } from 'next-intl';
-import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { useAuthStore, useNotificationStore } from '@/lib/store';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { adminApi } from '@/lib/api';
+import { useEffect, useMemo, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { useLocale, useTranslations } from 'next-intl';
+import { usePathname, useRouter } from 'next/navigation';
+import {
+    FaBell,
+    FaBook,
+    FaCog,
+    FaHome,
+    FaMoon,
+    FaMosque,
+    FaSignOutAlt,
+    FaSun,
+    FaTools,
+    FaUsers,
+    FaUserTie,
+    FaClipboardList,
+} from 'react-icons/fa';
+import { adminApi } from '@/lib/api';
+import { useAuthStore, useNotificationStore, useThemeStore } from '@/lib/store';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const t = useTranslations('admin');
     const locale = useLocale();
     const pathname = usePathname();
     const router = useRouter();
-    const { token, admin, rememberMe, setAuth, clearAuth } = useAuthStore();
-    const { unreadCount, addNotification, setNotifications } = useNotificationStore();
 
-    // If no token and not on login page, show login
-    const isLoginPage = pathname.includes('/admin') && !pathname.includes('/admin/');
+    const { token, admin, rememberMe, setAuth, clearAuth } = useAuthStore();
+    const { theme, toggleTheme } = useThemeStore();
+    const { unreadCount, items, addNotification, setNotifications, markRead } = useNotificationStore();
+
+    const [showNotifMenu, setShowNotifMenu] = useState(false);
+
+    const isLoginPage = pathname === `/${locale}/admin`;
+    const otherLocale = locale === 'ar' ? 'en' : 'ar';
+    const switchedLocalePath = useMemo(() => {
+        if (!pathname.startsWith(`/${locale}`)) return `/${otherLocale}/admin/dashboard`;
+        return pathname.replace(`/${locale}`, `/${otherLocale}`);
+    }, [pathname, locale, otherLocale]);
 
     useEffect(() => {
-        if (!token && !isLoginPage) {
-            // Don't redirect, just show login on the admin page
-        }
-    }, [token, isLoginPage]);
+        document.documentElement.classList.toggle('theme-dark', theme === 'dark');
+    }, [theme]);
 
     useEffect(() => {
         let mounted = true;
@@ -70,10 +89,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     createdAt: n.createdAt,
                     read: n.isRead,
                 })));
-            } catch (err) {
-                console.error('Notification count error', err);
+            } catch {
+                // ignore silent bootstrap failures
             }
         };
+
         void bootstrap();
 
         let socket: Socket | null = null;
@@ -84,6 +104,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 withCredentials: true,
                 query: { role: admin.role },
             });
+
             socket.on('notification', (payload: any) => {
                 addNotification({
                     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -100,101 +121,179 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 }
             });
         }
+
         return () => {
             socket?.disconnect();
         };
-    }, [token, admin?.role]);
+    }, [token, admin?.role, addNotification, setNotifications]);
 
     const handleLogout = () => {
         clearAuth();
         router.push(`/${locale}/admin`);
     };
 
-    // If no auth, show login component
     if (!token && !isLoginPage) {
         return children;
-    }
-
-    const navItems = [
-        { href: `/${locale}/admin/dashboard`, label: t('dashboard'), icon: '📊' },
-        { href: `/${locale}/admin/imams`, label: locale === 'ar' ? 'الأئمة' : 'Imams', icon: '🕌' },
-        { href: `/${locale}/admin/halaqat`, label: locale === 'ar' ? 'الحلقات' : 'Circles', icon: '📖' },
-        { href: `/${locale}/admin/maintenance`, label: locale === 'ar' ? 'الصيانة' : 'Maintenance', icon: '🔧' },
-        { href: `/${locale}/admin/notifications`, label: locale === 'ar' ? 'الإشعارات' : 'Notifications', icon: '🔔', badge: unreadCount },
-    ];
-
-    if (admin?.role === 'super_admin') {
-        navItems.push({ href: `/${locale}/admin/users`, label: t('users'), icon: '👥' });
     }
 
     if (isLoginPage) {
         return children;
     }
 
+    const navItems = [
+        { href: `/${locale}/admin/dashboard`, label: locale === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: FaHome },
+        { href: `/${locale}/admin/imams`, label: locale === 'ar' ? 'الأئمة' : 'Imams', icon: FaUserTie },
+        { href: `/${locale}/admin/halaqat`, label: locale === 'ar' ? 'الحلقات' : 'Halaqat', icon: FaBook },
+        { href: `/${locale}/admin/maintenance`, label: locale === 'ar' ? 'الصيانة' : 'Maintenance', icon: FaTools },
+        { href: `/${locale}/admin/audit`, label: locale === 'ar' ? 'سجل التدقيق' : 'Audit Logs', icon: FaClipboardList },
+        { href: `/${locale}/admin/settings`, label: locale === 'ar' ? 'الإعدادات' : 'Settings', icon: FaCog },
+    ];
+
+    if (admin?.role === 'super_admin') {
+        navItems.push({ href: `/${locale}/admin/users`, label: t('users'), icon: FaUsers });
+    }
+
+    const shellClass = theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-gray-100 text-gray-900';
+    const sidebarClass = theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-gray-900 border-gray-800 text-white';
+    const panelClass = theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200';
+
     return (
-        <div className="min-h-screen flex bg-gray-100">
-            {/* Sidebar */}
-            <aside className="w-64 bg-gray-900 text-white flex flex-col shrink-0 hidden md:flex">
-                <div className="p-6 border-b border-gray-800">
-                    <Link href={`/${locale}`} className="flex items-center gap-2">
-                        <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center">
-                            <span className="text-white text-xl font-bold">ق</span>
-                        </div>
+        <div className={`min-h-screen flex ${shellClass}`}>
+            <aside className={`w-72 border-e flex-col hidden md:flex ${sidebarClass}`}>
+                <div className="p-5 border-b border-current/10">
+                    <Link href={`/${locale}`} className="flex items-center gap-3">
+                        <span className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-white">
+                            <FaMosque className="text-xl" />
+                        </span>
                         <div>
-                            <span className="font-bold text-lg">{locale === 'ar' ? 'قريب' : 'Qareeb'}</span>
-                            <p className="text-xs text-gray-400">{t('dashboard')}</p>
+                            <p className="text-lg font-black">{locale === 'ar' ? 'قريب' : 'Qareeb'}</p>
+                            <p className="text-xs text-white/70">{locale === 'ar' ? 'لوحة التحكم' : 'Admin Dashboard'}</p>
                         </div>
                     </Link>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-1">
+                <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
                     {navItems.map((item) => {
-                        const isActive = pathname === item.href;
+                        const active = pathname === item.href;
+                        const Icon = item.icon;
                         return (
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${isActive ? 'bg-primary text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                                    }`}
+                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                                    active
+                                        ? 'bg-primary text-white'
+                                        : theme === 'dark'
+                                            ? 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                                            : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                                }`}
                             >
-                                <span>{item.icon}</span>
-                                <span className="flex items-center gap-2">
-                                    {item.label}
-                                    {item.badge ? (
-                                        <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1 text-[10px] font-bold bg-red-500 text-white rounded-full">
-                                            {item.badge > 99 ? '99+' : item.badge}
-                                        </span>
-                                    ) : null}
+                                <span className="flex items-center gap-2.5">
+                                    <Icon className="text-base" />
+                                    <span>{item.label}</span>
                                 </span>
                             </Link>
                         );
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-gray-800">
-                    <div className="flex items-center gap-3 mb-3 px-2">
-                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-sm font-bold">
+                <div className="p-4 border-t border-current/10">
+                    <div className="flex items-center gap-3 mb-3">
+                        <span className="w-9 h-9 rounded-full bg-primary text-white text-sm font-black inline-flex items-center justify-center">
                             {admin?.email?.[0]?.toUpperCase() || 'A'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{admin?.email}</p>
-                            <p className="text-xs text-gray-400">{admin?.role?.replace('_', ' ')}</p>
+                        </span>
+                        <div className="min-w-0">
+                            <p className="text-sm font-semibold truncate">{admin?.email}</p>
+                            <p className="text-xs text-white/70 truncate">{admin?.role?.replace('_', ' ')}</p>
                         </div>
                     </div>
-                    <button onClick={handleLogout} className="w-full text-start px-4 py-2 text-sm text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all">
-                        {t('logout')}
+                    <button
+                        onClick={handleLogout}
+                        className="w-full text-start px-3 py-2 rounded-lg text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors flex items-center gap-2"
+                    >
+                        <FaSignOutAlt />
+                        <span>{t('logout')}</span>
                     </button>
                 </div>
             </aside>
 
-            {/* Main Content */}
-            <div className="flex-1 overflow-auto">
-                {/* Mobile Header */}
-                <div className="md:hidden bg-gray-900 text-white p-4 flex items-center justify-between">
-                    <span className="font-bold">{locale === 'ar' ? 'قريب — لوحة التحكم' : 'Qareeb — Dashboard'}</span>
-                    <button onClick={handleLogout} className="text-sm text-gray-400">{t('logout')}</button>
-                </div>
-                <main className="p-6 md:p-8">{children}</main>
+            <div className="flex-1 min-w-0">
+                <header className={`sticky top-0 z-30 border-b ${panelClass}`}>
+                    <div className="px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                            <Link href={`/${locale}/admin/dashboard`} className="md:hidden w-9 h-9 rounded-lg bg-primary text-white inline-flex items-center justify-center">
+                                <FaMosque />
+                            </Link>
+                            <p className="text-sm font-semibold opacity-80">{locale === 'ar' ? 'إدارة المنصة' : 'Platform Management'}</p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={toggleTheme}
+                                className={`w-9 h-9 rounded-lg inline-flex items-center justify-center border ${theme === 'dark' ? 'border-slate-700 hover:bg-slate-800' : 'border-gray-300 hover:bg-gray-50'}`}
+                                title={locale === 'ar' ? 'تبديل الوضع الليلي' : 'Toggle dark mode'}
+                                aria-label={locale === 'ar' ? 'تبديل الوضع الليلي' : 'Toggle dark mode'}
+                            >
+                                {theme === 'dark' ? <FaSun /> : <FaMoon />}
+                            </button>
+
+                            <Link
+                                href={switchedLocalePath}
+                                className={`px-3 h-9 rounded-lg border text-sm font-semibold inline-flex items-center ${theme === 'dark' ? 'border-slate-700 hover:bg-slate-800' : 'border-gray-300 hover:bg-gray-50'}`}
+                                title={locale === 'ar' ? 'Switch to English' : 'التحويل للعربية'}
+                                aria-label={locale === 'ar' ? 'Switch to English' : 'التحويل للعربية'}
+                            >
+                                {locale === 'ar' ? 'EN' : 'AR'}
+                            </Link>
+
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowNotifMenu((v) => !v)}
+                                    className={`w-9 h-9 rounded-lg inline-flex items-center justify-center border relative ${theme === 'dark' ? 'border-slate-700 hover:bg-slate-800' : 'border-gray-300 hover:bg-gray-50'}`}
+                                    aria-label={locale === 'ar' ? 'الإشعارات' : 'Notifications'}
+                                    title={locale === 'ar' ? 'الإشعارات' : 'Notifications'}
+                                >
+                                    <FaBell />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold inline-flex items-center justify-center">
+                                            {unreadCount > 99 ? '99+' : unreadCount}
+                                        </span>
+                                    )}
+                                </button>
+
+                                {showNotifMenu && (
+                                    <div className={`absolute end-0 mt-2 w-80 rounded-xl border shadow-xl p-2 ${theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'}`}>
+                                        {items.length ? items.slice(0, 6).map((n) => (
+                                            <div key={n.id} className={`p-2 rounded-lg text-xs border-b last:border-b-0 ${theme === 'dark' ? 'border-slate-700' : 'border-gray-100'}`}>
+                                                <p className="font-bold">{n.title}</p>
+                                                <p className="opacity-80">{n.message}</p>
+                                                {!n.read && token && (
+                                                    <button
+                                                        className="mt-1 text-primary underline"
+                                                        onClick={async () => {
+                                                            await adminApi.markNotificationRead(token, n.id).catch(() => undefined);
+                                                            markRead(n.id);
+                                                        }}
+                                                    >
+                                                        {locale === 'ar' ? 'تعيين كمقروء' : 'Mark as read'}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )) : (
+                                            <p className="text-xs opacity-75 p-2">{locale === 'ar' ? 'لا توجد إشعارات' : 'No notifications'}</p>
+                                        )}
+
+                                        <Link href={`/${locale}/admin/notifications`} className="block text-center text-xs text-primary underline mt-2">
+                                            {locale === 'ar' ? 'عرض الكل' : 'View all'}
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <main className="p-4 md:p-6">{children}</main>
             </div>
         </div>
     );
