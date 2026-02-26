@@ -85,6 +85,8 @@ export default function AdminMaintenancePage() {
         formData.append('timestamp', String(sign.timestamp));
         formData.append('signature', sign.signature);
         formData.append('folder', sign.folder);
+        formData.append('allowed_formats', sign.allowed_formats);
+        formData.append('max_file_size', String(sign.max_file_size));
 
         const res = await fetch(`https://api.cloudinary.com/v1_1/${sign.cloud_name}/image/upload`, { method: 'POST', body: formData });
         const uploaded = await res.json();

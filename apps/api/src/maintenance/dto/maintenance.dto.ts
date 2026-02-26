@@ -41,11 +41,13 @@ export class CreateMaintenanceDto {
     @IsNumber()
     @IsOptional()
     @Type(() => Number)
+    @Transform(({ value }) => (value === '' || value === null || Number.isNaN(Number(value)) ? undefined : Number(value)))
     lat?: number; // legacy fallback
 
     @IsNumber()
     @IsOptional()
     @Type(() => Number)
+    @Transform(({ value }) => (value === '' || value === null || Number.isNaN(Number(value)) ? undefined : Number(value)))
     lng?: number; // legacy fallback
 
     @IsArray()
@@ -59,10 +61,14 @@ export class CreateMaintenanceDto {
 
     @IsNumber()
     @IsOptional()
+    @Type(() => Number)
+    @Transform(({ value }) => (value === '' || value === null || Number.isNaN(Number(value)) ? undefined : Number(value)))
     estimated_cost_min?: number;
 
     @IsNumber()
     @IsOptional()
+    @Type(() => Number)
+    @Transform(({ value }) => (value === '' || value === null || Number.isNaN(Number(value)) ? undefined : Number(value)))
     estimated_cost_max?: number;
 
     @IsString()

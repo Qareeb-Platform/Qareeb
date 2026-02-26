@@ -47,10 +47,15 @@ export default function SubmitPage() {
     const onSubmit = async (data: any) => {
         setSubmitting(true);
         try {
+            const toNum = (value: unknown) => {
+                if (value === '' || value === null || value === undefined) return undefined;
+                const parsed = Number(value);
+                return Number.isFinite(parsed) ? parsed : undefined;
+            };
             const payload = {
                 ...data,
-                lat: data.lat ? parseFloat(data.lat) : undefined,
-                lng: data.lng ? parseFloat(data.lng) : undefined,
+                lat: toNum(data.lat),
+                lng: toNum(data.lng),
             };
 
             if (entityType === 'imam') {
@@ -125,6 +130,8 @@ export default function SubmitPage() {
             formData.append('timestamp', String(sign.timestamp));
             formData.append('signature', sign.signature);
             formData.append('folder', sign.folder);
+            formData.append('allowed_formats', sign.allowed_formats);
+            formData.append('max_file_size', String(sign.max_file_size));
 
             const res = await fetch(`https://api.cloudinary.com/v1_1/${sign.cloud_name}/image/upload`, {
                 method: 'POST',
@@ -200,7 +207,7 @@ export default function SubmitPage() {
 
                     {/* Step: Info Form */}
                     {step === 'info' && entityType && (
-                        <form onSubmit={handleSubmit(() => setStep('contact'))} className="bg-white rounded-[40px] p-10 space-y-8 shadow-card border border-border animate-slide-up">
+                        <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-[40px] p-10 space-y-8 shadow-card border border-border animate-slide-up">
                             <div className="flex items-center justify-between pb-6 border-b border-border">
                                 <div className="flex items-center gap-4">
                                     <span className="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center text-lg font-black shadow-btn">1</span>
@@ -334,13 +341,82 @@ export default function SubmitPage() {
                                 </div>
                             </div>
 
+                            <div className="space-y-6 pt-2 border-t border-border">
+                                <PhoneInputField
+                                    label={ti('whatsapp')}
+                                    required
+                                    value={watch('whatsapp')}
+                                    onChange={(next) => setValue('whatsapp', next || '')}
+                                />
+
+                                {entityType === 'imam' && (
+                                    <div className="group">
+                                        <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">
+                                            {locale === 'ar' ? 'رابط التلاوة / الفيديو' : 'Recitation / Video URL'}
+                                        </label>
+                                        <input {...register('videoUrl')} className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold" dir="ltr" placeholder="https://..." />
+                                    </div>
+                                )}
+
+                                {entityType === 'maintenance' && (
+                                    <div className="group">
+                                        <label className="block text-sm font-black text-dark mb-2 ms-1">
+                                            {locale === 'ar' ? 'صور الصيانة (حتى 4)' : 'Maintenance images (up to 4)'}
+                                        </label>
+                                        <input
+                                            type="file"
+                                            accept="image/jpeg,image/png,image/webp"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file && imagePreviews.length < 4) void uploadMaintenanceImage(file);
+                                            }}
+                                            className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl"
+                                        />
+                                        <p className="text-xs text-text-muted mt-2">
+                                            {locale === 'ar' ? 'JPG/PNG/WEBP بحد أقصى 2MB للصورة' : 'JPG/PNG/WEBP up to 2MB each'}
+                                        </p>
+                                        {uploadingImage && <p className="text-xs text-primary mt-1">{locale === 'ar' ? 'جاري الرفع...' : 'Uploading...'}</p>}
+                                        {!!imagePreviews.length && (
+                                            <div className="mt-3 grid grid-cols-2 gap-2">
+                                                {imagePreviews.map((url, i) => (
+                                                    <div key={url} className="relative">
+                                                        <img src={url} alt={`preview-${i}`} className="w-full h-24 object-cover rounded-lg border" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setImagePreviews((prev) => prev.filter((_, idx) => idx !== i));
+                                                                setMediaUploads((prev) => prev.filter((_, idx) => idx !== i));
+                                                            }}
+                                                            className="absolute top-1 end-1 bg-black/60 text-white rounded-full w-5 h-5 text-xs"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {entityType === 'halqa' && (
+                                    <div className="group">
+                                        <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">{th('additionalInfo')}</label>
+                                        <textarea {...register('additionalInfo')} className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold min-h-[100px]"
+                                            placeholder={locale === 'ar' ? 'مواعيد الحلقة، السعة، ملاحظات...' : 'Schedule, capacity, notes...'}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="flex gap-4 pt-4">
                                 <button type="button" onClick={() => setStep('type')} className="btn-outline flex-1 rounded-2xl border-2 hover:bg-cream">
-                                    {locale === 'ar' ? 'السابق' : 'Previous'}
+                                    {locale === 'ar' ? 'تغيير النوع' : 'Change type'}
                                 </button>
-                                <button type="submit" className="btn-primary flex-1 rounded-2xl group">
-                                    {locale === 'ar' ? 'التالي' : 'Next'}
-                                    <span className="ms-2 rtl:rotate-180 inline-block transition-transform group-hover:translate-x-1">→</span>
+                                <button type="submit" disabled={submitting} className="btn-primary flex-1 rounded-2xl group flex items-center justify-center">
+                                    {submitting
+                                        ? (locale === 'ar' ? 'جاري الإرسال...' : 'Submitting...')
+                                        : (locale === 'ar' ? 'إرسال الطلب' : 'Submit Request')}
+                                    {!submitting && <span className="ms-2 rtl:rotate-180 inline-block transition-transform group-hover:translate-y-[-1px]">✨</span>}
                                 </button>
                             </div>
                         </form>

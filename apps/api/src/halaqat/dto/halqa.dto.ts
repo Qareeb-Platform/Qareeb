@@ -49,13 +49,17 @@ export class CreateHalqaDto {
     google_maps_url!: string;
 
     @ValidateIf((o) => !o.is_online)
+    @IsOptional()
     @IsNumber()
     @Type(() => Number)
+    @Transform(({ value }) => (value === '' || value === null || Number.isNaN(Number(value)) ? undefined : Number(value)))
     lat?: number; // legacy fallback
 
     @ValidateIf((o) => !o.is_online)
+    @IsOptional()
     @IsNumber()
     @Type(() => Number)
+    @Transform(({ value }) => (value === '' || value === null || Number.isNaN(Number(value)) ? undefined : Number(value)))
     lng?: number; // legacy fallback
 
     @IsString()
