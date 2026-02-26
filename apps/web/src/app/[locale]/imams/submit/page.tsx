@@ -32,6 +32,11 @@ export default function SubmitPage() {
 
     const selectedGovernorateId = watch('governorateId');
     const isOnline = watch('isOnline');
+    const entityTitle = entityType === 'imam'
+        ? (locale === 'ar' ? 'إضافة إمام' : 'Add Imam')
+        : entityType === 'halqa'
+            ? (locale === 'ar' ? 'إضافة حلقة' : 'Add Halqa')
+            : (locale === 'ar' ? 'إضافة صيانة' : 'Add Maintenance');
 
     useEffect(() => {
         if (pathname.includes('/halaqat/submit')) {
@@ -215,13 +220,14 @@ export default function SubmitPage() {
                         <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-[40px] p-10 space-y-8 shadow-card border border-border animate-slide-up">
                             <div className="flex items-center justify-between pb-6 border-b border-border">
                                 <div className="flex items-center gap-4">
-                                    <span className="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center text-lg font-black shadow-btn">1</span>
+                                    <span className="px-4 py-2 bg-primary text-white rounded-2xl text-sm font-black shadow-btn whitespace-nowrap">
+                                        {entityTitle}
+                                    </span>
                                     <div>
                                         <h3 className="font-black text-dark text-lg leading-tight">{t('basicInfo')}</h3>
                                         <p className="text-xs text-text-muted font-bold uppercase tracking-widest mt-0.5">{entityType}</p>
                                     </div>
                                 </div>
-                                <div className="text-xs font-black text-text-muted">{locale === 'ar' ? 'الخطوة الأولى' : 'Step 1'}</div>
                             </div>
 
                             <div className="space-y-6">

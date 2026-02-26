@@ -1,46 +1,219 @@
 ﻿'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useChatStore, useGeolocationStore } from '@/lib/store';
 import { api } from '@/lib/api';
+
+type SearchType = 'imam' | 'halqa' | 'maintenance';
+
+type ChatCard = {
+    id: string;
+    type: SearchType;
+    name: string;
+    address: string;
+    googleMapUrl?: string;
+};
 
 export default function ChatWidget() {
     const locale = useLocale();
     const router = useRouter();
     const { isOpen, messages, toggleChat, addMessage } = useChatStore();
     const { lat, lng, requestLocation } = useGeolocationStore();
+
     const [input, setInput] = useState('');
-    const [cards, setCards] = useState<any[]>([]);
+    const [cards, setCards] = useState<ChatCard[]>([]);
+
+    const [pendingType, setPendingType] = useState<SearchType | null>(null);
+    const [showLocationChooser, setShowLocationChooser] = useState(false);
+    const [loadingSearch, setLoadingSearch] = useState(false);
+
+    const [governorates, setGovernorates] = useState<any[]>([]);
+    const [areas, setAreas] = useState<any[]>([]);
+    const [governorateId, setGovernorateId] = useState('');
+    const [areaId, setAreaId] = useState('');
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, cards]);
+    }, [messages, cards, showLocationChooser]);
 
-    useEffect(() => { requestLocation(); }, []);
+    useEffect(() => {
+        requestLocation();
+    }, [requestLocation]);
+
+    useEffect(() => {
+        if (!showLocationChooser || governorates.length) return;
+        void api.getGovernorates().then(setGovernorates).catch(() => undefined);
+    }, [showLocationChooser, governorates.length]);
+
+    useEffect(() => {
+        if (!governorateId) {
+            setAreas([]);
+            setAreaId('');
+            return;
+        }
+        void api.getAreas(governorateId).then(setAreas).catch(() => undefined);
+    }, [governorateId]);
+
+    const typeLabel = (type: SearchType) => {
+        if (type === 'imam') return locale === 'ar' ? 'المساجد/الأئمة' : 'imams/mosques';
+        if (type === 'halqa') return locale === 'ar' ? 'الحلقات' : 'halaqat';
+        return locale === 'ar' ? 'الصيانة' : 'maintenance';
+    };
+
+    const mapEntityToCard = (item: any, type: SearchType): ChatCard => ({
+        id: item.id,
+        type,
+        name: item.imam_name || item.imamName || item.circle_name || item.circleName || item.mosque_name || item.mosqueName || '-',
+        address: item.area
+            ? (locale === 'ar' ? item.area.nameAr : item.area.nameEn)
+            : [item.governorate, item.city, item.district].filter(Boolean).join(' - '),
+        googleMapUrl: item.google_maps_url || item.googleMapsUrl || '',
+    });
 
     const send = async (text?: string) => {
         const value = (text ?? input).trim();
         if (!value) return;
+
         addMessage('user', value);
         setInput('');
 
         try {
             const res = await api.chatNearest({ text: value, lat: lat ?? undefined, lng: lng ?? undefined });
             if (res?.message) addMessage('bot', res.message);
-            setCards(Array.isArray(res?.cards) ? res.cards : []);
+            const serverCards = Array.isArray(res?.cards) ? (res.cards as any[]) : [];
+            setCards(serverCards.map((c) => ({
+                id: c.id,
+                type: c.type,
+                name: c.name,
+                address: c.address,
+                googleMapUrl: c.googleMapUrl,
+            })));
         } catch {
             addMessage('bot', locale === 'ar' ? 'حدث خطأ غير متوقع.' : 'Something went wrong.');
             setCards([]);
         }
     };
 
+    const searchByNearest = async (type: SearchType, userLat: number, userLng: number) => {
+        const res = await api.nearestSearch(userLat, userLng, type);
+        const result = Array.isArray(res?.data) ? res.data : [];
+        setCards(result.map((c: any) => ({
+            id: c.id,
+            type: c.type || type,
+            name: c.name,
+            address: c.address,
+            googleMapUrl: c.googleMapUrl,
+        })));
+
+        if (!result.length) {
+            addMessage('bot', locale === 'ar' ? 'لم أجد نتائج قريبة حالياً.' : 'No nearby results right now.');
+            return;
+        }
+
+        addMessage('bot', locale === 'ar' ? `هذه أقرب النتائج في ${typeLabel(type)}.` : `Here are the nearest ${typeLabel(type)} results.`);
+    };
+
+    const searchByAddress = async (type: SearchType) => {
+        const params = new URLSearchParams();
+        params.set('limit', '3');
+        if (areaId) params.set('area_id', areaId);
+        else if (governorateId) params.set('governorateId', governorateId);
+
+        const query = params.toString();
+        let res: any;
+        if (type === 'imam') res = await api.getImams(query);
+        else if (type === 'halqa') res = await api.getHalaqat(query);
+        else res = await api.getMaintenance(query);
+
+        const rows = Array.isArray(res?.data) ? res.data : [];
+        const mapped = rows.slice(0, 3).map((row) => mapEntityToCard(row, type));
+        setCards(mapped);
+
+        if (!mapped.length) {
+            addMessage('bot', locale === 'ar' ? 'لا يوجد نتائج في العنوان المحدد حالياً.' : 'No results in the selected address right now.');
+            return;
+        }
+
+        addMessage('bot', locale === 'ar' ? `هذه أفضل النتائج في ${typeLabel(type)} حسب المنطقة.` : `Here are the top ${typeLabel(type)} results for that area.`);
+    };
+
+    const quickSearch = async (type: SearchType, promptLabel: string) => {
+        addMessage('user', promptLabel);
+        setCards([]);
+
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+            setLoadingSearch(true);
+            try {
+                await searchByNearest(type, lat as number, lng as number);
+                setShowLocationChooser(false);
+                setPendingType(null);
+            } catch {
+                addMessage('bot', locale === 'ar' ? 'تعذر البحث بالموقع الحالي.' : 'Could not search by current location.');
+            }
+            setLoadingSearch(false);
+            return;
+        }
+
+        setPendingType(type);
+        setShowLocationChooser(true);
+        addMessage(
+            'bot',
+            locale === 'ar'
+                ? 'حدد موقعك: استخدم الموقع الحالي أو اختر المحافظة والمنطقة.'
+                : 'Choose location: use current location or select governorate/area.',
+        );
+    };
+
+    const useCurrentLocationNow = async () => {
+        if (!pendingType) return;
+        setLoadingSearch(true);
+        try {
+            const coords = await new Promise<{ lat: number; lng: number }>((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject(new Error('Geolocation not supported'));
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                    reject,
+                    { timeout: 10000 },
+                );
+            });
+            await searchByNearest(pendingType, coords.lat, coords.lng);
+            setShowLocationChooser(false);
+            setPendingType(null);
+        } catch {
+            addMessage('bot', locale === 'ar' ? 'تعذر الوصول للموقع الحالي. اختر المحافظة والمنطقة.' : 'Could not access current location. Select governorate and area.');
+        }
+        setLoadingSearch(false);
+    };
+
+    const searchWithSelectedAddress = async () => {
+        if (!pendingType) return;
+        if (!governorateId) {
+            addMessage('bot', locale === 'ar' ? 'اختر المحافظة أولاً.' : 'Select governorate first.');
+            return;
+        }
+
+        setLoadingSearch(true);
+        try {
+            await searchByAddress(pendingType);
+            setShowLocationChooser(false);
+            setPendingType(null);
+        } catch {
+            addMessage('bot', locale === 'ar' ? 'فشل البحث بالعنوان المحدد.' : 'Address search failed.');
+        }
+        setLoadingSearch(false);
+    };
+
     const quickButtons = [
-        'أقرب مسجد',
-        'أقرب حلقة',
-        'مسجد يحتاج صيانة',
+        { label: 'أقرب مسجد', type: 'imam' as const },
+        { label: 'أقرب حلقة', type: 'halqa' as const },
+        { label: 'مسجد يحتاج صيانة', type: 'maintenance' as const },
     ];
 
     if (!isOpen) {
@@ -64,12 +237,38 @@ export default function ChatWidget() {
                 </div>
 
                 <div className="grid gap-2">
-                    {quickButtons.map((label) => (
-                        <button key={label} onClick={() => send(label)} className="text-xs bg-white border border-border px-3 py-2 rounded-xl text-start hover:bg-primary hover:text-white transition-colors">
-                            {label}
+                    {quickButtons.map((item) => (
+                        <button key={item.label} onClick={() => quickSearch(item.type, item.label)} className="text-xs bg-white border border-border px-3 py-2 rounded-xl text-start hover:bg-primary hover:text-white transition-colors" disabled={loadingSearch}>
+                            {item.label}
                         </button>
                     ))}
                 </div>
+
+                {showLocationChooser && pendingType && (
+                    <div className="bg-white border border-border rounded-xl p-3 space-y-2 text-xs">
+                        <p className="font-bold">{locale === 'ar' ? 'حدد موقعك للبحث' : 'Choose location for search'}</p>
+                        <button onClick={useCurrentLocationNow} className="btn-outline !py-1 !px-2 text-[11px]" disabled={loadingSearch}>
+                            {locale === 'ar' ? 'استخدم موقعي الحالي' : 'Use current location'}
+                        </button>
+                        <div className="grid grid-cols-1 gap-2">
+                            <select value={governorateId} onChange={(e) => setGovernorateId(e.target.value)} className="px-2 py-2 rounded-lg border border-border bg-white">
+                                <option value="">{locale === 'ar' ? 'اختر المحافظة' : 'Select governorate'}</option>
+                                {governorates.map((g) => (
+                                    <option key={g.id} value={g.id}>{locale === 'ar' ? g.nameAr : g.nameEn}</option>
+                                ))}
+                            </select>
+                            <select value={areaId} onChange={(e) => setAreaId(e.target.value)} disabled={!governorateId} className="px-2 py-2 rounded-lg border border-border bg-white disabled:opacity-50">
+                                <option value="">{locale === 'ar' ? 'كل المناطق' : 'All areas'}</option>
+                                {areas.map((a) => (
+                                    <option key={a.id} value={a.id}>{locale === 'ar' ? a.nameAr : a.nameEn}</option>
+                                ))}
+                            </select>
+                            <button onClick={searchWithSelectedAddress} className="btn-primary !py-1.5 !px-3 text-xs" disabled={loadingSearch}>
+                                {loadingSearch ? (locale === 'ar' ? 'جارٍ البحث...' : 'Searching...') : (locale === 'ar' ? 'ابحث حسب العنوان' : 'Search by address')}
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {messages.map((msg, i) => (
                     <div key={i} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -85,12 +284,21 @@ export default function ChatWidget() {
                                 <p className="text-text-muted">{card.address}</p>
                                 <div className="flex gap-2 flex-wrap">
                                     {card.googleMapUrl && <a className="btn-outline !py-1 !px-2 text-[11px]" href={card.googleMapUrl} target="_blank" rel="noreferrer">Google Maps</a>}
-                                    <button className="btn-outline !py-1 !px-2 text-[11px]" onClick={() => router.push(`/${locale}/${card.type === 'halqa' ? 'halaqat' : card.type}/${card.id}`)}>{locale === 'ar' ? 'عرض التفاصيل' : 'View details'}</button>
+                                    <button
+                                        className="btn-outline !py-1 !px-2 text-[11px]"
+                                        onClick={() => {
+                                            const path = card.type === 'halqa' ? 'halaqat' : card.type === 'imam' ? 'imams' : 'maintenance';
+                                            router.push(`/${locale}/${path}/${card.id}`);
+                                        }}
+                                    >
+                                        {locale === 'ar' ? 'عرض التفاصيل' : 'View details'}
+                                    </button>
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
+
                 <div ref={messagesEndRef} />
             </div>
 
@@ -101,4 +309,3 @@ export default function ChatWidget() {
         </div>
     );
 }
-
