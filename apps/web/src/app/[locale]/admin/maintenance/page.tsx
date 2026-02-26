@@ -24,7 +24,7 @@ export default function AdminMaintenancePage() {
     const [statusFilter, setStatusFilter] = useState('pending');
     const [loading, setLoading] = useState(true);
     const [editForm, setEditForm] = useState<any>({});
-    const [newImageUrl, setNewImageUrl] = useState('');
+    const [newImageUrls, setNewImageUrls] = useState<string[]>([]);
 
     useEffect(() => {
         if (!token) { router.push(`/${locale}/admin`); return; }
@@ -95,24 +95,34 @@ export default function AdminMaintenancePage() {
     };
 
     const addUploadedImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file || !payload) return;
+        const files = Array.from(event.target.files || []);
+        if (!files.length || !payload) return;
         const current = payload.media || [];
-        if (current.length >= 4) {
+        const queued = editForm.media_uploads || [];
+        const available = 4 - (current.length + queued.length);
+        if (available <= 0) {
             pushToast(locale === 'ar' ? 'الحد الأقصى 4 صور' : 'Max 4 images', 'error');
             return;
         }
         try {
-            const uploaded = await uploadImageToCloudinary(file);
-            setEditForm((s: any) => ({ ...s, media_uploads: [...(s.media_uploads || []), uploaded] }));
-            setNewImageUrl(uploaded?.secureUrl || '');
-            pushToast(locale === 'ar' ? 'تم رفع الصورة' : 'Image uploaded', 'success');
+            const selected = files.slice(0, available);
+            const uploadedBatch: Array<{ publicId: string; secureUrl: string }> = [];
+            for (const file of selected) {
+                const uploaded = await uploadImageToCloudinary(file);
+                uploadedBatch.push(uploaded);
+            }
+            if (uploadedBatch.length) {
+                setEditForm((s: any) => ({ ...s, media_uploads: [...(s.media_uploads || []), ...uploadedBatch] }));
+                setNewImageUrls((prev) => [...prev, ...uploadedBatch.map((x) => x.secureUrl)]);
+                pushToast(locale === 'ar' ? 'تم رفع الصور' : 'Images uploaded', 'success');
+            }
         } catch (error: any) {
             const reason = error?.message === 'size' ? (locale === 'ar' ? 'الحد الأقصى للحجم 2MB' : 'Max size is 2MB')
                 : error?.message === 'type' ? (locale === 'ar' ? 'نوع الصورة غير مدعوم' : 'Unsupported image type')
                     : (locale === 'ar' ? 'فشل رفع الصورة' : 'Upload failed');
             pushToast(reason, 'error');
         }
+        event.currentTarget.value = '';
     };
 
     const deleteExistingImage = async (publicId: string) => {
@@ -152,7 +162,7 @@ export default function AdminMaintenancePage() {
                                     <td className="px-4 py-4"><span className={`px-2.5 py-1 rounded-full text-xs font-bold ${item.status === 'approved' ? 'bg-green-100 text-green-700' : item.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{item.status}</span></td>
                                     <td className="px-4 py-4"><div className="flex gap-2">
                                         <IconButton label="view" onClick={() => openModal('view', 'maintenance', item)}><FaEye className="text-slate-700" /></IconButton>
-                                        <IconButton label="edit" onClick={() => { setEditForm({ mosque_name: item.mosqueName, whatsapp: item.whatsapp, description: item.description, google_maps_url: item.googleMapsUrl || '' }); setNewImageUrl(''); openModal('edit', 'maintenance', item); }}><FaPenToSquare className="text-blue-700" /></IconButton>
+                                        <IconButton label="edit" onClick={() => { setEditForm({ mosque_name: item.mosqueName, whatsapp: item.whatsapp, description: item.description, google_maps_url: item.googleMapsUrl || '' }); setNewImageUrls([]); openModal('edit', 'maintenance', item); }}><FaPenToSquare className="text-blue-700" /></IconButton>
                                         {item.status === 'pending' && <IconButton label="approve" onClick={() => approve(item.id)}><FaCheck className="text-green-700" /></IconButton>}
                                         {item.status === 'pending' && <IconButton label="reject" onClick={() => reject(item.id)}><FaXmark className="text-red-700" /></IconButton>}
                                     </div></td>
@@ -195,8 +205,14 @@ export default function AdminMaintenancePage() {
 
                     <div className="border border-dashed border-border rounded-xl p-3">
                         <label className="text-sm font-semibold block mb-2">{locale === 'ar' ? 'إضافة صورة' : 'Add image'} (jpg/png/webp, max 2MB)</label>
-                        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={addUploadedImage} />
-                        {newImageUrl && <img src={newImageUrl} alt="uploaded" className="mt-3 w-40 h-28 object-cover rounded-lg border" />}
+                        <input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={addUploadedImage} />
+                        {!!newImageUrls.length && (
+                            <div className="mt-3 grid grid-cols-2 gap-2">
+                                {newImageUrls.map((url) => (
+                                    <img key={url} src={url} alt="uploaded" className="w-full h-24 object-cover rounded-lg border" />
+                                ))}
+                            </div>
+                        )}
                         <p className="text-xs text-text-muted mt-2">{locale === 'ar' ? 'الحد الأقصى 4 صور لكل طلب' : 'Maximum 4 images per request'}</p>
                     </div>
                     <button className="btn-primary w-full" onClick={saveEdit}>{locale === 'ar' ? 'حفظ' : 'Save'}</button>

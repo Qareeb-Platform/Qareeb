@@ -118,29 +118,38 @@ export default function SubmitPage() {
         setSubmitting(false);
     };
 
-    const uploadMaintenanceImage = async (file: File) => {
+    const uploadMaintenanceImages = async (files: File[]) => {
         const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-        if (!allowed.includes(file.type) || file.size > 2 * 1024 * 1024) return;
+        if (!files.length) return;
+
+        const remainingSlots = 4 - mediaUploads.length;
+        if (remainingSlots <= 0) return;
+        const selected = files.slice(0, remainingSlots);
+
         setUploadingImage(true);
         try {
-            const sign = await api.getSignedUploadParams();
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('api_key', sign.api_key);
-            formData.append('timestamp', String(sign.timestamp));
-            formData.append('signature', sign.signature);
-            formData.append('folder', sign.folder);
-            formData.append('allowed_formats', sign.allowed_formats);
-            formData.append('max_file_size', String(sign.max_file_size));
+            for (const file of selected) {
+                if (!allowed.includes(file.type) || file.size > 2 * 1024 * 1024) continue;
 
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${sign.cloud_name}/image/upload`, {
-                method: 'POST',
-                body: formData,
-            });
-            const payload = await res.json();
-            if (res.ok) {
-                setMediaUploads((prev) => prev.length < 4 ? [...prev, { publicId: payload.public_id, secureUrl: payload.secure_url }] : prev);
-                setImagePreviews((prev) => prev.length < 4 ? [...prev, payload.secure_url] : prev);
+                const sign = await api.getSignedUploadParams();
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('api_key', sign.api_key);
+                formData.append('timestamp', String(sign.timestamp));
+                formData.append('signature', sign.signature);
+                formData.append('folder', sign.folder);
+                formData.append('allowed_formats', sign.allowed_formats);
+                formData.append('max_file_size', String(sign.max_file_size));
+
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${sign.cloud_name}/image/upload`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                const payload = await res.json();
+                if (res.ok) {
+                    setMediaUploads((prev) => prev.length < 4 ? [...prev, { publicId: payload.public_id, secureUrl: payload.secure_url }] : prev);
+                    setImagePreviews((prev) => prev.length < 4 ? [...prev, payload.secure_url] : prev);
+                }
             }
         } finally {
             setUploadingImage(false);
@@ -365,10 +374,12 @@ export default function SubmitPage() {
                                         </label>
                                         <input
                                             type="file"
+                                            multiple
                                             accept="image/jpeg,image/png,image/webp"
                                             onChange={(e) => {
-                                                const file = e.target.files?.[0];
-                                                if (file && imagePreviews.length < 4) void uploadMaintenanceImage(file);
+                                                const files = Array.from(e.target.files || []);
+                                                if (files.length) void uploadMaintenanceImages(files);
+                                                e.currentTarget.value = '';
                                             }}
                                             className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl"
                                         />
@@ -460,10 +471,12 @@ export default function SubmitPage() {
                                         </label>
                                         <input
                                             type="file"
+                                            multiple
                                             accept="image/jpeg,image/png,image/webp"
                                             onChange={(e) => {
-                                                const file = e.target.files?.[0];
-                                                if (file && imagePreviews.length < 4) void uploadMaintenanceImage(file);
+                                                const files = Array.from(e.target.files || []);
+                                                if (files.length) void uploadMaintenanceImages(files);
+                                                e.currentTarget.value = '';
                                             }}
                                             className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl"
                                         />
