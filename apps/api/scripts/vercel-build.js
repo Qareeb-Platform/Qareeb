@@ -5,6 +5,9 @@ const API_ROOT = path.resolve(__dirname, '..');
 const SCHEMA_PATH = path.join('prisma', 'schema.prisma');
 const MAX_ATTEMPTS = Number(process.env.PRISMA_MIGRATE_RETRIES || 5);
 const BASE_DELAY_MS = Number(process.env.PRISMA_MIGRATE_RETRY_DELAY_MS || 5000);
+const AUTO_RESOLVE_ROLLED_BACK = [
+  '20260226102000_fix_media_assets_polymorphic_fk',
+];
 
 function run(command, args, env) {
   return new Promise((resolve) => {
@@ -32,12 +35,30 @@ async function runMigrateWithRetry(env) {
   return 1;
 }
 
+async function tryResolveKnownFailedMigrations(env) {
+  const bin = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+  for (const migration of AUTO_RESOLVE_ROLLED_BACK) {
+    const code = await run(
+      bin,
+      ['prisma', 'migrate', 'resolve', '--rolled-back', migration, '--schema', SCHEMA_PATH],
+      env,
+    );
+    if (code === 0) {
+      console.log(`Resolved failed migration state for: ${migration}`);
+    } else {
+      console.log(`No failed state to resolve for: ${migration} (continuing).`);
+    }
+  }
+}
+
 async function main() {
   const env = { ...process.env };
   if (!env.DIRECT_URL && env.DATABASE_URL) {
     env.DIRECT_URL = env.DATABASE_URL;
     console.log('DIRECT_URL is missing, fallback to DATABASE_URL for build.');
   }
+
+  await tryResolveKnownFailedMigrations(env);
 
   let code = await runMigrateWithRetry(env);
   if (code !== 0) process.exit(code);
