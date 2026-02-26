@@ -5,6 +5,7 @@ import { useLocale } from 'next-intl';
 import { adminApi } from '@/lib/api';
 import { useAuthStore, useModalStore, useNotificationStore } from '@/lib/store';
 import AppModal from '@/components/ui/AppModal';
+import Pagination from '@/components/ui/Pagination';
 
 export default function NotificationsPage() {
     const locale = useLocale();
@@ -13,6 +14,8 @@ export default function NotificationsPage() {
     const { isOpen, payload, openModal, closeModal } = useModalStore();
     const [status, setStatus] = useState<'unread' | 'all'>('unread');
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const limit = 10;
 
     useEffect(() => {
         const load = async () => {
@@ -37,6 +40,10 @@ export default function NotificationsPage() {
         void load();
     }, [status, token]);
 
+    useEffect(() => {
+        setPage(1);
+    }, [status, items.length]);
+
     const onMarkRead = async (id: string) => {
         if (!token) return;
         await adminApi.markNotificationRead(token, id);
@@ -50,6 +57,8 @@ export default function NotificationsPage() {
     };
 
     const entityLabel = (type: string) => type.includes('imam') ? 'imam' : type.includes('halqa') ? 'halqa' : 'maintenance';
+    const totalPages = Math.max(1, Math.ceil(items.length / limit));
+    const paginatedItems = items.slice((page - 1) * limit, page * limit);
 
     return (
         <div className="space-y-6">
@@ -67,7 +76,7 @@ export default function NotificationsPage() {
 
             <div className="bg-white rounded-2xl shadow-card border border-border divide-y">
                 {loading ? <div className="p-6 text-text-muted">Loading...</div> : !items.length ? <div className="p-6 text-text-muted">{locale === 'ar' ? 'لا إشعارات' : 'No notifications'}</div> : (
-                    items.map((n) => (
+                    paginatedItems.map((n) => (
                         <div key={n.id} className="p-5 flex items-start gap-4">
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${n.read ? 'bg-gray-100 text-gray-500' : 'bg-primary/10 text-primary'}`}>🔔</div>
                             <div className="flex-1">
@@ -87,6 +96,7 @@ export default function NotificationsPage() {
                     ))
                 )}
             </div>
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} locale={locale} />
 
             <AppModal isOpen={isOpen} type="view" title={locale === 'ar' ? 'سجل الإشعار' : 'Notification Record'} onClose={closeModal}>
                 {payload && (

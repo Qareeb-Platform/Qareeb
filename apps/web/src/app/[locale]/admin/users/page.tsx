@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useAuthStore, useToastStore } from '@/lib/store';
 import { adminApi } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import Pagination from '@/components/ui/Pagination';
 
 export default function AdminUsersPage() {
     const t = useTranslations('admin');
@@ -19,6 +20,8 @@ export default function AdminUsersPage() {
     const [newEmail, setNewEmail] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [newRole, setNewRole] = useState('imam_reviewer');
+    const [page, setPage] = useState(1);
+    const limit = 10;
 
     useEffect(() => {
         if (!token || admin?.role !== 'super_admin') {
@@ -27,6 +30,10 @@ export default function AdminUsersPage() {
         }
         void fetchUsers();
     }, [token]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [users.length]);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -68,6 +75,9 @@ export default function AdminUsersPage() {
         ? { super_admin: 'مشرف عام', full_reviewer: 'مراجع شامل', imam_reviewer: 'مراجع أئمة', halqa_reviewer: 'مراجع حلقات', maintenance_reviewer: 'مراجع صيانة' }
         : { super_admin: 'Super Admin', full_reviewer: 'Full Reviewer', imam_reviewer: 'Imam Reviewer', halqa_reviewer: 'Halqa Reviewer', maintenance_reviewer: 'Maint. Reviewer' };
 
+    const totalPages = Math.max(1, Math.ceil(users.length / limit));
+    const paginatedUsers = users.slice((page - 1) * limit, page * limit);
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -93,7 +103,7 @@ export default function AdminUsersPage() {
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b"><tr><th className="text-start px-4 py-3 text-sm font-medium">{t('email')}</th><th className="text-start px-4 py-3 text-sm font-medium">{t('role')}</th><th className="text-start px-4 py-3 text-sm font-medium">{t('status')}</th><th className="text-start px-4 py-3 text-sm font-medium">{locale === 'ar' ? 'الإجراءات' : 'Actions'}</th></tr></thead>
                         <tbody className="divide-y">
-                            {loading ? <tr><td colSpan={4} className="px-4 py-8 text-center">Loading...</td></tr> : users.map((user) => (
+                            {loading ? <tr><td colSpan={4} className="px-4 py-8 text-center">Loading...</td></tr> : paginatedUsers.map((user) => (
                                 <tr key={user.id} className="hover:bg-gray-50">
                                     <td className="px-4 py-4 font-medium">{user.email}</td>
                                     <td className="px-4 py-4"><span className="badge bg-primary-light text-primary text-xs">{roleLabels[user.role] || user.role}</span></td>
@@ -105,6 +115,7 @@ export default function AdminUsersPage() {
                     </table>
                 </div>
             </div>
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} locale={locale} />
         </div>
     );
 }

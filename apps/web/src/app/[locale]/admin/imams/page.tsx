@@ -9,6 +9,7 @@ import AppModal from '@/components/ui/AppModal';
 import { FaCheck, FaEye, FaPenToSquare, FaTrash, FaXmark } from 'react-icons/fa6';
 import PhoneInputField from '@/components/form/PhoneInputField';
 import { getEmbeddableVideoUrl } from '@/lib/video';
+import Pagination from '@/components/ui/Pagination';
 
 function IconButton({ label, onClick, children, className = '' }: { label: string; onClick: () => void; children: React.ReactNode; className?: string }) {
     return (
@@ -29,6 +30,9 @@ export default function AdminImamsPage() {
     const [statusFilter, setStatusFilter] = useState('pending');
     const [loading, setLoading] = useState(true);
     const [editForm, setEditForm] = useState<any>({});
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const limit = 12;
 
     const shareText = async (text: string) => {
         try {
@@ -49,13 +53,18 @@ export default function AdminImamsPage() {
             return;
         }
         void fetchData();
-    }, [token, statusFilter]);
+    }, [token, statusFilter, page]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [statusFilter]);
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const result = await adminApi.getAdminImams(token!, `status=${statusFilter}`);
+            const result = await adminApi.getAdminImams(token!, `status=${statusFilter}&page=${page}&limit=${limit}`);
             setItems(result?.data || []);
+            setTotalPages(result?.meta?.totalPages || 1);
         } catch {
             pushToast(locale === 'ar' ? 'فشل تحميل البيانات' : 'Failed to load data', 'error');
         }
@@ -154,6 +163,7 @@ export default function AdminImamsPage() {
                     </table>
                 </div>
             </div>
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} locale={locale} />
 
             <AppModal isOpen={isOpen && type === 'view'} type="view" title={locale === 'ar' ? 'عرض الإمام' : 'View Imam'} onClose={closeModal}>
                 {payload && (

@@ -130,7 +130,7 @@ export default function ChatWidget() {
         else res = await api.getMaintenance(query);
 
         const rows = Array.isArray(res?.data) ? res.data : [];
-        const mapped = rows.slice(0, 3).map((row) => mapEntityToCard(row, type));
+        const mapped = rows.slice(0, 3).map((row: any) => mapEntityToCard(row, type));
         setCards(mapped);
 
         if (!mapped.length) {

@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import AppModal from '@/components/ui/AppModal';
 import { FaCheck, FaEye, FaPenToSquare, FaTrash, FaXmark } from 'react-icons/fa6';
 import PhoneInputField from '@/components/form/PhoneInputField';
+import Pagination from '@/components/ui/Pagination';
 
 function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
     return <button aria-label={label} title={label} onClick={onClick} className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:bg-cream">{children}</button>;
@@ -25,17 +26,25 @@ export default function AdminMaintenancePage() {
     const [loading, setLoading] = useState(true);
     const [editForm, setEditForm] = useState<any>({});
     const [newImageUrls, setNewImageUrls] = useState<string[]>([]);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const limit = 12;
 
     useEffect(() => {
         if (!token) { router.push(`/${locale}/admin`); return; }
         void fetchData();
-    }, [token, statusFilter]);
+    }, [token, statusFilter, page]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [statusFilter]);
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const result = await adminApi.getAdminMaintenance(token!, `status=${statusFilter}`);
+            const result = await adminApi.getAdminMaintenance(token!, `status=${statusFilter}&page=${page}&limit=${limit}`);
             setItems(result?.data || []);
+            setTotalPages(result?.meta?.totalPages || 1);
         } catch {
             pushToast(locale === 'ar' ? 'فشل تحميل البيانات' : 'Failed to load data', 'error');
         }
@@ -171,6 +180,7 @@ export default function AdminMaintenancePage() {
                     </table>
                 </div>
             </div>
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} locale={locale} />
 
             <AppModal isOpen={isOpen && type === 'view'} type="view" title={locale === 'ar' ? 'عرض الصيانة' : 'View Maintenance'} onClose={closeModal}>
                 {payload && <div className="space-y-3 text-sm">
