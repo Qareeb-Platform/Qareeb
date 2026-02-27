@@ -27,13 +27,12 @@ export default function AdminHalaqatPage() {
     const [loading, setLoading] = useState(true);
     const [editForm, setEditForm] = useState<any>({});
     const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const limit = 12;
+    const pageSize = 12;
 
     useEffect(() => {
         if (!token) { router.push(`/${locale}/admin`); return; }
         void fetchData();
-    }, [token, statusFilter, page]);
+    }, [token, statusFilter]);
 
     useEffect(() => {
         setPage(1);
@@ -46,9 +45,9 @@ export default function AdminHalaqatPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const result = await adminApi.getAdminHalaqat(token!, `status=${statusFilter}&page=${page}&limit=${limit}`);
+            // جلب كل البيانات لهذا الفلتر؛ الباجنيشن يتم على الواجهة
+            const result = await adminApi.getAdminHalaqat(token!, `status=${statusFilter}`);
             setItems(result?.data || []);
-            setTotalPages(result?.meta?.totalPages || 1);
         } catch {
             pushToast(locale === 'ar' ? 'فشل تحميل البيانات' : 'Failed to load data', 'error');
         }
@@ -87,6 +86,9 @@ export default function AdminHalaqatPage() {
         ].some((field: any) => (field || '').toString().toLowerCase().includes(q));
     });
 
+    const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
+    const paginatedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
+
     return (
         <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -121,7 +123,7 @@ export default function AdminHalaqatPage() {
                         <tbody className="divide-y">
                             {loading && <tr><td colSpan={4} className="px-4 py-10 text-center">Loading...</td></tr>}
                             {!loading && !filteredItems.length && <tr><td colSpan={4} className="px-4 py-10 text-center">No data</td></tr>}
-                            {!loading && filteredItems.map((item) => (
+                            {!loading && paginatedItems.map((item) => (
                                 <tr key={item.id}>
                                     <td className="px-4 py-4 font-semibold">{item.circleName}</td>
                                     <td className="px-4 py-4 text-sm text-text-muted">{item.mosqueName}</td>

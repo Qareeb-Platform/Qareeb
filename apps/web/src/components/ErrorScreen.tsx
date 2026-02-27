@@ -1,9 +1,8 @@
- 'use client';
+'use client';
 
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 interface ErrorScreenProps {
@@ -148,19 +147,111 @@ const errorConfig: Record<
   },
 };
 
+const textConfig: Record<
+  number,
+  {
+    tagAr: string;
+    tagEn: string;
+    titleAr: string; // may contain <br/>
+    titleEn: string;
+    subAr: string;
+    subEn: string;
+  }
+> = {
+  404: {
+    tagAr: 'الصفحة غير موجودة',
+    tagEn: 'Page not found',
+    titleAr: 'يبدو أن هذا المسجد<br/>مش في خريطتنا! 🗺️',
+    titleEn: 'Looks like this page<br/>is not on our map! 🗺️',
+    subAr:
+      'الصفحة اللي بتدور عليها مش موجودة أو اتنقلت لمكان تاني. تقدر ترجع للرئيسية أو تبحث عن اللي تحتاجه.',
+    subEn:
+      'The page you are looking for does not exist or was moved. You can go back home or search again.',
+  },
+  500: {
+    tagAr: 'خطأ في الخادم',
+    tagEn: 'Server error',
+    titleAr: 'في مشكلة من جهتنا<br/>نعتذر منك! 🙏',
+    titleEn: 'Something went wrong<br/>on our side. Sorry! 🙏',
+    subAr:
+      'حصل خطأ غير متوقع في الخادم. فريقنا التقني اتنبّه تلقائياً وبيشتغل على حل المشكلة دلوقتي.',
+    subEn:
+      'An unexpected error occurred on the server. Our team has been notified and is working on a fix.',
+  },
+  401: {
+    tagAr: 'غير مصرح',
+    tagEn: 'Unauthorized',
+    titleAr: 'محتاج تسجّل دخولك<br/>الأول! 👤',
+    titleEn: 'You need to<br/>sign in first! 👤',
+    subAr:
+      'الصفحة دي بتطلب تسجيل دخول. سجّل دخولك وارجع تاني أو أنشئ حساب جديد مجاناً.',
+    subEn:
+      'This page requires you to be signed in. Please log in and come back, or create a free account.',
+  },
+  403: {
+    tagAr: 'الدخول محظور',
+    tagEn: 'Forbidden',
+    titleAr: 'هذا المكان<br/>مش ليك يا صديقي! 🚫',
+    titleEn: 'You are not allowed<br/>to access this page 🚫',
+    subAr:
+      'مش عندك صلاحية تدخل على هذه الصفحة. لو بتفتكر إن في غلط، تواصل مع الإدارة.',
+    subEn:
+      'You do not have permission to access this page. If you think this is a mistake, contact the admin.',
+  },
+  408: {
+    tagAr: 'انتهى وقت الطلب',
+    tagEn: 'Request timeout',
+    titleAr: 'الاتصال اتأخر<br/>أكتر من اللازم! 📶',
+    titleEn: 'The request took<br/>too long to respond! 📶',
+    subAr:
+      'الطلب بتاعك خد وقت طويل جداً للاستجابة. ممكن يكون عندك مشكلة في الإنترنت أو الخادم مشغول.',
+    subEn:
+      'Your request took too long to respond. It may be a network issue on your side or a busy server.',
+  },
+  429: {
+    tagAr: 'طلبات كتير أوي',
+    tagEn: 'Too many requests',
+    titleAr: 'استنّى شوية<br/>والمحاولة تاني! ⏳',
+    titleEn: 'Slow down a bit<br/>and try again! ⏳',
+    subAr:
+      'بعتت طلبات كتير في وقت قصير. منصة قريب بتحمي نفسها من الضغط الزيادة. استنّى الوقت اللي جاي وحاول تاني.',
+    subEn:
+      'You have sent too many requests in a short time. Qareeb is protecting itself from overload. Please wait and try again.',
+  },
+  503: {
+    tagAr: 'الخدمة غير متاحة',
+    tagEn: 'Service unavailable',
+    titleAr: 'المنصة بتتصان<br/>هترجع قريباً! 🛠️',
+    titleEn: 'The platform is under<br/>maintenance, back soon! 🛠️',
+    subAr:
+      'قريب بتخضع لتحديثات مجدولة لتحسين خدمتك. شكراً لصبرك — هنكون أحسن وأسرع!',
+    subEn:
+      'Qareeb is undergoing scheduled updates to improve your experience. Thanks for your patience!',
+  },
+  0: {
+    tagAr: 'مشكلة في الاتصال',
+    tagEn: 'Connection issue',
+    titleAr: 'شكل الإنترنت عندك<br/>مش ثابت شوية! 📡',
+    titleEn: 'Your internet<br/>connection looks unstable 📡',
+    subAr:
+      'يبدو أن في مشكلة في الاتصال. تأكد من اتصالك بالإنترنت وحاول مرة أخرى.',
+    subEn:
+      'There seems to be a connectivity issue. Please check your internet connection and try again.',
+  },
+};
+
 export default function ErrorScreen({ status, locale, reset }: ErrorScreenProps) {
-  const t = useTranslations('errors');
   // server-side log to help trace which error screens are rendered in production
   // eslint-disable-next-line no-console
   console.log('[ErrorScreen] render', { status, locale });
   const isAr = locale === 'ar';
 
   const info = (errorConfig as any)[status] || errorConfig[500];
-  const codeKey = status === 0 ? 'offline' : status.toString();
+  const textInfo = textConfig[status] || textConfig[500];
 
-  const tag = t(`${codeKey}.tag` as any);
-  const title = t(`${codeKey}.title` as any);
-  const sub = t(`${codeKey}.sub` as any);
+  const tag = isAr ? textInfo.tagAr : textInfo.tagEn;
+  const title = isAr ? textInfo.titleAr : textInfo.titleEn;
+  const sub = isAr ? textInfo.subAr : textInfo.subEn;
 
   // countdown for 429
   const [cooldown, setCooldown] = useState(status === 429 ? 60 : 0);

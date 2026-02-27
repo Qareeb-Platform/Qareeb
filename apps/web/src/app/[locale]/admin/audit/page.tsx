@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { adminApi } from '@/lib/api';
 import { useAuthStore, useModalStore } from '@/lib/store';
 import AppModal from '@/components/ui/AppModal';
+import Pagination from '@/components/ui/Pagination';
 
 export default function AuditPage() {
     const locale = useLocale();
@@ -16,7 +17,6 @@ export default function AuditPage() {
     const [data, setData] = useState<any[]>([]);
     const [users, setUsers] = useState<any[]>([]);
     const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true);
 
     const [userId, setUserId] = useState('');
@@ -25,6 +25,7 @@ export default function AuditPage() {
     const [from, setFrom] = useState('');
     const [to, setTo] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const pageSize = 20;
 
     useEffect(() => {
         if (!token) {
@@ -36,8 +37,8 @@ export default function AuditPage() {
             return;
         }
         void fetchUsers();
-        void fetchLogs(page);
-    }, [token, page, action, entityType, userId, from, to, searchTerm]);
+        void fetchLogs();
+    }, [token, action, entityType, userId, from, to, searchTerm]);
 
     const fetchUsers = async () => {
         if (!token || admin?.role !== 'super_admin') return;
@@ -49,30 +50,20 @@ export default function AuditPage() {
         }
     };
 
-    const fetchLogs = async (p: number) => {
+    const fetchLogs = async () => {
         if (!token) return;
         setLoading(true);
         try {
-            const params = new URLSearchParams({ page: p.toString(), limit: '20' });
+            const params = new URLSearchParams();
+            // نحتاج حجم كبير لضمان كل السجلات
+            params.set('limit', '1000');
             if (entityType) params.set('entityType', entityType);
             if (userId) params.set('userId', userId);
             if (action) params.set('action', action);
             if (from) params.set('from', from);
             if (to) params.set('to', to);
             const res = await adminApi.getAuditLogs(token, params.toString());
-            const rows = res.data || [];
-            const filtered = rows.filter((log: any) => {
-                if (!searchTerm) return true;
-                const q = searchTerm.toLowerCase();
-                return [
-                    log.admin?.email,
-                    log.action,
-                    log.entityType,
-                    log.entityId,
-                ].some((field: any) => (field || '').toString().toLowerCase().includes(q));
-            });
-            setData(filtered);
-            setTotalPages(res.meta?.totalPages || 1);
+            setData(res.data || []);
         } catch (err) {
             console.error('Audit fetch error', err);
         }
@@ -80,6 +71,20 @@ export default function AuditPage() {
     };
 
     const formatDate = (d: string) => new Date(d).toLocaleString(locale === 'ar' ? 'ar-EG' : 'en-US');
+
+    const filteredData = data.filter((log: any) => {
+        if (!searchTerm) return true;
+        const q = searchTerm.toLowerCase();
+        return [
+            log.admin?.email,
+            log.action,
+            log.entityType,
+            log.entityId,
+        ].some((field: any) => (field || '').toString().toLowerCase().includes(q));
+    });
+
+    const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
+    const paginatedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
 
     return (
         <div className="space-y-6">
@@ -172,7 +177,7 @@ export default function AuditPage() {
                     <tbody className="divide-y divide-border">
                         {loading ? (
                             <tr><td className="py-6 text-center" colSpan={6}>Loading...</td></tr>
-                        ) : data.length ? data.map((log: any) => (
+                        ) : paginatedData.length ? paginatedData.map((log: any) => (
                             <tr key={log.id} className="hover:bg-cream/60 transition-colors">
                                 <td className="py-2 pe-4 text-text-muted">{log.admin?.email || '-'}</td>
                                 <td className="py-2 pe-4 uppercase text-xs font-black text-primary">{log.action}</td>
@@ -188,13 +193,7 @@ export default function AuditPage() {
                 </table>
             </div>
 
-            {totalPages > 1 && (
-                <div className="flex gap-2">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).slice(0, 8).map((p) => (
-                        <button key={p} onClick={() => setPage(p)} className={`px-3 py-2 rounded-btn text-sm font-medium ${p === page ? 'bg-primary text-white' : 'bg-white border border-border text-text'}`}>{p}</button>
-                    ))}
-                </div>
-            )}
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} locale={locale} />
 
             <AppModal isOpen={isOpen} type="view" title={locale === 'ar' ? 'تفاصيل السجل' : 'Log Details'} onClose={closeModal}>
                 {payload && (
