@@ -13,7 +13,8 @@ type TabType = 'all' | 'imams' | 'halqa' | 'maintenance';
 
 export default function PublicCardsTabs() {
     const locale = useLocale();
-    const { isOpen, type, payload, openModal, closeModal } = useModalStore();
+    // openModal not used in this component (details are handled via navigation)
+    const { isOpen, type, payload, openModal: _openModal, closeModal } = useModalStore();
     const { pushToast } = useToastStore();
     const [tab, setTab] = useState<TabType>('all');
     const [imams, setImams] = useState<any[]>([]);

@@ -126,7 +126,7 @@ export default function ErrorScreen({ status, locale, reset }: ErrorScreenProps)
           style={info.bg ? { background: info.bg } : undefined}
         >
           <div className="bg-grid"></div>
-          {info.orbs.map((style, i) => (
+          {info.orbs.map((style: React.CSSProperties, i: number) => (
             <div key={i} className="orb" style={style}></div>
           ))}
           <div className="error-card">
