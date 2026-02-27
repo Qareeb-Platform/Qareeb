@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import Pagination from '@/components/ui/Pagination';
@@ -6,16 +6,14 @@ import { useLocale } from 'next-intl';
 import { api } from '@/lib/api';
 import AppModal from '@/components/ui/AppModal';
 import UnifiedCard from './UnifiedCard';
-import { useModalStore, useToastStore } from '@/lib/store';
+import { useModalStore } from '@/lib/store';
 import { getEmbeddableVideoUrl } from '@/lib/video';
 
 type TabType = 'all' | 'imams' | 'halqa' | 'maintenance';
 
 export default function PublicCardsTabs() {
     const locale = useLocale();
-    // openModal not used in this component (details are handled via navigation)
     const { isOpen, type, payload, openModal: _openModal, closeModal } = useModalStore();
-    const { pushToast } = useToastStore();
     const [tab, setTab] = useState<TabType>('all');
     const [imams, setImams] = useState<any[]>([]);
     const [halaqat, setHalaqat] = useState<any[]>([]);
@@ -56,19 +54,6 @@ export default function PublicCardsTabs() {
         setPageHalaqat(1);
         setPageMaintenance(1);
     }, [tab]);
-
-    const shareText = async (text: string) => {
-        try {
-            if (navigator.share) {
-                await navigator.share({ text });
-                return;
-            }
-            await navigator.clipboard.writeText(text);
-            pushToast(locale === 'ar' ? 'تم نسخ النص' : 'Text copied', 'success');
-        } catch {
-            pushToast(locale === 'ar' ? 'تعذر تنفيذ الحركة' : 'Unable to perform action', 'error');
-        }
-    };
 
     const cards = useMemo(() => {
         const toCard = (item: any, entity: 'imam' | 'halqa' | 'maintenance') => ({
@@ -123,11 +108,6 @@ export default function PublicCardsTabs() {
         window.open(`/${locale}${base}/${card.id}`, '_blank');
     };
 
-    const shareCard = async (card: any) => {
-        const text = `${card.name}\n${card.mosque || ''}\n${card.location}\n${card.map || ''}`.trim();
-        await shareText(text);
-    };
-
     return (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             {/* Tabs */}
@@ -155,22 +135,13 @@ export default function PublicCardsTabs() {
             {/* Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {cards.map((card) => (
-                    <div key={`${card.entity}-${card.id}`} className="flex flex-col gap-2">
-                        <UnifiedCard
-                            card={card}
-                            showWhatsApp={card.entity !== 'imam'} // للحلقات والصيانة فقط
-                            showImages={card.entity === 'maintenance'} // للصيانة فقط
-                            onViewDetails={handleViewDetails}
-                        />
-                        {/* زر المشاركة */}
-                        <button
-                            className="btn-outline !py-2 !px-4 text-xs font-bold text-center"
-                            onClick={() => shareCard(card)}
-                            title={locale === 'ar' ? 'مشاركة البطاقة' : 'Share card'}
-                        >
-                            {locale === 'ar' ? '📤 مشاركة' : '📤 Share'}
-                        </button>
-                    </div>
+                    <UnifiedCard
+                        key={`${card.entity}-${card.id}`}
+                        card={card}
+                        showWhatsApp={card.entity !== 'imam'} // للحلقات والصيانة فقط
+                        showImages={card.entity === 'maintenance'} // للصيانة فقط
+                        onViewDetails={handleViewDetails}
+                    />
                 ))}
             </div>
             {/* pagination for current tab */}

@@ -56,6 +56,31 @@ export default function UnifiedCard({ card, showWhatsApp = false, showImages = f
         }
     };
 
+    const handleShare = async () => {
+        const basePath =
+            card.entity === 'imam'
+                ? '/imams'
+                : card.entity === 'halqa'
+                ? '/halaqat'
+                : '/maintenance';
+        const relativeUrl = `${basePath}/${card.id}`;
+        const fullUrl =
+            typeof window !== 'undefined'
+                ? new URL(`/${locale}${relativeUrl}`, window.location.origin).toString()
+                : `/${locale}${relativeUrl}`;
+
+        try {
+            if (navigator.share) {
+                await navigator.share({ url: fullUrl });
+                return;
+            }
+            await navigator.clipboard.writeText(fullUrl);
+            pushToast(locale === 'ar' ? 'تم نسخ الرابط' : 'Link copied', 'success');
+        } catch {
+            pushToast(locale === 'ar' ? 'تعذر مشاركة الرابط' : 'Unable to share link', 'error');
+        }
+    };
+
     // للحلقات: إذا كانت online، أخفِ الخريطة
     const isOnline = card.online === true;
     const shouldShowMap = !isOnline && card.map;
@@ -157,7 +182,13 @@ export default function UnifiedCard({ card, showWhatsApp = false, showImages = f
                 >
                     {locale === 'ar' ? '➡️ عرض التفاصيل' : '➡️ View Details'}
                 </button>
-                {/* سيتم إضافة زر المشاركة من الصفحة الأم */}
+                <button
+                    className="btn-outline !py-2.5 !px-3 text-xs font-bold flex items-center justify-center gap-1.5"
+                    onClick={handleShare}
+                    aria-label={locale === 'ar' ? 'مشاركة الرابط' : 'Share link'}
+                >
+                    {locale === 'ar' ? '📤 مشاركة' : '📤 Share'}
+                </button>
             </div>
         </div>
     );

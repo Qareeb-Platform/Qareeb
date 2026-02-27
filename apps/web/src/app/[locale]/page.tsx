@@ -6,6 +6,7 @@ import FAB from '@/components/ui/FAB';
 import ChatWidget from '@/components/chat/ChatWidget';
 import SubmitServiceSection from '@/components/home/SubmitServiceSection';
 import LatestUnifiedCard from '@/components/home/LatestUnifiedCard';
+import HomeCardModals from '@/components/home/HomeCardModals';
 
 export const revalidate = 60; // ISR: revalidate every 60 seconds
 
@@ -318,6 +319,8 @@ export default async function HomePage() {
 
                 <SubmitServiceSection locale={locale} />
             </main>
+
+            <HomeCardModals />
 
             <Footer />
             <FAB />
