@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
 
 interface ErrorScreenProps {
   status: number;
@@ -82,6 +83,46 @@ const errorConfig: Record<
     icon: '⚠️',
     retry: true,
   },
+  401: {
+    bg: 'linear-gradient(160deg,#EEF2FF,#FAF8F3)',
+    orbs: [
+      {
+        width: 420,
+        height: 420,
+        background: 'radial-gradient(circle,rgba(57,73,171,.07),transparent 70%)',
+        bottom: -80,
+        right: -80,
+      },
+    ],
+    icon: '🔑',
+  },
+  403: {
+    bg: 'linear-gradient(160deg,#FFF8E7,#FAF8F3)',
+    orbs: [
+      {
+        width: 420,
+        height: 420,
+        background: 'radial-gradient(circle,rgba(201,150,42,.07),transparent 70%)',
+        top: -80,
+        right: -80,
+      },
+    ],
+    icon: '🔒',
+  },
+  408: {
+    bg: 'linear-gradient(160deg,#E0F2F1,#FAF8F3)',
+    orbs: [
+      {
+        width: 440,
+        height: 440,
+        background: 'radial-gradient(circle,rgba(0,121,107,.07),transparent 70%)',
+        bottom: -90,
+        left: -90,
+      },
+    ],
+    icon: '🐢',
+    retry: true,
+  },
   503: {
     bg: 'linear-gradient(160deg,#F0F4FF,#FAF8F3)',
     orbs: [
@@ -119,6 +160,23 @@ export default function ErrorScreen({ status, locale, reset }: ErrorScreenProps)
   const title = t(`${codeKey}.title` as any);
   const sub = t(`${codeKey}.sub` as any);
 
+  // countdown for 429
+  const [cooldown, setCooldown] = useState(status === 429 ? 60 : 0);
+
+  useEffect(() => {
+    if (status !== 429) return;
+    setCooldown(60);
+    let current = 60;
+    const id = setInterval(() => {
+      current -= 1;
+      setCooldown(current);
+      if (current <= 0) {
+        clearInterval(id);
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [status]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -143,15 +201,53 @@ export default function ErrorScreen({ status, locale, reset }: ErrorScreenProps)
               dangerouslySetInnerHTML={{ __html: title }}
             />
             <div className="error-sub">{sub}</div>
+            {status === 429 && (
+              <div className="countdown-wrap">
+                <div className="countdown-num">
+                  {cooldown > 0 ? cooldown : 0}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#7B1FA2' }}>
+                    {isAr ? 'ثانية' : 'seconds'}
+                  </div>
+                  <div className="countdown-lbl">
+                    {isAr ? 'وتقدر تحاول تاني' : 'until you can try again'}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {status === 503 && (
+              <div className="status-list">
+                <div className="status-row">
+                  <div className="status-dot ok" />
+                  <div className="status-name">{isAr ? 'قاعدة البيانات' : 'Database'}</div>
+                  <div className="status-val ok">{isAr ? '✓ تعمل' : '✓ Operational'}</div>
+                </div>
+                <div className="status-row">
+                  <div className="status-dot warn" />
+                  <div className="status-name">{isAr ? 'الخادم الرئيسي' : 'Main server'}</div>
+                  <div className="status-val warn">{isAr ? '⟳ تحديث' : '⟳ Updating'}</div>
+                </div>
+                <div className="status-row">
+                  <div className="status-dot err" />
+                  <div className="status-name">{isAr ? 'واجهة المستخدم' : 'Frontend'}</div>
+                  <div className="status-val err">{isAr ? '✗ صيانة' : '✗ Maintenance'}</div>
+                </div>
+                <div className="status-row">
+                  <div className="status-dot ok" />
+                  <div className="status-name">{isAr ? 'نظام الواتساب' : 'WhatsApp system'}</div>
+                  <div className="status-val ok">{isAr ? '✓ تعمل' : '✓ Operational'}</div>
+                </div>
+              </div>
+            )}
+
             <div className="error-btns">
               {info.retry && reset && (
                 <button
                   onClick={() => reset()}
                   className="btn-primary"
-                  style={{
-                    background: 'linear-gradient(135deg,#C0392B,#E74C3C)',
-                    boxShadow: '0 6px 24px rgba(192,57,43,.35)',
-                  }}
+                  disabled={status === 429 && cooldown > 0}
                 >
                   {isAr ? '🔄 إعادة المحاولة' : '🔄 Retry'}
                 </button>
@@ -159,7 +255,6 @@ export default function ErrorScreen({ status, locale, reset }: ErrorScreenProps)
               <Link
                 href={`/${locale}`}
                 className="btn-outline"
-                style={{ color: '#C0392B', borderColor: '#C0392B' }}
               >
                 {isAr ? '🏠 الرئيسية' : '🏠 Home'}
               </Link>

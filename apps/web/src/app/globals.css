@@ -147,3 +147,65 @@
 @keyframes shake{0%,100%{transform:translate(-50%,-50%) rotate(0deg)}20%{transform:translate(-50%,-50%) rotate(-6deg)}40%{transform:translate(-50%,-50%) rotate(6deg)}60%{transform:translate(-50%,-50%) rotate(-3deg)}80%{transform:translate(-50%,-50%) rotate(3deg)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes spin{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+/* Status-specific variations */
+#e404 .error-code{background:linear-gradient(135deg,var(--g),var(--gl));-webkit-background-clip:text;background-clip:text}
+#e404{background:linear-gradient(160deg,#F0F9F4,#FAF8F3)}
+
+#e500 .error-code{background:linear-gradient(135deg,#C0392B,#E74C3C);-webkit-background-clip:text;background-clip:text}
+#e500{background:linear-gradient(160deg,#FFF5F5,#FAF8F3)}
+#e500 .error-tag{background:#FEE2E2;color:#C0392B}
+#e500 .error-icon-badge{animation:shake 2s ease-in-out infinite}
+
+#e403 .error-code{background:linear-gradient(135deg,#7B3F00,var(--gold));-webkit-background-clip:text;background-clip:text}
+#e403{background:linear-gradient(160deg,#FFF8E7,#FAF8F3)}
+#e403 .error-tag{background:#FFF3CD;color:#856404}
+
+#e401 .error-code{background:linear-gradient(135deg,#1A237E,#3949AB);-webkit-background-clip:text;background-clip:text}
+#e401{background:linear-gradient(160deg,#EEF2FF,#FAF8F3)}
+#e401 .error-tag{background:#E8EAF6;color:#3949AB}
+#e401 .btn-primary{background:linear-gradient(135deg,#3949AB,#5C6BC0)}
+#e401 .btn-outline{color:#3949AB;border-color:#3949AB}
+#e401 .btn-outline:hover{background:#EEF2FF}
+#e401 .ql-item:hover{border-color:#3949AB;background:#EEF2FF}
+
+#e429 .error-code{background:linear-gradient(135deg,#6B1B6B,#9C27B0);-webkit-background-clip:text;background-clip:text}
+#e429{background:linear-gradient(160deg,#F9F0FF,#FAF8F3)}
+#e429 .error-tag{background:#F3E5F5;color:#7B1FA2}
+#e429 .btn-primary{background:linear-gradient(135deg,#7B1FA2,#9C27B0)}
+#e429 .btn-outline{color:#7B1FA2;border-color:#7B1FA2}
+#e429 .btn-outline:hover{background:#F3E5F5}
+#e429 .ql-item:hover{border-color:#9C27B0;background:#F3E5F5}
+
+#e503 .error-code{background:linear-gradient(135deg,#E65100,#FF9800);-webkit-background-clip:text;background-clip:text}
+#e503{background:linear-gradient(160deg,#FFF3E0,#FAF8F3)}
+#e503 .error-tag{background:#FFE0B2;color:#E65100}
+#e503 .btn-primary{background:linear-gradient(135deg,#E65100,#F57C00)}
+#e503 .btn-outline{color:#E65100;border-color:#E65100}
+#e503 .btn-outline:hover{background:#FFF3E0}
+#e503 .ql-item:hover{border-color:#FF9800;background:#FFF3E0}
+
+#e408 .error-code{background:linear-gradient(135deg,#004D40,#00796B);-webkit-background-clip:text;background-clip:text}
+#e408{background:linear-gradient(160deg,#E0F2F1,#FAF8F3)}
+#e408 .error-tag{background:#B2DFDB;color:#00695C}
+#e408 .btn-primary{background:linear-gradient(135deg,#00695C,#00897B)}
+#e408 .btn-outline{color:#00695C;border-color:#00695C}
+#e408 .btn-outline:hover{background:#E0F2F1}
+#e408 .ql-item:hover{border-color:#00796B;background:#E0F2F1}
+
+/* Countdown for 429 */
+.countdown-wrap{background:#fff;border-radius:14px;padding:16px 20px;border:2px solid #E1BEE7;margin-bottom:22px;display:inline-flex;align-items:center;gap:12px}
+.countdown-num{font-size:32px;font-weight:900;color:#7B1FA2;line-height:1;min-width:2ch;text-align:center}
+.countdown-lbl{font-size:13px;color:var(--muted);font-weight:600}
+
+/* Status list for 503 */
+.status-list{background:#fff;border-radius:14px;padding:16px 18px;border:1px solid var(--border);margin-bottom:22px;max-width:320px;margin-left:auto;margin-right:auto}
+.status-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+.status-row:last-child{border-bottom:none}
+.status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.status-dot.ok{background:#22C55E}
+.status-dot.warn{background:#F59E0B;animation:pulse 1.5s infinite}
+.status-dot.err{background:#EF4444;animation:pulse 1s infinite}
+.status-name{font-size:12px;font-weight:600;color:var(--text);flex:1}
+.status-val{font-size:11px;font-weight:700}
+.status-val.ok{color:#22C55E}.status-val.warn{color:#F59E0B}.status-val.err{color:#EF4444}
