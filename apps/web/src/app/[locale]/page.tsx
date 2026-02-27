@@ -25,6 +25,11 @@ type LatestItem = {
     link: string;
     badge: string;
     icon: string;
+    map?: string;
+    video?: string;
+    whatsapp?: string;
+    online?: boolean;
+    images?: string[];
 };
 
 const sortByDateDesc = (items?: any[]) =>
@@ -78,11 +83,15 @@ export default async function HomePage() {
         id: item.id,
         title: item.imam_name || item.imamName,
         subtitle: item.mosque_name || item.mosqueName,
-        location: [item.governorate, item.city].filter(Boolean).join(' — '),
+        location: [item.governorate, item.city, item.district].filter(Boolean).join(' — '),
         createdAt: item.created_at || item.createdAt,
         link: `/${locale}/imams/${item.id}`,
         badge: locale === 'ar' ? 'إمام' : 'Imam',
         icon: '🕌',
+        map: item.google_maps_url || item.googleMapsUrl || '',
+        video: item.video_url || item.videoUrl || '',
+        whatsapp: item.whatsapp || '',
+        images: item.media ? item.media.map((m: any) => m.url) : [],
     }));
 
     const latestHalaqat: LatestItem[] = sortByDateDesc(halaqat.data).slice(0, 3).map((item) => ({
@@ -94,6 +103,11 @@ export default async function HomePage() {
         link: `/${locale}/halaqat/${item.id}`,
         badge: locale === 'ar' ? 'حلقة' : 'Circle',
         icon: '📖',
+        map: item.google_maps_url || item.googleMapsUrl || '',
+        video: item.video_url || item.videoUrl || '',
+        whatsapp: item.whatsapp || '',
+        online: (item.additional_info || item.additionalInfo || '').toString().startsWith('[ONLINE]'),
+        images: item.media ? item.media.map((m: any) => m.url) : [],
     }));
 
     const latestMaintenance: LatestItem[] = sortByDateDesc(maintenance.data).slice(0, 3).map((item) => ({
@@ -105,12 +119,16 @@ export default async function HomePage() {
         link: `/${locale}/maintenance/${item.id}`,
         badge: locale === 'ar' ? 'إعمار' : 'Maintenance',
         icon: '🔧',
+        map: item.google_maps_url || item.googleMapsUrl || '',
+        video: item.video_url || item.videoUrl || '',
+        whatsapp: item.whatsapp || '',
+        images: item.media ? item.media.map((m: any) => m.url) : [],
     }));
 
-    const latestSections: { title: string; items: LatestItem[]; browseHref: string }[] = [
-        { title: locale === 'ar' ? 'أحدث الأئمة' : 'Latest Imams', items: latestImams, browseHref: `/${locale}/imams` },
-        { title: locale === 'ar' ? 'أحدث الحلقات' : 'Latest Circles', items: latestHalaqat, browseHref: `/${locale}/halaqat` },
-        { title: locale === 'ar' ? 'أحدث الإعمار' : 'Latest Maintenance', items: latestMaintenance, browseHref: `/${locale}/maintenance` },
+    const latestSections: { title: string; items: LatestItem[]; browseHref: string; entity: 'imam' | 'halqa' | 'maintenance' }[] = [
+        { title: locale === 'ar' ? 'أحدث الأئمة' : 'Latest Imams', items: latestImams, browseHref: `/${locale}/imams`, entity: 'imam' },
+        { title: locale === 'ar' ? 'أحدث الحلقات' : 'Latest Circles', items: latestHalaqat, browseHref: `/${locale}/halaqat`, entity: 'halqa' },
+        { title: locale === 'ar' ? 'أحدث الإعمار' : 'Latest Maintenance', items: latestMaintenance, browseHref: `/${locale}/maintenance`, entity: 'maintenance' },
     ];
 
     return (
@@ -170,7 +188,7 @@ export default async function HomePage() {
                 </section>
 
                 {/* Latest Additions */}
-                <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <section className="pt-12 pb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <span className="inline-block bg-primary/10 text-primary px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider mb-3">
                             {locale === 'ar' ? 'أحدث الإضافات' : 'Latest Additions'}
@@ -185,36 +203,58 @@ export default async function HomePage() {
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {latestSections.flatMap((section) =>
-                            section.items.map((item) => {
-                                const entity: 'imam' | 'halqa' | 'maintenance' =
-                                    section.browseHref.includes('/imams')
-                                        ? 'imam'
-                                        : section.browseHref.includes('/halaqat')
-                                        ? 'halqa'
-                                        : 'maintenance';
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {latestSections.map((section) => {
+                            const columnStyles =
+                                section.entity === 'imam'
+                                    ? 'bg-[#F0F9F4] border-primary/10'
+                                    : section.entity === 'halqa'
+                                    ? 'bg-[#F5F0FF] border-[#C4B5FD]/40'
+                                    : 'bg-[#FFF7EC] border-[#FACC6B]/40';
 
-                                return (
-                                    <LatestUnifiedCard
-                                        key={`${entity}-${item.id}`}
-                                        id={item.id}
-                                        entity={entity}
-                                        name={item.title}
-                                        mosque={item.subtitle}
-                                        location={item.location}
-                                        typeLabel={item.badge}
-                                        typeIcon={item.icon}
-                                        link={item.link}
-                                    />
-                                );
-                            }),
-                        )}
-                        {!latestSections.some((section) => section.items.length) && (
-                            <div className="col-span-full text-center text-text-muted italic py-8 border-2 border-dashed border-border rounded-2xl">
-                                {locale === 'ar' ? 'لا توجد إضافات بعد' : 'No items yet'}
-                            </div>
-                        )}
+                            return (
+                                <div
+                                    key={section.title}
+                                    className={`rounded-3xl shadow-card border p-5 flex flex-col gap-4 ${columnStyles}`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-lg font-black text-dark">{section.title}</h3>
+                                        <Link
+                                            href={section.browseHref}
+                                            className="text-sm font-bold text-primary hover:text-primary-dark"
+                                        >
+                                            {locale === 'ar' ? 'استعرض الكل ←' : 'Browse All ←'}
+                                        </Link>
+                                    </div>
+
+                                    {section.items.length ? (
+                                        section.items.map((item) => (
+                                            <div key={item.id} className="flex flex-col gap-2">
+                                                <LatestUnifiedCard
+                                                    id={item.id}
+                                                    entity={section.entity}
+                                                    name={item.title}
+                                                    mosque={item.subtitle}
+                                                    location={item.location}
+                                                    typeLabel={item.badge}
+                                                    typeIcon={item.icon}
+                                                    link={item.link}
+                                                    map={item.map}
+                                                    video={item.video}
+                                                    whatsapp={item.whatsapp}
+                                                    online={item.online}
+                                                    images={item.images}
+                                                />
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center text-text-muted italic py-8 border-2 border-dashed border-border/60 rounded-2xl bg-white/40">
+                                            {locale === 'ar' ? 'لا توجد إضافات بعد' : 'No items yet'}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 </section>
 
