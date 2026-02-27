@@ -8,6 +8,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import FAB from '@/components/ui/FAB';
 import ChatWidget from '@/components/chat/ChatWidget';
+import Pagination from '@/components/ui/Pagination';
 import { api } from '@/lib/api';
 import { useGeolocationStore } from '@/lib/store';
 import { getWhatsAppUrl } from '@/lib/utils';
@@ -30,6 +31,8 @@ export default function MaintenancePage() {
     const [governorateId, setGovernorateId] = useState<string>(searchParams.get('governorateId') || '');
     const [areaId, setAreaId] = useState<string>(searchParams.get('areaId') || '');
     const [searchTerm, setSearchTerm] = useState<string>(searchParams.get('query') || '');
+    const [page, setPage] = useState<number>(Number(searchParams.get('page') || 1));
+    const limit = 12;
 
     useEffect(() => { requestLocation(); api.getGovernorates().then(setGovernorates).catch(console.error); }, []);
     useEffect(() => {
@@ -40,7 +43,8 @@ export default function MaintenancePage() {
             setAreaId('');
         }
     }, [governorateId]);
-    useEffect(() => { fetchData(); }, [lat, lng, governorateId, areaId, governorates]);
+    useEffect(() => { void fetchData(); }, [lat, lng, governorateId, areaId, governorates, page]);
+    useEffect(() => { setPage(1); }, [governorateId, areaId]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -52,6 +56,8 @@ export default function MaintenancePage() {
             } else if (governorateId) {
                 params.set('governorateId', governorateId);
             }
+            params.set('page', String(page));
+            params.set('limit', String(limit));
             const result = await api.getMaintenance(params.toString());
             setData(result);
         } catch (err) { console.error('Error:', err); }
@@ -176,6 +182,13 @@ export default function MaintenancePage() {
                     ) : (
                         <div className="text-center py-16"><h3 className="text-lg font-semibold mb-2">{tc('noResults')}</h3></div>
                     )}
+                    <Pagination
+                        page={data?.meta?.page || page}
+                        totalPages={data?.meta?.totalPages || 1}
+                        onPageChange={setPage}
+                        locale={locale}
+                        className="mt-8"
+                    />
                 </div>
             </main>
             <Footer />

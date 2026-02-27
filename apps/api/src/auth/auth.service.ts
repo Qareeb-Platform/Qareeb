@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -30,7 +30,7 @@ export class AuthService {
         return admin;
     }
 
-    async login(email: string, password: string) {
+    async login(email: string, password: string, rememberMe = true) {
         const admin = await this.validateAdmin(email, password);
 
         const payload = {
@@ -40,7 +40,7 @@ export class AuthService {
         };
 
         const accessToken = this.jwtService.sign(payload);
-        const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+        const refreshToken = this.jwtService.sign(payload, { expiresIn: rememberMe ? '30d' : '1d' });
 
         return {
             access_token: accessToken,
@@ -76,5 +76,39 @@ export class AuthService {
         } catch {
             throw new UnauthorizedException('Invalid or expired refresh token');
         }
+    }
+
+    async changePassword(adminId: string, currentPassword: string, newPassword: string) {
+        const admin = await this.prisma.admin.findUnique({ where: { id: adminId } });
+        if (!admin || !admin.isActive) {
+            throw new UnauthorizedException('Unauthorized');
+        }
+
+        const isCurrentValid = await bcrypt.compare(currentPassword, admin.passwordHash);
+        if (!isCurrentValid) {
+            throw new UnauthorizedException('Current password is incorrect');
+        }
+
+        if (newPassword.length < 8) {
+            throw new BadRequestException('New password must be at least 8 characters');
+        }
+
+        const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/;
+        if (!strongPasswordRegex.test(newPassword)) {
+            throw new BadRequestException('New password must include uppercase, lowercase, number, and symbol');
+        }
+
+        const isSamePassword = await bcrypt.compare(newPassword, admin.passwordHash);
+        if (isSamePassword) {
+            throw new BadRequestException('New password must be different from current password');
+        }
+
+        const passwordHash = await bcrypt.hash(newPassword, 12);
+        await this.prisma.admin.update({
+            where: { id: adminId },
+            data: { passwordHash },
+        });
+
+        return { success: true };
     }
 }

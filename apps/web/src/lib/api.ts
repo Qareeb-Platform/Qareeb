@@ -57,6 +57,9 @@ export const api = {
     // Chat
     chatNearest: (data: { text: string; lat?: number; lng?: number }) =>
         fetchAPI<any>('/chat/nearest', { method: 'POST', body: JSON.stringify(data) }),
+    nearestSearch: (lat: number, lng: number, type: 'imam' | 'halqa' | 'maintenance') =>
+        fetchAPI<any>(`/search/nearest?lat=${lat}&lng=${lng}&type=${type}`),
+    getGeoCountry: () => fetchAPI<{ country: string }>('/geo'),
 
     // Locations admin
     createGovernorate: (token: string, data: any) => fetchAPI<any>('/locations/governorates', { method: 'POST', token, body: JSON.stringify(data) }),
@@ -68,10 +71,10 @@ export const api = {
 // ── Admin API ──
 
 export const adminApi = {
-    login: (email: string, password: string) =>
+    login: (email: string, password: string, rememberMe = true) =>
         fetchAPI<any>('/admin/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ email, password, remember_me: rememberMe }),
             credentials: 'include',
         }),
 
@@ -79,6 +82,16 @@ export const adminApi = {
         fetchAPI<any>('/admin/auth/refresh', {
             method: 'POST',
             credentials: 'include',
+        }),
+
+    changePassword: (token: string, currentPassword: string, newPassword: string) =>
+        fetchAPI<any>('/admin/auth/change-password', {
+            method: 'PATCH',
+            token,
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword,
+            }),
         }),
 
     getDashboardStats: (token: string) =>
@@ -115,6 +128,8 @@ export const adminApi = {
         fetchAPI<any>(`/admin/maintenance/${id}/reject`, { method: 'PATCH', token, body: JSON.stringify({ reason }) }),
     updateMaintenance: (token: string, id: string, data: any) =>
         fetchAPI<any>(`/admin/maintenance/${id}`, { method: 'PATCH', token, body: JSON.stringify(data) }),
+    deleteMediaAsset: (token: string, publicId: string) =>
+        fetchAPI<any>(`/media/${encodeURIComponent(publicId)}`, { method: 'DELETE', token }),
 
     // Users
     getAdminUsers: (token: string) =>

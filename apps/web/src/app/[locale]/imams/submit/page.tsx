@@ -1,11 +1,13 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useForm } from 'react-hook-form';
+import { usePathname } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { api } from '@/lib/api';
+import PhoneInputField from '@/components/form/PhoneInputField';
 
 type FormStep = 'type' | 'info' | 'contact' | 'review';
 
@@ -15,16 +17,42 @@ export default function SubmitPage() {
     const th = useTranslations('halaqat');
     const tm = useTranslations('maintenance');
     const locale = useLocale();
+    const pathname = usePathname();
 
-    const [step, setStep] = useState<FormStep>('type');
-    const [entityType, setEntityType] = useState<'imam' | 'halqa' | 'maintenance' | null>(null);
+    const [step, setStep] = useState<FormStep>('info');
+    const [entityType, setEntityType] = useState<'imam' | 'halqa' | 'maintenance' | null>('imam');
     const [submitted, setSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [mediaUploads, setMediaUploads] = useState<Array<{ publicId: string; secureUrl: string }>>([]);
+    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+    const [uploadingImage, setUploadingImage] = useState(false);
     const { register, handleSubmit, watch, setValue } = useForm();
     const [governorates, setGovernorates] = useState<any[]>([]);
     const [areas, setAreas] = useState<any[]>([]);
 
     const selectedGovernorateId = watch('governorateId');
+    const isOnline = watch('isOnline');
+    const entityTitle = entityType === 'imam'
+        ? (locale === 'ar' ? 'إضافة إمام' : 'Add Imam')
+        : entityType === 'halqa'
+            ? (locale === 'ar' ? 'إضافة حلقة' : 'Add Halqa')
+            : (locale === 'ar' ? 'إضافة صيانة' : 'Add Maintenance');
+
+    useEffect(() => {
+        if (pathname.includes('/halaqat/submit')) {
+            setEntityType('halqa');
+            setStep('info');
+            return;
+        }
+        if (pathname.includes('/maintenance/submit')) {
+            setEntityType('maintenance');
+            setStep('info');
+            return;
+        }
+        setEntityType('imam');
+        setStep('info');
+    }, [pathname]);
+
     useEffect(() => {
         api.getGovernorates().then(setGovernorates).catch(console.error);
     }, []);
@@ -42,10 +70,15 @@ export default function SubmitPage() {
     const onSubmit = async (data: any) => {
         setSubmitting(true);
         try {
+            const toNum = (value: unknown) => {
+                if (value === '' || value === null || value === undefined) return undefined;
+                const parsed = Number(value);
+                return Number.isFinite(parsed) ? parsed : undefined;
+            };
             const payload = {
                 ...data,
-                lat: data.lat ? parseFloat(data.lat) : undefined,
-                lng: data.lng ? parseFloat(data.lng) : undefined,
+                lat: toNum(data.lat),
+                lng: toNum(data.lng),
             };
 
             if (entityType === 'imam') {
@@ -72,14 +105,18 @@ export default function SubmitPage() {
                     city: payload.city,
                     district: payload.district,
                     area_id: payload.areaId,
-                    google_maps_url: payload.googleMapsUrl,
-                    video_url: payload.videoUrl,
-                    lat: payload.lat,
-                    lng: payload.lng,
+                    google_maps_url: payload.isOnline ? undefined : payload.googleMapsUrl,
+                    is_online: !!payload.isOnline,
+                    lat: payload.isOnline ? undefined : payload.lat,
+                    lng: payload.isOnline ? undefined : payload.lng,
                     whatsapp: payload.whatsapp,
                     additional_info: payload.additionalInfo,
                 });
             } else if (entityType === 'maintenance') {
+                if (mediaUploads.length < 3 || mediaUploads.length > 4) {
+                    setSubmitting(false);
+                    return;
+                }
                 await api.createMaintenance({
                     mosque_name: payload.mosqueName,
                     governorate: payload.governorate,
@@ -94,6 +131,7 @@ export default function SubmitPage() {
                     estimated_cost_min: parseInt(payload.costMin) || undefined,
                     estimated_cost_max: parseInt(payload.costMax) || undefined,
                     whatsapp: payload.whatsapp,
+                    media_uploads: mediaUploads,
                 });
             }
             setSubmitted(true);
@@ -101,6 +139,43 @@ export default function SubmitPage() {
             console.error('Submit error:', err);
         }
         setSubmitting(false);
+    };
+
+    const uploadMaintenanceImages = async (files: File[]) => {
+        const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!files.length) return;
+
+        const remainingSlots = 4 - mediaUploads.length;
+        if (remainingSlots <= 0) return;
+        const selected = files.slice(0, remainingSlots);
+
+        setUploadingImage(true);
+        try {
+            for (const file of selected) {
+                if (!allowed.includes(file.type) || file.size > 2 * 1024 * 1024) continue;
+
+                const sign = await api.getSignedUploadParams();
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('api_key', sign.api_key);
+                formData.append('timestamp', String(sign.timestamp));
+                formData.append('signature', sign.signature);
+                formData.append('folder', sign.folder);
+                formData.append('allowed_formats', sign.allowed_formats);
+
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${sign.cloud_name}/image/upload`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                const payload = await res.json();
+                if (res.ok) {
+                    setMediaUploads((prev) => prev.length < 4 ? [...prev, { publicId: payload.public_id, secureUrl: payload.secure_url }] : prev);
+                    setImagePreviews((prev) => prev.length < 4 ? [...prev, payload.secure_url] : prev);
+                }
+            }
+        } finally {
+            setUploadingImage(false);
+        }
     };
 
     if (submitted) {
@@ -140,39 +215,19 @@ export default function SubmitPage() {
                         <p className="text-text-muted font-medium">{locale === 'ar' ? 'ساهم في بناء مجتمعنا المسلم في مصر' : 'Contribute to building our Muslim community in Egypt'}</p>
                     </div>
 
-                    {/* Step: Select Type */}
-                    {step === 'type' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 animate-fade-in">
-                            {[
-                                { type: 'imam' as const, label: t('imam'), color: 'hover:border-primary', icon: '🕌', desc: locale === 'ar' ? 'إضافة إمام مسجد' : 'Add Masjid Imam' },
-                                { type: 'halqa' as const, label: t('halqa'), color: 'hover:border-primary', icon: '📖', desc: locale === 'ar' ? 'إضافة دار تحفيظ' : 'Add Quran Center' },
-                                { type: 'maintenance' as const, label: t('maintenanceReq'), color: 'hover:border-primary', icon: '🏗️', desc: locale === 'ar' ? 'طلب إعمار' : 'Maint. Request' },
-                            ].map((item) => (
-                                <button
-                                    key={item.type}
-                                    onClick={() => { setEntityType(item.type); setStep('info'); }}
-                                    className={`bg-white rounded-[32px] p-8 text-center border-2 border-transparent shadow-card transition-all hover:-translate-y-2 group ${item.color}`}
-                                >
-                                    <span className="text-5xl mb-6 block transition-transform group-hover:scale-110">{item.icon}</span>
-                                    <span className="font-black text-dark block mb-2">{item.label}</span>
-                                    <span className="text-xs text-text-muted font-bold block">{item.desc}</span>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
                     {/* Step: Info Form */}
                     {step === 'info' && entityType && (
-                        <form onSubmit={handleSubmit(() => setStep('contact'))} className="bg-white rounded-[40px] p-10 space-y-8 shadow-card border border-border animate-slide-up">
+                        <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-[40px] p-10 space-y-8 shadow-card border border-border animate-slide-up">
                             <div className="flex items-center justify-between pb-6 border-b border-border">
                                 <div className="flex items-center gap-4">
-                                    <span className="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center text-lg font-black shadow-btn">1</span>
+                                    <span className="px-4 py-2 bg-primary text-white rounded-2xl text-sm font-black shadow-btn whitespace-nowrap">
+                                        {entityTitle}
+                                    </span>
                                     <div>
                                         <h3 className="font-black text-dark text-lg leading-tight">{t('basicInfo')}</h3>
                                         <p className="text-xs text-text-muted font-bold uppercase tracking-widest mt-0.5">{entityType}</p>
                                     </div>
                                 </div>
-                                <div className="text-xs font-black text-text-muted">{locale === 'ar' ? 'الخطوة الأولى' : 'Step 1'}</div>
                             </div>
 
                             <div className="space-y-6">
@@ -202,6 +257,13 @@ export default function SubmitPage() {
                                             <option value="mixed">{th('mixed')}</option>
                                         </select>
                                     </div>
+                                )}
+
+                                {entityType === 'halqa' && (
+                                    <label className="flex items-center gap-3 p-3 rounded-xl bg-cream border border-border">
+                                        <input type="checkbox" {...register('isOnline')} className="w-5 h-5" />
+                                        <span className="text-sm font-bold">{locale === 'ar' ? 'حلقة أونلاين' : 'Online Halqa'}</span>
+                                    </label>
                                 )}
 
                                 {entityType === 'maintenance' && (
@@ -275,13 +337,14 @@ export default function SubmitPage() {
 
                                 <div className="group">
                                     <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">
-                                        {locale === 'ar' ? 'رابط خرائط جوجل (إجباري)' : 'Google Maps Link (Required)'}
+                                        {locale === 'ar' ? 'رابط خرائط جوجل' : 'Google Maps Link'}
                                     </label>
                                     <input
-                                        {...register('googleMapsUrl', { required: true })}
+                                        {...register('googleMapsUrl', { required: entityType !== 'halqa' || !isOnline })}
                                         type="url"
                                         className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold"
                                         placeholder="https://maps.google.com/...?q=30.0444,31.2357"
+                                        disabled={entityType === 'halqa' && isOnline}
                                     />
                                     <span className="text-[10px] text-text-muted mt-2 block ms-1 font-bold">
                                         {locale === 'ar' ? 'سنستخرج الإحداثيات تلقائياً من الرابط' : 'We will extract coordinates automatically from the link'}
@@ -289,13 +352,81 @@ export default function SubmitPage() {
                                 </div>
                             </div>
 
-                            <div className="flex gap-4 pt-4">
-                                <button type="button" onClick={() => setStep('type')} className="btn-outline flex-1 rounded-2xl border-2 hover:bg-cream">
-                                    {locale === 'ar' ? 'السابق' : 'Previous'}
-                                </button>
-                                <button type="submit" className="btn-primary flex-1 rounded-2xl group">
-                                    {locale === 'ar' ? 'التالي' : 'Next'}
-                                    <span className="ms-2 rtl:rotate-180 inline-block transition-transform group-hover:translate-x-1">→</span>
+                            <div className="space-y-6 pt-2 border-t border-border">
+                                <PhoneInputField
+                                    label={ti('whatsapp')}
+                                    required
+                                    value={watch('whatsapp')}
+                                    onChange={(next) => setValue('whatsapp', next || '')}
+                                />
+
+                                {entityType === 'imam' && (
+                                    <div className="group">
+                                        <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">
+                                            {locale === 'ar' ? 'رابط التلاوة / الفيديو' : 'Recitation / Video URL'}
+                                        </label>
+                                        <input {...register('videoUrl')} className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold" dir="ltr" placeholder="https://..." />
+                                    </div>
+                                )}
+
+                                {entityType === 'maintenance' && (
+                                    <div className="group">
+                                        <label className="block text-sm font-black text-dark mb-2 ms-1">
+                                            {locale === 'ar' ? 'صور الصيانة (حتى 4)' : 'Maintenance images (up to 4)'}
+                                        </label>
+                                        <input
+                                            type="file"
+                                            multiple
+                                            accept="image/jpeg,image/png,image/webp"
+                                            onChange={(e) => {
+                                                const files = Array.from(e.target.files || []);
+                                                if (files.length) void uploadMaintenanceImages(files);
+                                                e.currentTarget.value = '';
+                                            }}
+                                            className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl"
+                                        />
+                                        <p className="text-xs text-text-muted mt-2">
+                                            {locale === 'ar' ? 'JPG/PNG/WEBP بحد أقصى 2MB للصورة' : 'JPG/PNG/WEBP up to 2MB each'}
+                                        </p>
+                                        {uploadingImage && <p className="text-xs text-primary mt-1">{locale === 'ar' ? 'جاري الرفع...' : 'Uploading...'}</p>}
+                                        {!!imagePreviews.length && (
+                                            <div className="mt-3 grid grid-cols-2 gap-2">
+                                                {imagePreviews.map((url, i) => (
+                                                    <div key={url} className="relative">
+                                                        <img src={url} alt={`preview-${i}`} className="w-full h-24 object-cover rounded-lg border" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setImagePreviews((prev) => prev.filter((_, idx) => idx !== i));
+                                                                setMediaUploads((prev) => prev.filter((_, idx) => idx !== i));
+                                                            }}
+                                                            className="absolute top-1 end-1 bg-black/60 text-white rounded-full w-5 h-5 text-xs"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {entityType === 'halqa' && (
+                                    <div className="group">
+                                        <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">{th('additionalInfo')}</label>
+                                        <textarea {...register('additionalInfo')} className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold min-h-[100px]"
+                                            placeholder={locale === 'ar' ? 'مواعيد الحلقة، السعة، ملاحظات...' : 'Schedule, capacity, notes...'}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="pt-4">
+                                <button type="submit" disabled={submitting} className="btn-primary w-full rounded-2xl group flex items-center justify-center">
+                                    {submitting
+                                        ? (locale === 'ar' ? 'جاري الإرسال...' : 'Submitting...')
+                                        : (locale === 'ar' ? 'إرسال الطلب' : 'Submit Request')}
+                                    {!submitting && <span className="ms-2 rtl:rotate-180 inline-block transition-transform group-hover:translate-y-[-1px]">✨</span>}
                                 </button>
                             </div>
                         </form>
@@ -316,30 +447,61 @@ export default function SubmitPage() {
                             </div>
 
                             <div className="space-y-6">
-                                <div className="group">
-                                    <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">
-                                        {ti('whatsapp')} <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            {...register('whatsapp', { required: true })}
-                                            className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold pe-12"
-                                            placeholder="+201..."
-                                            dir="ltr"
-                                        />
-                                        <div className="absolute right-5 top-1/2 -translate-y-1/2 text-2xl">📱</div>
-                                    </div>
-                                    <span className="text-[10px] text-text-muted mt-2 block ms-1 font-bold">
-                                        {locale === 'ar' ? 'تأكد من إضافة كود الدولة (مثال: +20)' : 'Include country code (e.g. +20)'}
-                                    </span>
-                                </div>
+                                <PhoneInputField
+                                    label={ti('whatsapp')}
+                                    required
+                                    value={watch('whatsapp')}
+                                    onChange={(next) => setValue('whatsapp', next || '')}
+                                />
 
-                                {(entityType === 'imam' || entityType === 'halqa') && (
+                                {entityType === 'imam' && (
                                     <div className="group">
                                         <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">
                                             {locale === 'ar' ? 'رابط التلاوة / الفيديو' : 'Recitation / Video URL'}
                                         </label>
                                         <input {...register('videoUrl')} className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold" dir="ltr" placeholder="https://..." />
+                                    </div>
+                                )}
+
+                                {entityType === 'maintenance' && (
+                                    <div className="group">
+                                        <label className="block text-sm font-black text-dark mb-2 ms-1">
+                                            {locale === 'ar' ? 'صور الصيانة (حتى 4)' : 'Maintenance images (up to 4)'}
+                                        </label>
+                                        <input
+                                            type="file"
+                                            multiple
+                                            accept="image/jpeg,image/png,image/webp"
+                                            onChange={(e) => {
+                                                const files = Array.from(e.target.files || []);
+                                                if (files.length) void uploadMaintenanceImages(files);
+                                                e.currentTarget.value = '';
+                                            }}
+                                            className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl"
+                                        />
+                                        <p className="text-xs text-text-muted mt-2">
+                                            {locale === 'ar' ? 'JPG/PNG/WEBP بحد أقصى 2MB للصورة' : 'JPG/PNG/WEBP up to 2MB each'}
+                                        </p>
+                                        {uploadingImage && <p className="text-xs text-primary mt-1">{locale === 'ar' ? 'جاري الرفع...' : 'Uploading...'}</p>}
+                                        {!!imagePreviews.length && (
+                                            <div className="mt-3 grid grid-cols-2 gap-2">
+                                                {imagePreviews.map((url, i) => (
+                                                    <div key={url} className="relative">
+                                                        <img src={url} alt={`preview-${i}`} className="w-full h-24 object-cover rounded-lg border" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setImagePreviews((prev) => prev.filter((_, idx) => idx !== i));
+                                                                setMediaUploads((prev) => prev.filter((_, idx) => idx !== i));
+                                                            }}
+                                                            className="absolute top-1 end-1 bg-black/60 text-white rounded-full w-5 h-5 text-xs"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
@@ -372,3 +534,4 @@ export default function SubmitPage() {
         </div>
     );
 }
+

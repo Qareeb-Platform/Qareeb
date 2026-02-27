@@ -1,6 +1,7 @@
-import { Controller, Post, Body, Res, Req, HttpCode } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, HttpCode, Patch, UseGuards } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('admin/auth')
 export class AuthController {
@@ -9,18 +10,19 @@ export class AuthController {
     @Post('login')
     @HttpCode(200)
     async login(
-        @Body() body: { email: string; password: string },
+        @Body() body: { email: string; password: string; remember_me?: boolean },
         @Res({ passthrough: true }) res: Response,
     ) {
-        const result = await this.authService.login(body.email, body.password);
+        const result = await this.authService.login(body.email, body.password, body.remember_me ?? true);
+        const rememberMe = body.remember_me ?? true;
 
         // Set refresh token as HttpOnly cookie
         res.cookie('refresh_token', result.refresh_token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-            path: '/v1/admin/auth/refresh',
+            sameSite: 'lax',
+            maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000, // 30d or 1d
+            path: '/',
         });
 
         return {
@@ -37,5 +39,19 @@ export class AuthController {
             return { error: 'No refresh token provided' };
         }
         return this.authService.refreshToken(refreshToken);
+    }
+
+    @Patch('change-password')
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(200)
+    async changePassword(
+        @Req() req: any,
+        @Body() body: { current_password: string; new_password: string },
+    ) {
+        return this.authService.changePassword(
+            req.user.id,
+            body.current_password,
+            body.new_password,
+        );
     }
 }

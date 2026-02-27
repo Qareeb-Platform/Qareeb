@@ -5,6 +5,8 @@ import Footer from '@/components/layout/Footer';
 import FAB from '@/components/ui/FAB';
 import ChatWidget from '@/components/chat/ChatWidget';
 import HomeSearchBar from '@/components/search/HomeSearchBar';
+import PublicCardsTabs from '@/components/public/PublicCardsTabs';
+import SubmitServiceSection from '@/components/home/SubmitServiceSection';
 
 export const revalidate = 60; // ISR: revalidate every 60 seconds
 
@@ -173,6 +175,8 @@ export default async function HomePage() {
                     <HomeSearchBar />
                 </div>
 
+                <PublicCardsTabs />
+
                 {/* Latest Additions */}
                 <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
@@ -298,6 +302,8 @@ export default async function HomePage() {
                         </Link>
                     </div>
                 </section>
+
+                <SubmitServiceSection locale={locale} />
             </main>
 
             <Footer />

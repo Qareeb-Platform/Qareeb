@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsEnum, IsArray, IsNotEmpty, IsUrl, IsUUID } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsEnum, IsArray, IsNotEmpty, IsUrl, IsUUID, IsBoolean, ValidateIf } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
 export enum HalqaType {
@@ -39,22 +39,27 @@ export class CreateHalqaDto {
     @Transform(({ value }) => (value === '' ? undefined : value))
     area_id?: string;
 
+    @IsBoolean()
+    @Type(() => Boolean)
+    is_online!: boolean;
+
+    @ValidateIf((o) => !o.is_online)
     @IsUrl()
     @IsNotEmpty()
     google_maps_url!: string;
 
-    @IsUrl()
+    @ValidateIf((o) => !o.is_online)
     @IsOptional()
-    video_url?: string;
-
     @IsNumber()
-    @IsOptional()
     @Type(() => Number)
+    @Transform(({ value }) => (value === '' || value === null || Number.isNaN(Number(value)) ? undefined : Number(value)))
     lat?: number; // legacy fallback
 
-    @IsNumber()
+    @ValidateIf((o) => !o.is_online)
     @IsOptional()
+    @IsNumber()
     @Type(() => Number)
+    @Transform(({ value }) => (value === '' || value === null || Number.isNaN(Number(value)) ? undefined : Number(value)))
     lng?: number; // legacy fallback
 
     @IsString()
