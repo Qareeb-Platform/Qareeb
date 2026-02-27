@@ -89,14 +89,14 @@ export default function PublicCardsTabs() {
     const embedUrl = getEmbeddableVideoUrl(payload?.video);
 
     const handleViewDetails = (card: any) => {
-        // open details page in a new tab instead of modal
+        // open details page in a new tab instead of modal, respecting locale prefix
         const base =
             card.entity === 'imam'
                 ? '/imams'
                 : card.entity === 'halqa'
                 ? '/halaqat'
                 : '/maintenance';
-        window.open(`${base}/${card.id}`, '_blank');
+        window.open(`/${locale}${base}/${card.id}`, '_blank');
     };
 
     const shareCard = async (card: any) => {
