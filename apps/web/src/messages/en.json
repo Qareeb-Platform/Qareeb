@@ -155,6 +155,32 @@
         "serverError": "Server Error",
         "networkError": "Network Error",
         "unauthorized": "Unauthorized Access",
-        "validationError": "Please check the entered data"
+        "validationError": "Please check the entered data",
+        
+        "500": {
+            "tag": "Server Error",
+            "title": "Something went wrong on our end! 🙏",
+            "sub": "An unexpected error occurred on the server. Our tech team has been notified and is working on a fix."
+        },
+        "404": {
+            "tag": "Page not found",
+            "title": "Looks like this place isn't on our map! 🗺️",
+            "sub": "The page you're looking for doesn't exist or has moved. You can go back home or search for what you need."
+        },
+        "429": {
+            "tag": "Too Many Requests",
+            "title": "You're sending too many requests!",
+            "sub": "Please wait a moment before trying again."
+        },
+        "503": {
+            "tag": "Service Unavailable",
+            "title": "Site is down for maintenance.",
+            "sub": "We will be back shortly. Please try again later."
+        },
+        "offline": {
+            "tag": "Network Error",
+            "title": "No internet connection",
+            "sub": "Please check your network and try again."
+        }
     }
 }
