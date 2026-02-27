@@ -107,6 +107,9 @@ const errorConfig: Record<
 
 export default function ErrorScreen({ status, locale, reset }: ErrorScreenProps) {
   const t = useTranslations('errors');
+  // server-side log to help trace which error screens are rendered in production
+  // eslint-disable-next-line no-console
+  console.log('[ErrorScreen] render', { status, locale });
   const isAr = locale === 'ar';
 
   const info = (errorConfig as any)[status] || errorConfig[500];
