@@ -29,6 +29,7 @@ export class MaintenanceService {
 
         if (postgisEnabled && query.lat && query.lng) {
             const radius = query.radius || 10000;
+            try {
             const results = await this.prisma.$queryRaw`
         SELECT id, mosque_name, governorate, city, district,
                latitude, longitude, maintenance_types, description,
@@ -55,6 +56,10 @@ export class MaintenanceService {
                 data: results,
                 meta: { page, limit, total, totalPages: Math.ceil(total / limit), hasNext: page * limit < total, hasPrev: page > 1 },
             };
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error('PostGIS query for maintenance failed, falling back to default query:', error);
+        }
         }
 
         const where: any = {

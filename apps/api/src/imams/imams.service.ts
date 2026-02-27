@@ -29,7 +29,8 @@ export class ImamsService {
         // If geospatial query params provided and PostGIS is available, use raw SQL with PostGIS
         if (postgisEnabled && query.lat && query.lng) {
             const radius = query.radius || 10000; // Default 10km
-            const results = await this.prisma.$queryRaw`
+            try {
+                const results = await this.prisma.$queryRaw`
         SELECT id, imam_name, mosque_name, governorate, city, district,
                latitude, longitude, whatsapp, recitation_url, status,
                created_at, updated_at,
@@ -62,6 +63,11 @@ export class ImamsService {
                     hasPrev: page > 1,
                 },
             };
+        } catch (error) {
+            // If the spatial query fails, log and continue to non-spatial logic below
+            // eslint-disable-next-line no-console
+            console.error('PostGIS query for imams failed, falling back to default query:', error);
+        }
         }
 
         // Fallback: standard Prisma query with filters

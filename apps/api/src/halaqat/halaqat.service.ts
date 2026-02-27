@@ -28,6 +28,7 @@ export class HalaqatService {
 
         if (postgisEnabled && query.lat && query.lng) {
             const radius = query.radius || 10000;
+            try {
             const typeFilter = query.type
                 ? `AND halqa_type = '${query.type}'::"HalqaType"`
                 : '';
@@ -59,6 +60,10 @@ export class HalaqatService {
                 data: results,
                 meta: { page, limit, total, totalPages: Math.ceil(total / limit), hasNext: page * limit < total, hasPrev: page > 1 },
             };
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error('PostGIS query for halaqat failed, falling back to default query:', error);
+        }
         }
 
         const where: any = {
