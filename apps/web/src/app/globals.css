@@ -43,36 +43,62 @@
     @apply w-full px-4 py-3 border border-gray-300 rounded-btn focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 bg-white;
   }
 
-  /* PhoneInput styles */
+  /* PhoneInput styles - react-phone-number-input overrides */
   .PhoneInput {
     position: relative;
+    width: 100%;
   }
 
+  .PhoneInput--input {
+    width: 100%;
+  }
+
+  /* Override library's default input styling - THIS REMOVES THE BLACK BORDER */
   .PhoneInputInput {
     @apply w-full px-4 py-3 border border-gray-300 rounded-btn bg-white transition-all duration-200 !important;
     outline: none !important;
+    border: 1px solid rgb(209, 213, 219) !important;
+    box-shadow: none !important;
+    -webkit-appearance: none !important;
   }
 
-  .PhoneInputInput:focus {
-    @apply border-primary ring-2 ring-primary ring-opacity-20 !important;
+  /* Remove the black border/outline on focus - THE KEY FIX */
+  .PhoneInputInput:focus,
+  .PhoneInputInput:focus-visible,
+  .PhoneInputInput:active {
+    outline: none !important;
+    border-color: rgb(27, 107, 69) !important;
+    box-shadow: 0 0 0 2px rgba(27, 107, 69, 0.1) !important;
   }
 
-  /* Remove default border styling that interferes */
+  /* Ensure placeholder styling */
   .PhoneInputInput::placeholder {
     @apply text-gray-400 !important;
+    opacity: 1 !important;
   }
 
   /* PhoneInput country select styling */
   .PhoneInputCountrySelect {
     @apply border-none bg-transparent !important;
     appearance: none !important;
+    outline: none !important;
+    cursor: pointer;
+  }
+
+  .PhoneInputCountrySelect:focus {
+    outline: none !important;
   }
 
   .PhoneInputCountryIcon {
     margin-right: 6px !important;
+    margin-left: 0 !important;
   }
 
   /* RTL support for Arabic */
+  [dir="rtl"] .PhoneInput {
+    direction: rtl !important;
+  }
+
   [dir="rtl"] .PhoneInputInput {
     direction: rtl !important;
     text-align: right !important;
@@ -88,10 +114,11 @@
   [dir="rtl"] .PhoneInputCountryIcon {
     margin-left: 6px !important;
     margin-right: 0 !important;
+    order: 2 !important;
   }
 
   [dir="rtl"] .PhoneInputCountrySelect::after {
-    right: 3px !important;
+    right: 4px !important;
     left: auto !important;
   }
 
