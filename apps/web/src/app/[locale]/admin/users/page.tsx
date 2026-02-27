@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -21,6 +21,7 @@ export default function AdminUsersPage() {
     const [newPassword, setNewPassword] = useState('');
     const [newRole, setNewRole] = useState('imam_reviewer');
     const [page, setPage] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
     const limit = 10;
 
     useEffect(() => {
@@ -33,7 +34,7 @@ export default function AdminUsersPage() {
 
     useEffect(() => {
         setPage(1);
-    }, [users.length]);
+    }, [users.length, searchTerm]);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -75,14 +76,34 @@ export default function AdminUsersPage() {
         ? { super_admin: 'مشرف عام', full_reviewer: 'مراجع شامل', imam_reviewer: 'مراجع أئمة', halqa_reviewer: 'مراجع حلقات', maintenance_reviewer: 'مراجع صيانة' }
         : { super_admin: 'Super Admin', full_reviewer: 'Full Reviewer', imam_reviewer: 'Imam Reviewer', halqa_reviewer: 'Halqa Reviewer', maintenance_reviewer: 'Maint. Reviewer' };
 
-    const totalPages = Math.max(1, Math.ceil(users.length / limit));
-    const paginatedUsers = users.slice((page - 1) * limit, page * limit);
+    const filteredUsers = users.filter((user) => {
+        if (!searchTerm) return true;
+        const q = searchTerm.toLowerCase();
+        return [
+            user.email,
+            user.role,
+            roleLabels[user.role],
+        ].some((field: any) => (field || '').toString().toLowerCase().includes(q));
+    });
+
+    const totalPages = Math.max(1, Math.ceil(filteredUsers.length / limit));
+    const paginatedUsers = filteredUsers.slice((page - 1) * limit, page * limit);
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <h1 className="text-2xl font-bold">{t('users')}</h1>
-                <button onClick={() => setShowCreate(!showCreate)} className="btn-primary text-sm">{showCreate ? (locale === 'ar' ? 'إلغاء' : 'Cancel') : t('addUser')}</button>
+                <div className="flex flex-wrap items-center gap-2">
+                    <input
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder={locale === 'ar' ? 'بحث بالإيميل أو الصلاحية' : 'Search by email or role'}
+                        className="input-field max-w-xs text-sm"
+                    />
+                    <button onClick={() => setShowCreate(!showCreate)} className="btn-primary text-sm">
+                        {showCreate ? (locale === 'ar' ? 'إلغاء' : 'Cancel') : t('addUser')}
+                    </button>
+                </div>
             </div>
 
             {showCreate && (

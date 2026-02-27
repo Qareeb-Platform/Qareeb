@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useLocale } from 'next-intl';
@@ -15,6 +15,7 @@ export default function NotificationsPage() {
     const [status, setStatus] = useState<'unread' | 'all'>('unread');
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
     const limit = 10;
 
     useEffect(() => {
@@ -42,7 +43,7 @@ export default function NotificationsPage() {
 
     useEffect(() => {
         setPage(1);
-    }, [status, items.length]);
+    }, [status, items.length, searchTerm]);
 
     const onMarkRead = async (id: string) => {
         if (!token) return;
@@ -57,20 +58,57 @@ export default function NotificationsPage() {
     };
 
     const entityLabel = (type: string) => type.includes('imam') ? 'imam' : type.includes('halqa') ? 'halqa' : 'maintenance';
-    const totalPages = Math.max(1, Math.ceil(items.length / limit));
-    const paginatedItems = items.slice((page - 1) * limit, page * limit);
+
+    const filteredItems = items.filter((n) => {
+        if (!searchTerm) return true;
+        const q = searchTerm.toLowerCase();
+        return [
+            n.title,
+            n.message,
+            n.type,
+            entityLabel(n.type),
+        ].some((field: any) => (field || '').toString().toLowerCase().includes(q));
+    });
+
+    const totalPages = Math.max(1, Math.ceil(filteredItems.length / limit));
+    const paginatedItems = filteredItems.slice((page - 1) * limit, page * limit);
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-bold">{locale === 'ar' ? 'الإشعارات' : 'Notifications'}</h1>
                     <p className="text-text-muted text-sm">{locale === 'ar' ? 'تحديث لحظي بدون Refresh' : 'Live updates without refresh'}</p>
                 </div>
-                <div className="flex gap-2">
-                    <button onClick={() => setStatus('unread')} className={`px-4 py-2 rounded-btn text-sm font-bold ${status === 'unread' ? 'bg-primary text-white' : 'bg-gray-100 text-text'}`}>{locale === 'ar' ? 'غير مقروءة' : 'Unread'}</button>
-                    <button onClick={() => setStatus('all')} className={`px-4 py-2 rounded-btn text-sm font-bold ${status === 'all' ? 'bg-primary text-white' : 'bg-gray-100 text-text'}`}>{locale === 'ar' ? 'الكل' : 'All'}</button>
-                    <button onClick={onMarkAll} className="px-4 py-2 rounded-btn text-sm font-bold bg-cream text-text hover:bg-primary/10">{locale === 'ar' ? 'تعيين الكل كمقروء' : 'Mark all read'}</button>
+                <div className="flex flex-wrap items-center gap-2">
+                    <input
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder={locale === 'ar' ? 'بحث في العنوان أو الرسالة' : 'Search by title or message'}
+                        className="input-field max-w-xs text-sm"
+                    />
+                    <button
+                        onClick={() => setStatus('unread')}
+                        className={`px-4 py-2 rounded-btn text-sm font-bold ${
+                            status === 'unread' ? 'bg-primary text-white' : 'bg-gray-100 text-text'
+                        }`}
+                    >
+                        {locale === 'ar' ? 'غير مقروءة' : 'Unread'}
+                    </button>
+                    <button
+                        onClick={() => setStatus('all')}
+                        className={`px-4 py-2 rounded-btn text-sm font-bold ${
+                            status === 'all' ? 'bg-primary text-white' : 'bg-gray-100 text-text'
+                        }`}
+                    >
+                        {locale === 'ar' ? 'الكل' : 'All'}
+                    </button>
+                    <button
+                        onClick={onMarkAll}
+                        className="px-4 py-2 rounded-btn text-sm font-bold bg-cream text-text hover:bg-primary/10"
+                    >
+                        {locale === 'ar' ? 'تعيين الكل كمقروء' : 'Mark all read'}
+                    </button>
                 </div>
             </div>
 

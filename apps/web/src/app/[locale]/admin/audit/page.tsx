@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useLocale } from 'next-intl';
@@ -24,6 +24,7 @@ export default function AuditPage() {
     const [entityType, setEntityType] = useState('');
     const [from, setFrom] = useState('');
     const [to, setTo] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         if (!token) {
@@ -36,7 +37,7 @@ export default function AuditPage() {
         }
         void fetchUsers();
         void fetchLogs(page);
-    }, [token, page, action, entityType, userId, from, to]);
+    }, [token, page, action, entityType, userId, from, to, searchTerm]);
 
     const fetchUsers = async () => {
         if (!token || admin?.role !== 'super_admin') return;
@@ -59,7 +60,18 @@ export default function AuditPage() {
             if (from) params.set('from', from);
             if (to) params.set('to', to);
             const res = await adminApi.getAuditLogs(token, params.toString());
-            setData(res.data || []);
+            const rows = res.data || [];
+            const filtered = rows.filter((log: any) => {
+                if (!searchTerm) return true;
+                const q = searchTerm.toLowerCase();
+                return [
+                    log.admin?.email,
+                    log.action,
+                    log.entityType,
+                    log.entityId,
+                ].some((field: any) => (field || '').toString().toLowerCase().includes(q));
+            });
+            setData(filtered);
             setTotalPages(res.meta?.totalPages || 1);
         } catch (err) {
             console.error('Audit fetch error', err);
@@ -73,26 +85,76 @@ export default function AuditPage() {
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold">{locale === 'ar' ? 'سجل التدقيق' : 'Audit Logs'}</h1>
-                <p className="text-text-muted text-sm">{locale === 'ar' ? 'جميع إجراءات الإدارة مع snapshot كامل' : 'All admin actions with full snapshots'}</p>
+                <p className="text-text-muted text-sm">
+                    {locale === 'ar'
+                        ? 'جميع إجراءات الإدارة مع snapshot كامل'
+                        : 'All admin actions with full snapshots'}
+                </p>
             </div>
 
-            <div className="card p-4 grid grid-cols-1 md:grid-cols-5 gap-3">
-                <select className="input-field" value={entityType} onChange={(e) => { setPage(1); setEntityType(e.target.value); }}>
+            <div className="card p-4 grid grid-cols-1 md:grid-cols-6 gap-3">
+                <select
+                    className="input-field"
+                    value={entityType}
+                    onChange={(e) => {
+                        setPage(1);
+                        setEntityType(e.target.value);
+                    }}
+                >
                     <option value="">{locale === 'ar' ? 'كل الكيانات' : 'All entities'}</option>
                     <option value="imam">imam</option>
                     <option value="halqa">halqa</option>
                     <option value="maintenance">maintenance</option>
                 </select>
-                <select className="input-field" value={action} onChange={(e) => { setPage(1); setAction(e.target.value); }}>
+                <select
+                    className="input-field"
+                    value={action}
+                    onChange={(e) => {
+                        setPage(1);
+                        setAction(e.target.value);
+                    }}
+                >
                     <option value="">{locale === 'ar' ? 'كل الإجراءات' : 'All actions'}</option>
                     {['create', 'update', 'delete', 'approve', 'reject'].map((a) => <option key={a} value={a}>{a}</option>)}
                 </select>
-                <select className="input-field" value={userId} onChange={(e) => { setPage(1); setUserId(e.target.value); }}>
+                <select
+                    className="input-field"
+                    value={userId}
+                    onChange={(e) => {
+                        setPage(1);
+                        setUserId(e.target.value);
+                    }}
+                >
                     <option value="">{locale === 'ar' ? 'كل المستخدمين' : 'All users'}</option>
                     {users.map((u) => <option key={u.id} value={u.id}>{u.email}</option>)}
                 </select>
-                <input type="date" className="input-field" value={from} onChange={(e) => { setPage(1); setFrom(e.target.value); }} />
-                <input type="date" className="input-field" value={to} onChange={(e) => { setPage(1); setTo(e.target.value); }} />
+                <input
+                    type="date"
+                    className="input-field"
+                    value={from}
+                    onChange={(e) => {
+                        setPage(1);
+                        setFrom(e.target.value);
+                    }}
+                />
+                <input
+                    type="date"
+                    className="input-field"
+                    value={to}
+                    onChange={(e) => {
+                        setPage(1);
+                        setTo(e.target.value);
+                    }}
+                />
+                <input
+                    className="input-field"
+                    value={searchTerm}
+                    onChange={(e) => {
+                        setPage(1);
+                        setSearchTerm(e.target.value);
+                    }}
+                    placeholder={locale === 'ar' ? 'بحث بالمستخدم أو الكيان أو السجل' : 'Search by user, entity or record'}
+                />
             </div>
 
             <div className="card p-4 overflow-x-auto">

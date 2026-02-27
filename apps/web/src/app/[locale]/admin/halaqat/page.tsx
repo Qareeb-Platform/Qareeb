@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useLocale } from 'next-intl';
@@ -23,6 +23,7 @@ export default function AdminHalaqatPage() {
 
     const [items, setItems] = useState<any[]>([]);
     const [statusFilter, setStatusFilter] = useState('pending');
+    const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [editForm, setEditForm] = useState<any>({});
     const [page, setPage] = useState(1);
@@ -37,6 +38,10 @@ export default function AdminHalaqatPage() {
     useEffect(() => {
         setPage(1);
     }, [statusFilter]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [searchTerm]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -70,11 +75,43 @@ export default function AdminHalaqatPage() {
         }
     };
 
+    const filteredItems = items.filter((item) => {
+        if (!searchTerm) return true;
+        const q = searchTerm.toLowerCase();
+        return [
+            item.circleName,
+            item.mosqueName,
+            item.status,
+            item.whatsapp,
+            item.halqaType,
+        ].some((field: any) => (field || '').toString().toLowerCase().includes(q));
+    });
+
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-black">{locale === 'ar' ? 'إدارة الحلقات' : 'Manage Halaqat'}</h1>
-            <div className="flex gap-2 flex-wrap">
-                {['pending', 'approved', 'rejected'].map((s) => <button key={s} onClick={() => setStatusFilter(s)} className={`px-4 py-2 rounded-xl text-sm font-bold ${statusFilter === s ? 'bg-primary text-white' : 'bg-white border border-border'}`}>{s}</button>)}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <h1 className="text-2xl font-black">{locale === 'ar' ? 'إدارة الحلقات' : 'Manage Halaqat'}</h1>
+                <div className="flex flex-wrap gap-2 items-center">
+                    <input
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder={locale === 'ar' ? 'بحث بالاسم أو المسجد أو النوع' : 'Search by name, mosque or type'}
+                        className="input-field max-w-xs text-sm"
+                    />
+                    <div className="flex gap-2 flex-wrap">
+                        {['pending', 'approved', 'rejected'].map((s) => (
+                            <button
+                                key={s}
+                                onClick={() => setStatusFilter(s)}
+                                className={`px-4 py-2 rounded-xl text-sm font-bold ${
+                                    statusFilter === s ? 'bg-primary text-white' : 'bg-white border border-border'
+                                }`}
+                            >
+                                {s}
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             <div className="card overflow-hidden">
@@ -83,8 +120,8 @@ export default function AdminHalaqatPage() {
                         <thead className="bg-gray-50 border-b"><tr><th className="text-start px-4 py-3 text-sm">Name</th><th className="text-start px-4 py-3 text-sm">Mosque</th><th className="text-start px-4 py-3 text-sm">Status</th><th className="text-start px-4 py-3 text-sm">Actions</th></tr></thead>
                         <tbody className="divide-y">
                             {loading && <tr><td colSpan={4} className="px-4 py-10 text-center">Loading...</td></tr>}
-                            {!loading && !items.length && <tr><td colSpan={4} className="px-4 py-10 text-center">No data</td></tr>}
-                            {!loading && items.map((item) => (
+                            {!loading && !filteredItems.length && <tr><td colSpan={4} className="px-4 py-10 text-center">No data</td></tr>}
+                            {!loading && filteredItems.map((item) => (
                                 <tr key={item.id}>
                                     <td className="px-4 py-4 font-semibold">{item.circleName}</td>
                                     <td className="px-4 py-4 text-sm text-text-muted">{item.mosqueName}</td>
