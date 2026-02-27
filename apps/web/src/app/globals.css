@@ -43,26 +43,40 @@
     @apply w-full px-4 py-3 border border-gray-300 rounded-btn focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 bg-white;
   }
 
-  /* PhoneInput styles - react-phone-number-input overrides */
+  /* PhoneInput - Always LTR regardless of page direction */
   .PhoneInput {
     position: relative;
     width: 100%;
+    direction: ltr !important;
+    display: flex;
+    flex-direction: row;
   }
 
   .PhoneInput--input {
     width: 100%;
+    direction: ltr !important;
   }
 
-  /* Override library's default input styling - THIS REMOVES THE BLACK BORDER */
+  .PhoneInputCountry {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    order: 0;
+  }
+
+  /* Override library's default input styling */
   .PhoneInputInput {
     @apply w-full px-4 py-3 border border-gray-300 rounded-btn bg-white transition-all duration-200 !important;
     outline: none !important;
     border: 1px solid rgb(209, 213, 219) !important;
     box-shadow: none !important;
     -webkit-appearance: none !important;
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: embed !important;
   }
 
-  /* Remove the black border/outline on focus - THE KEY FIX */
+  /* Remove the black border/outline on focus */
   .PhoneInputInput:focus,
   .PhoneInputInput:focus-visible,
   .PhoneInputInput:active {
@@ -71,55 +85,68 @@
     box-shadow: 0 0 0 2px rgba(27, 107, 69, 0.1) !important;
   }
 
-  /* Ensure placeholder styling */
+  /* Placeholder styling */
   .PhoneInputInput::placeholder {
     @apply text-gray-400 !important;
     opacity: 1 !important;
   }
 
-  /* PhoneInput country select styling */
+  /* PhoneInput country select - always on left */
   .PhoneInputCountrySelect {
     @apply border-none bg-transparent !important;
     appearance: none !important;
     outline: none !important;
     cursor: pointer;
+    direction: ltr !important;
+    order: 1;
   }
 
   .PhoneInputCountrySelect:focus {
     outline: none !important;
   }
 
+  /* Flag icon - always on left */
   .PhoneInputCountryIcon {
     margin-right: 6px !important;
     margin-left: 0 !important;
+    flex-shrink: 0;
+    order: 0;
   }
 
-  /* RTL support for Arabic */
+  /* Force LTR even when parent has dir="rtl" */
   [dir="rtl"] .PhoneInput {
-    direction: rtl !important;
+    direction: ltr !important;
+    flex-direction: row !important;
   }
 
   [dir="rtl"] .PhoneInputInput {
-    direction: rtl !important;
-    text-align: right !important;
-    padding-left: 12px !important;
-    padding-right: 4px !important;
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: embed !important;
+    padding-left: 4px !important;
+    padding-right: 0 !important;
+  }
+
+  [dir="rtl"] .PhoneInputCountry {
+    flex-direction: row !important;
+    order: 0 !important;
   }
 
   [dir="rtl"] .PhoneInputCountrySelect {
-    margin-left: auto !important;
+    margin-left: 0 !important;
     margin-right: 0 !important;
+    order: 1 !important;
   }
 
   [dir="rtl"] .PhoneInputCountryIcon {
-    margin-left: 6px !important;
-    margin-right: 0 !important;
-    order: 2 !important;
+    margin-left: 0 !important;
+    margin-right: 6px !important;
+    order: 0 !important;
   }
 
   [dir="rtl"] .PhoneInputCountrySelect::after {
-    right: 4px !important;
-    left: auto !important;
+    right: auto !important;
+    left: 8px !important;
   }
 
   /* Password visibility icon RTL alignment */
