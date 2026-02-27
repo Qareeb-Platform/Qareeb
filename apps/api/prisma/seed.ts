@@ -511,11 +511,24 @@ async function main() {
     let areaCount = 0;
     for (const a of areas) {
         try {
-            const record = await prisma.area.create({
-                data: {
+            const govId = govMap[a.gov];
+            if (!govId) {
+                console.warn(`⚠️  Skipping area (${a.gov}/${a.ar}): governorate not found`);
+                continue;
+            }
+
+            const record = await prisma.area.upsert({
+                where: {
+                    governorateId_nameEn: {
+                        governorateId: govId,
+                        nameEn: a.en,
+                    },
+                },
+                update: { nameAr: a.ar },
+                create: {
                     nameAr: a.ar,
                     nameEn: a.en,
-                    governorateId: govMap[a.gov],
+                    governorateId: govId,
                 },
             });
             areaMap[`${a.gov}:${a.ar}`] = record.id;
@@ -702,10 +715,15 @@ async function main() {
     }
     console.log(`✅ ${imamCount} imams seeded`);
 
-    // Seed Halaqat (50 items) - skip isOnline/onlineLink for now due to Prisma client update issue
+    // Seed Halaqat (50 items) - with online support
     const halaqat = [];
     const halqaTypes = [HalqaType.children, HalqaType.men, HalqaType.women];
-    
+    const onlinePlatforms = [
+        'https://zoom.us/meeting/123456789',
+        'https://meet.google.com/abc-defg-hij',
+        'https://discord.gg/qareeb',
+    ];
+
     for (let i = 0; i < 50; i++) {
         const circleIdx = i % circleNames.length;
         const mosqueIdx = i % mosqueNames.length;
@@ -713,7 +731,11 @@ async function main() {
         const statusIdx = i % statuses.length;
         const typeIdx = i % halqaTypes.length;
         const area = availableAreas[areaIdx];
-        
+
+        // Make every 3rd halqa online
+        const isOnline = i % 3 === 0;
+        const platformIdx = i % onlinePlatforms.length;
+
         const coords = cityCoordinates['القاهرة'];
         const baseLat = coords[0] + (Math.random() - 0.5) * 0.5;
         const baseLng = coords[1] + (Math.random() - 0.5) * 0.5;
@@ -734,6 +756,8 @@ async function main() {
             additionalInfo: `الدرس كل أسبوع يوم ${['السبت', 'الأحد', 'الاثنين', 'الثلاثاء'][i % 4]}`,
             status: statuses[statusIdx] || SubmissionStatus.approved,
             adminId: statuses[statusIdx] === SubmissionStatus.approved ? superAdmin.id : undefined,
+            isOnline,
+            onlineLink: isOnline ? `${onlinePlatforms[platformIdx]}?id=${i}` : null,
         });
     }
 
@@ -754,16 +778,7 @@ async function main() {
             break;
         }
     }
-    console.log(`✅ ${halqaCount} halaqat seeded`);
-
-    // Update halaqat with online data via raw SQL
-    await prisma.$executeRaw`
-        UPDATE halaqat SET 
-            is_online = (id::text LIKE '%' || (ROW_NUMBER() OVER () % 3)::text || '%') IS TRUE AND (ROW_NUMBER() OVER () % 3 = 0),
-            online_link = CASE WHEN ROW_NUMBER() OVER () % 3 = 0 THEN 'https://meet.google.com/abc-defg-' || (ROW_NUMBER() OVER ())::text ELSE NULL END
-    `.catch(() => {
-        console.log('⚠️  Could not update halaqat online fields');
-    });
+    console.log(`✅ ${halqaCount} halaqat seeded (${Math.floor(halqaCount / 3)} online)`);
 
     // Seed Maintenance Requests (50 items)
     const maintenance = [];
