@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import AppModal from '@/components/ui/AppModal';
 import UnifiedCard from './UnifiedCard';
 import { useModalStore, useToastStore } from '@/lib/store';
+import { getEmbeddableVideoUrl } from '@/lib/video';
 
 type TabType = 'all' | 'imams' | 'halqa' | 'maintenance';
 
