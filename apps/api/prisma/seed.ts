@@ -130,307 +130,238 @@ async function main() {
 
     const areaFor = (gov: string, area: string) => areaMap[`${gov}:${area}`] || null;
 
-    // Seed Imams (6 items)
-    const imams = [
-        {
-            imamName: 'الشيخ محمد عبد الرحمن',
-            mosqueName: 'مسجد السيدة زينب',
-            governorate: 'القاهرة',
-            city: 'القاهرة',
-            district: 'السيدة زينب',
-            areaId: areaFor('القاهرة', 'السيدة زينب'),
-            latitude: 30.0444,
-            longitude: 31.2357,
-            googleMapsUrl: toMapUrl(30.0444, 31.2357),
-            videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            whatsapp: '+201012345678',
-            status: SubmissionStatus.approved,
-            adminId: superAdmin.id,
-        },
-        {
-            imamName: 'الشيخ أحمد كمال الدين',
-            mosqueName: 'مسجد النور',
-            governorate: 'الإسكندرية',
-            city: 'الإسكندرية',
-            district: 'محرم بك',
-            areaId: areaFor('الإسكندرية', 'محرم بك'),
-            latitude: 31.2001,
-            longitude: 29.9187,
-            googleMapsUrl: toMapUrl(31.2001, 29.9187),
-            whatsapp: '+201123456789',
-            status: SubmissionStatus.approved,
-            adminId: superAdmin.id,
-        },
-        {
-            imamName: 'الشيخ عمر حسن الجوهري',
-            mosqueName: 'مسجد الرحمة',
-            governorate: 'الجيزة',
-            city: 'الجيزة',
-            district: 'المهندسين',
-            areaId: areaFor('الجيزة', 'المهندسين'),
-            latitude: 30.0131,
-            longitude: 31.2089,
-            googleMapsUrl: toMapUrl(30.0131, 31.2089),
-            whatsapp: '+201234567890',
-            status: SubmissionStatus.pending,
-        },
-        {
-            imamName: 'الشيخ يوسف إبراهيم السعيد',
-            mosqueName: 'مسجد الفتح',
-            governorate: 'القاهرة',
-            city: 'القاهرة',
-            district: 'مصر الجديدة',
-            areaId: areaFor('القاهرة', 'مصر الجديدة'),
-            latitude: 30.09,
-            longitude: 31.32,
-            googleMapsUrl: toMapUrl(30.09, 31.32),
-            whatsapp: '+201098765432',
-            status: SubmissionStatus.approved,
-            adminId: superAdmin.id,
-        },
-        {
-            imamName: 'الشيخ عبد الله صابر',
-            mosqueName: 'مسجد بلال',
-            governorate: 'الدقهلية',
-            city: 'المنصورة',
-            district: 'وسط البلد',
-            areaId: areaFor('الدقهلية', 'وسط البلد'),
-            latitude: 31.04,
-            longitude: 31.37,
-            googleMapsUrl: toMapUrl(31.04, 31.37),
-            whatsapp: '+201512345678',
-            status: SubmissionStatus.approved,
-            adminId: superAdmin.id,
-        },
-        {
-            imamName: 'الشيخ حسام الدين رضا',
-            mosqueName: 'مسجد المصطفى',
-            governorate: 'الإسكندرية',
-            city: 'الإسكندرية',
-            district: 'العجمي',
-            areaId: areaFor('الإسكندرية', 'العجمي'),
-            latitude: 31.13,
-            longitude: 29.78,
-            googleMapsUrl: toMapUrl(31.13, 29.78),
-            whatsapp: '+201612345678',
-            status: SubmissionStatus.pending,
-        },
+    // Helper data for generating diverse records
+    const arabicNames = [
+        { first: 'محمد', last: 'عبد الرحمن' },
+        { first: 'أحمد', last: 'كمال الدين' },
+        { first: 'عمر', last: 'حسن الجوهري' },
+        { first: 'يوسف', last: 'إبراهيم السعيد' },
+        { first: 'عبد الله', last: 'صابر' },
+        { first: 'حسام الدين', last: 'رضا' },
+        { first: 'علي', last: 'محمود' },
+        { first: 'إبراهيم', last: 'الشريف' },
+        { first: 'محمود', last: 'علي الدين' },
+        { first: 'ياسر', last: 'صالح' },
+        { first: 'سالم', last: 'العطار' },
+        { first: 'خالد', last: 'الحسن' },
+        { first: 'فايز', last: 'محمد' },
+        { first: 'جمال', last: 'الدهيمي' },
+        { first: 'مصطفى', last: 'الزهراني' },
+        { first: 'رمضان', last: 'السيد' },
+        { first: 'حسن', last: 'الخولي' },
+        { first: 'صلاح', last: 'الجمال' },
+        { first: 'كريم', last: 'الرفاعي' },
+        { first: 'وليد', last: 'الشطي' },
+        { first: 'نور', last: 'الدين' },
+        { first: 'سعيد', last: 'العربي' },
+        { first: 'طارق', last: 'السلمي' },
+        { first: 'هاني', last: 'الشناوي' },
+        { first: 'بشير', last: 'القاضي' },
     ];
+
+    const mosqueNames = [
+        'مسجد السيدة زينب', 'مسجد النور', 'مسجد الرحمة', 'مسجد الفتح',
+        'مسجد بلال', 'مسجد المصطفى', 'مسجد عمر بن الخطاب', 'مسجد الإخلاص',
+        'مسجد السلام', 'مسجد التوبة', 'مسجد النساء', 'مسجد الحصار',
+        'مسجد القدس', 'مسجد الحمراء', 'مسجد الصفا', 'مسجد قباء',
+        'مسجد المعراج', 'مسجد الهجرة', 'مسجد الإيمان', 'مسجد النجاح',
+        'مسجد الشرح', 'مسجد الهدى', 'مسجد الراية', 'مسجد الأمانة',
+        'مسجد السند', 'مسجد الجود', 'مسجد القيمة', 'مسجد الفضل',
+        'مسجد الرايات', 'مسجد الغفران', 'مسجد الأنوار', 'مسجد السراج',
+        'مسجد النجم', 'مسجد القمر', 'مسجد الشمس', 'مسجد الأرز',
+        'مسجد الزيتون', 'مسجد الرومان', 'مسجد التمر', 'مسجد الحب',
+        'مسجد الود', 'مسجد السلفة', 'مسجد التقوى', 'مسجد الخير',
+        'مسجد البركة', 'مسجد الرزق', 'مسجد النعمة', 'مسجد الحكمة',
+        'مسجد الإصلاح', 'مسجد التعاون',
+    ];
+
+    const maintenanceDescriptions = [
+        'تجديد السجاد - المساحة ٢٠٠ م²',
+        'تكييف المصلى الرئيسي لخدمة ٣٠٠ مصلٍّ',
+        'إصلاح شبكة السباكة الداخلية لدورات المياه',
+        'دهان وتجديد الواجهة الخارجية والجدران الداخلية',
+        'تجديد كامل منظومة الإنارة والكهرباء',
+        'توسعة المصلى بطابق ثانٍ',
+        'إصلاح السقف والتسربات المائية',
+        'تجديد أبواب وشبابيك المسجد',
+        'تنظيف وعزل الخزانات المائية',
+        'صيانة شرائط التحفيف والمراوح',
+        'إعادة تصميم داخلي للمنطقة النسائية',
+        'تركيب نظام صوي بجودة عالية',
+        'إصلاح التهوية والتكييف المركزي',
+        'تجديد الأدوات السنية وأرضيات دورات المياه',
+        'عزل حراري للمصلى',
+        'تركيب إضاءة LED موفرة للطاقة',
+        'إعادة بناء منطقة وضوء درجة أولى',
+        'صيانة نوافذ الحديد والكاسات',
+        'إعادة تخطيط الممرات والمخارج',
+        'تجديد أسقف معلقة وتكسيات جديدة',
+        'صيانة شاملة لنظام الصرف الصحي',
+        'إعادة رسم الجدران وتركيب لوحات تذهب',
+        'تركيب أجهزة إطفاء الحريق والأمان',
+        'تجديد وعزل الأساسات والجدران الخارجية',
+        'صيانة الأرضيات والسيراميك المتضرر',
+    ];
+
+    const maintenanceTypes = [
+        [MaintenanceType.Carpentry],
+        [MaintenanceType.AC_Repair],
+        [MaintenanceType.Plumbing],
+        [MaintenanceType.Painting],
+        [MaintenanceType.Electrical],
+        [MaintenanceType.Other],
+        [MaintenanceType.Carpentry, MaintenanceType.Painting],
+        [MaintenanceType.AC_Repair, MaintenanceType.Electrical],
+        [MaintenanceType.Plumbing, MaintenanceType.Electrical],
+        [MaintenanceType.Painting, MaintenanceType.Carpentry],
+    ];
+
+    const circleNames = [
+        'حلقة نور العلم', 'حلقة السيدات للتحفيظ', 'حلقة الإخوة للرجال',
+        'حلقة الصغار المميزة', 'حلقة القراءات العشر', 'حلقة أمهات المؤمنين',
+        'حلقة الشباب الواعي', 'حلقة رياض الجنة', 'حلقة السنة النبوية',
+        'حلقة أساسيات الإسلام', 'حلقة الفقه الإسلامي', 'حلقة التفسير المميز',
+        'حلقة التجويد للجميع', 'حلقة الحديث الشريف', 'حلقة العقيدة السلفية',
+        'حلقة الدعوة والتوعية', 'حلقة الأخلاق والآداب', 'حلقة تربية الأطفال',
+        'حلقة إعادة التأهيل', 'حلقة الإمامة والخطابة', 'حلقة الحفاظ',
+        'حلقة التطبيق العملي', 'حلقة السيرة النبوية', 'حلقة أحكام الصلاة',
+        'حلقة أحكام زكاة', 'حلقة أحكام الصيام', 'حلقة أحكام الحج',
+        'حلقة دروس الجمعة', 'حلقة المسابقات القرآنية', 'حلقة المتقدمين',
+        'حلقة الأساسيين', 'حلقة المبتدئين', 'حلقة الشباب المتدين',
+        'حلقة كبار السن', 'حلقة الموظفين', 'حلقة الطلاب',
+        'حلقة العاملين', 'حلقة الأساتذة', 'حلقة الأطباء',
+        'حلقة المهندسين', 'حلقة الفنانين', 'حلقة الصانعين',
+        'حلقة التجار', 'حلقة الفلاحين', 'حلقة الحرفيين',
+        'حلقة الباعة', 'حلقة الموصيين',
+    ];
+
+    // Geographic distribution for coordinates
+    const cityCoordinates: Record<string, [number, number]> = {
+        'القاهرة': [30.0444, 31.2357],
+        'الجيزة': [30.0131, 31.2089],
+        'الإسكندرية': [31.2001, 29.9187],
+        'الدقهلية': [31.04, 31.37],
+        'الشرقية': [30.58, 31.51],
+        'البحيرة': [31.03, 30.47],
+        'المنيا': [28.1198, 30.7381],
+        'بني سويف': [29.0711, 31.1075],
+        'الغربية': [30.6815, 31.0226],
+        'المنوفية': [30.5047, 31.1499],
+    };
+
+    // Seed Imams (50 items)
+    const imams = [];
+    const availableAreas = Object.keys(areaMap).map(key => ({ key, areaId: areaMap[key] }));
+    const statuses = [SubmissionStatus.approved, SubmissionStatus.pending, SubmissionStatus.approved, SubmissionStatus.approved];
+    
+    for (let i = 0; i < 50; i++) {
+        const nameIdx = i % arabicNames.length;
+        const mosqueIdx = i % mosqueNames.length;
+        const areaIdx = i % availableAreas.length;
+        const statusIdx = i % statuses.length;
+        const area = availableAreas[areaIdx];
+        
+        const coords = cityCoordinates['القاهرة']; // Default coords
+        const baseLat = coords[0] + (Math.random() - 0.5) * 0.5;
+        const baseLng = coords[1] + (Math.random() - 0.5) * 0.5;
+
+        imams.push({
+            imamName: `الشيخ ${arabicNames[nameIdx]?.first || 'محمد'} ${arabicNames[nameIdx]?.last || 'السعيد'}`,
+            mosqueName: mosqueNames[mosqueIdx] || 'مسجد جديد',
+            governorate: 'القاهرة',
+            city: 'القاهرة',
+            district: `منطقة-${i + 1}`,
+            areaId: area.areaId,
+            latitude: baseLat,
+            longitude: baseLng,
+            googleMapsUrl: toMapUrl(baseLat, baseLng),
+            videoUrl: i % 3 === 0 ? 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' : undefined,
+            whatsapp: `+201${String(i + 1).padStart(10, '0')}`,
+            status: statuses[statusIdx] || SubmissionStatus.approved,
+            adminId: statuses[statusIdx] === SubmissionStatus.approved ? superAdmin.id : undefined,
+        });
+    }
 
     for (const imam of imams) {
         await prisma.imam.create({ data: imam });
     }
     console.log(`✅ ${imams.length} imams seeded`);
 
-    // Seed Halaqat (6 items)
-    const halaqat = [
-        {
-            circleName: 'حلقة نور العلم',
-            mosqueName: 'مسجد عمر بن الخطاب',
-            halqaType: HalqaType.children,
+    // Seed Halaqat (50 items)
+    const halaqat = [];
+    const halqaTypes = [HalqaType.children, HalqaType.men, HalqaType.women];
+    
+    for (let i = 0; i < 50; i++) {
+        const circleIdx = i % circleNames.length;
+        const mosqueIdx = i % mosqueNames.length;
+        const areaIdx = i % availableAreas.length;
+        const statusIdx = i % statuses.length;
+        const typeIdx = i % halqaTypes.length;
+        const area = availableAreas[areaIdx];
+        
+        const coords = cityCoordinates['القاهرة'];
+        const baseLat = coords[0] + (Math.random() - 0.5) * 0.5;
+        const baseLng = coords[1] + (Math.random() - 0.5) * 0.5;
+
+        halaqat.push({
+            circleName: circleNames[circleIdx] || 'حلقة جديدة',
+            mosqueName: mosqueNames[mosqueIdx] || 'مسجد جديد',
+            halqaType: halqaTypes[typeIdx] || HalqaType.children,
             governorate: 'القاهرة',
             city: 'القاهرة',
-            district: 'مدينة نصر',
-            areaId: areaFor('القاهرة', 'مدينة نصر'),
-            latitude: 30.05,
-            longitude: 31.33,
-            googleMapsUrl: toMapUrl(30.05, 31.33),
-            videoUrl: 'https://www.youtube.com/watch?v=J---aiyznGQ',
-            whatsapp: '+201011111111',
-            additionalInfo: 'السبت والاثنين ٤-٦ م - تحفيظ قرآن للأطفال',
-            status: SubmissionStatus.approved,
-            adminId: superAdmin.id,
-        },
-        {
-            circleName: 'حلقة السيدات للتحفيظ',
-            mosqueName: 'مسجد السلام',
-            halqaType: HalqaType.women,
-            governorate: 'الجيزة',
-            city: 'الجيزة',
-            district: 'الدقي',
-            areaId: areaFor('الجيزة', 'الدقي'),
-            latitude: 30.03,
-            longitude: 31.21,
-            googleMapsUrl: toMapUrl(30.03, 31.21),
-            whatsapp: '+201022222222',
-            additionalInfo: 'يومياً ١٠ص - ١٢ ظ - للسيدات فقط',
-            status: SubmissionStatus.approved,
-            adminId: superAdmin.id,
-        },
-        {
-            circleName: 'حلقة الإخوة للرجال',
-            mosqueName: 'مسجد الإخلاص',
-            halqaType: HalqaType.men,
-            governorate: 'الإسكندرية',
-            city: 'الإسكندرية',
-            district: 'سيدي بشر',
-            areaId: areaFor('الإسكندرية', 'سيدي بشر'),
-            latitude: 31.26,
-            longitude: 30.0,
-            googleMapsUrl: toMapUrl(31.26, 30.0),
-            whatsapp: '+201033333333',
-            additionalInfo: 'بعد المغرب يومياً - للرجال فقط',
-            status: SubmissionStatus.approved,
-            adminId: superAdmin.id,
-        },
-        {
-            circleName: 'حلقة الصغار المميزة',
-            mosqueName: 'مسجد الرحمن',
-            halqaType: HalqaType.children,
-            governorate: 'القاهرة',
-            city: 'القاهرة',
-            district: 'شبرا',
-            areaId: areaFor('القاهرة', 'شبرا'),
-            latitude: 30.1,
-            longitude: 31.24,
-            googleMapsUrl: toMapUrl(30.1, 31.24),
-            whatsapp: '+201044444444',
-            additionalInfo: 'الجمعة والأحد ٣-٥ م',
-            status: SubmissionStatus.pending,
-        },
-        {
-            circleName: 'حلقة القراءات العشر',
-            mosqueName: 'مسجد التوبة',
-            halqaType: HalqaType.men,
-            governorate: 'الدقهلية',
-            city: 'المنصورة',
-            district: 'الجمهورية',
-            areaId: areaFor('الدقهلية', 'الجمهورية'),
-            latitude: 31.04,
-            longitude: 31.38,
-            googleMapsUrl: toMapUrl(31.04, 31.38),
-            whatsapp: '+201055555555',
-            additionalInfo: 'الثلاثاء والخميس ٨-١٠ م - للمتقدمين',
-            status: SubmissionStatus.approved,
-            adminId: superAdmin.id,
-        },
-        {
-            circleName: 'حلقة أمهات المؤمنين',
-            mosqueName: 'مسجد النساء',
-            halqaType: HalqaType.women,
-            governorate: 'الجيزة',
-            city: 'الجيزة',
-            district: 'فيصل',
-            areaId: areaFor('الجيزة', 'فيصل'),
-            latitude: 30.0,
-            longitude: 31.17,
-            googleMapsUrl: toMapUrl(30.0, 31.17),
-            whatsapp: '+201066666666',
-            additionalInfo: 'الاثنين والأربعاء ٩-١١ص',
-            status: SubmissionStatus.approved,
-            adminId: superAdmin.id,
-        },
-    ];
+            district: `منطقة-${i + 1}`,
+            areaId: area.areaId,
+            latitude: baseLat,
+            longitude: baseLng,
+            googleMapsUrl: toMapUrl(baseLat, baseLng),
+            videoUrl: i % 2 === 0 ? 'https://www.youtube.com/watch?v=J---aiyznGQ' : undefined,
+            whatsapp: `+201${String(i + 101).padStart(10, '0')}`,
+            additionalInfo: `الدرس كل أسبوع يوم ${['السبت', 'الأحد', 'الاثنين', 'الثلاثاء'][i % 4]}`,
+            status: statuses[statusIdx] || SubmissionStatus.approved,
+            adminId: statuses[statusIdx] === SubmissionStatus.approved ? superAdmin.id : undefined,
+        });
+    }
 
     for (const halqa of halaqat) {
         await prisma.halqa.create({ data: halqa });
     }
     console.log(`✅ ${halaqat.length} halaqat seeded`);
 
-    // Seed Maintenance Requests (6 items)
-    const maintenance = [
-        {
-            mosqueName: 'مسجد النور',
+    // Seed Maintenance Requests (50 items)
+    const maintenance = [];
+    
+    for (let i = 0; i < 50; i++) {
+        const mosqueIdx = i % mosqueNames.length;
+        const areaIdx = i % availableAreas.length;
+        const statusIdx = i % statuses.length;
+        const descIdx = i % maintenanceDescriptions.length;
+        const typeIdx = i % maintenanceTypes.length;
+        const area = availableAreas[areaIdx];
+        
+        const coords = cityCoordinates['القاهرة'];
+        const baseLat = coords[0] + (Math.random() - 0.5) * 0.5;
+        const baseLng = coords[1] + (Math.random() - 0.5) * 0.5;
+        
+        const baseCost = 5000 + (i * 1000);
+
+        maintenance.push({
+            mosqueName: mosqueNames[mosqueIdx] || 'مسجد جديد',
             governorate: 'القاهرة',
             city: 'القاهرة',
-            district: 'حلوان',
-            areaId: areaFor('القاهرة', 'حلوان'),
-            latitude: 29.84,
-            longitude: 31.33,
-            googleMapsUrl: toMapUrl(29.84, 31.33),
-            maintenanceTypes: [MaintenanceType.Carpentry],
-            description: 'تجديد السجاد - المساحة ٢٠٠ م²',
-            estimatedCostMin: 15000,
-            estimatedCostMax: 25000,
-            whatsapp: '+201077777777',
-            status: SubmissionStatus.approved,
-            adminId: superAdmin.id,
-        },
-        {
-            mosqueName: 'مسجد الفتح',
-            governorate: 'الجيزة',
-            city: 'الجيزة',
-            district: 'إمبابة',
-            areaId: areaFor('الجيزة', 'إمبابة'),
-            latitude: 30.07,
-            longitude: 31.21,
-            googleMapsUrl: toMapUrl(30.07, 31.21),
-            maintenanceTypes: [MaintenanceType.AC_Repair],
-            description: 'تكييف المصلى الرئيسي لخدمة ٣٠٠ مصلٍّ',
-            estimatedCostMin: 30000,
-            estimatedCostMax: 50000,
-            whatsapp: '+201088888888',
-            status: SubmissionStatus.approved,
-            adminId: superAdmin.id,
-        },
-        {
-            mosqueName: 'مسجد السلام',
-            governorate: 'الإسكندرية',
-            city: 'الإسكندرية',
-            district: 'المنتزه',
-            areaId: areaFor('الإسكندرية', 'المنتزه'),
-            latitude: 31.27,
-            longitude: 30.01,
-            googleMapsUrl: toMapUrl(31.27, 30.01),
-            maintenanceTypes: [MaintenanceType.Plumbing],
-            description: 'إصلاح شبكة السباكة الداخلية لدورات المياه',
-            estimatedCostMin: 8000,
-            estimatedCostMax: 15000,
-            whatsapp: '+201099999999',
-            status: SubmissionStatus.approved,
-            adminId: superAdmin.id,
-        },
-        {
-            mosqueName: 'مسجد التوبة',
-            governorate: 'الشرقية',
-            city: 'الزقازيق',
-            district: 'وسط البلد',
-            areaId: areaFor('الشرقية', 'وسط البلد'),
-            latitude: 30.58,
-            longitude: 31.51,
-            googleMapsUrl: toMapUrl(30.58, 31.51),
-            maintenanceTypes: [MaintenanceType.Painting],
-            description: 'دهان وتجديد الواجهة الخارجية والجدران الداخلية',
-            estimatedCostMin: 5000,
-            estimatedCostMax: 9000,
-            whatsapp: '+201100000001',
-            status: SubmissionStatus.approved,
-            adminId: superAdmin.id,
-        },
-        {
-            mosqueName: 'مسجد عمر بن الخطاب',
-            governorate: 'القاهرة',
-            city: 'القاهرة',
-            district: 'المرج',
-            areaId: areaFor('القاهرة', 'المرج'),
-            latitude: 30.15,
-            longitude: 31.33,
-            googleMapsUrl: toMapUrl(30.15, 31.33),
-            maintenanceTypes: [MaintenanceType.Electrical],
-            description: 'تجديد كامل منظومة الإنارة والكهرباء',
-            estimatedCostMin: 20000,
-            estimatedCostMax: 35000,
-            whatsapp: '+201100000002',
-            status: SubmissionStatus.approved,
-            adminId: superAdmin.id,
-        },
-        {
-            mosqueName: 'مسجد الرحمة',
-            governorate: 'البحيرة',
-            city: 'دمنهور',
-            district: 'الزهور',
-            areaId: areaFor('البحيرة', 'الزهور'),
-            latitude: 31.03,
-            longitude: 30.47,
-            googleMapsUrl: toMapUrl(31.03, 30.47),
-            maintenanceTypes: [MaintenanceType.Other],
-            description: 'توسعة المصلى بطابق ثانٍ',
-            estimatedCostMin: 80000,
-            estimatedCostMax: 150000,
-            whatsapp: '+201100000003',
-            status: SubmissionStatus.pending,
-        },
-    ];
+            district: `منطقة-${i + 1}`,
+            areaId: area.areaId,
+            latitude: baseLat,
+            longitude: baseLng,
+            googleMapsUrl: toMapUrl(baseLat, baseLng),
+            maintenanceTypes: maintenanceTypes[typeIdx] || [MaintenanceType.Other],
+            description: maintenanceDescriptions[descIdx] || 'صيانة عامة وتحسينات',
+            estimatedCostMin: baseCost,
+            estimatedCostMax: baseCost + 10000 + (i * 500),
+            whatsapp: `+201${String(i + 201).padStart(10, '0')}`,
+            status: statuses[statusIdx] || SubmissionStatus.approved,
+            adminId: statuses[statusIdx] === SubmissionStatus.approved ? superAdmin.id : undefined,
+        });
+    }
 
     for (const m of maintenance) {
         await prisma.maintenanceRequest.create({ data: m });
