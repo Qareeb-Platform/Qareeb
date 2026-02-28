@@ -99,12 +99,12 @@ export default function SubmitPage() {
             } else if (entityType === 'halqa') {
                 await api.createHalqa({
                     circle_name: payload.name,
-                    mosque_name: payload.mosqueName,
-                    halqa_type: payload.halqaType || 'mixed',
-                    governorate: payload.governorate,
-                    city: payload.city,
-                    district: payload.district,
-                    area_id: payload.areaId,
+                    mosque_name: payload.isOnline ? undefined : payload.mosqueName,
+                    halqa_type: payload.halqaType || 'children',
+                    governorate: payload.isOnline ? undefined : payload.governorate,
+                    city: payload.isOnline ? undefined : payload.city,
+                    district: payload.isOnline ? undefined : payload.district,
+                    area_id: payload.isOnline ? undefined : payload.areaId,
                     google_maps_url: payload.isOnline ? undefined : payload.googleMapsUrl,
                     is_online: !!payload.isOnline,
                     lat: payload.isOnline ? undefined : payload.lat,
@@ -240,12 +240,14 @@ export default function SubmitPage() {
                                     </div>
                                 )}
 
-                                <div className="group">
-                                    <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">
-                                        {entityType === 'imam' ? ti('mosqueName') : entityType === 'halqa' ? th('mosqueName') : tm('mosqueName')} <span className="text-red-500">*</span>
-                                    </label>
-                                    <input {...register('mosqueName', { required: true })} className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold" placeholder={locale === 'ar' ? 'اسم المسجد التابع له...' : 'Mosque name...'} />
-                                </div>
+                                {!(entityType === 'halqa' && isOnline) && (
+                                    <div className="group">
+                                        <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">
+                                            {entityType === 'imam' ? ti('mosqueName') : entityType === 'halqa' ? th('mosqueName') : tm('mosqueName')} <span className="text-red-500">*</span>
+                                        </label>
+                                        <input {...register('mosqueName', { required: entityType !== 'halqa' || !isOnline })} className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold" placeholder={locale === 'ar' ? 'اسم المسجد التابع له...' : 'Mosque name...'} />
+                                    </div>
+                                )}
 
                                 {entityType === 'halqa' && (
                                     <div className="group">
@@ -254,8 +256,7 @@ export default function SubmitPage() {
                                             <option value="men">{th('men')}</option>
                                             <option value="women">{th('women')}</option>
                                             <option value="children">{th('children')}</option>
-                                            <option value="mixed">{th('mixed')}</option>
-                                        </select>
+                                                                                    </select>
                                     </div>
                                 )}
 

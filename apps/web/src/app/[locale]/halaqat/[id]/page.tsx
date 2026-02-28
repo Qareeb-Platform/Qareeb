@@ -16,8 +16,8 @@ async function getHalqa(id: string): Promise<any> {
 }
 
 const typeLabels: Record<string, Record<string, string>> = {
-    ar: { men: 'رجال', women: 'نساء', children: 'أطفال', mixed: 'مختلط' },
-    en: { men: 'Men', women: 'Women', children: 'Children', mixed: 'Mixed' },
+    ar: { men: 'رجال', women: 'نساء', children: 'أطفال' },
+    en: { men: 'Men', women: 'Women', children: 'Children' },
 };
 
 export default async function HalqaDetailPage({ params }: { params: { id: string } }) {

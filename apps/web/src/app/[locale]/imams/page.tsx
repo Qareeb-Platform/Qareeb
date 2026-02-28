@@ -46,21 +46,22 @@ export default function ImamsPage() {
 
     useEffect(() => {
         void fetchData();
-    }, [lat, lng, governorateId, areaId, governorates, page]);
+    }, [lat, lng, governorateId, areaId, governorates, page, searchTerm]);
 
     useEffect(() => {
         setPage(1);
-    }, [governorateId, areaId]);
+    }, [governorateId, areaId, searchTerm]);
 
     const fetchData = async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams();
-            if (lat && lng) {
+            if (!searchTerm && lat && lng) {
                 params.set('lat', lat.toString());
                 params.set('lng', lng.toString());
                 params.set('radius', '10000');
             }
+            if (searchTerm.trim()) params.set('query', searchTerm.trim());
             if (areaId) {
                 params.set('area_id', areaId);
             } else if (governorateId) {
@@ -75,20 +76,6 @@ export default function ImamsPage() {
         }
         setLoading(false);
     };
-
-    const filteredData = data?.data?.filter((imam: any) => {
-        if (!searchTerm) return true;
-        const q = searchTerm.toLowerCase();
-        return [
-            imam.imam_name || imam.imamName,
-            imam.mosque_name || imam.mosqueName,
-            imam.governorate,
-            imam.city,
-            imam.district,
-            imam.area?.nameEn,
-            imam.area?.nameAr,
-        ].some((field) => (field || '').toString().toLowerCase().includes(q));
-    });
 
     const router = useRouter();
 
@@ -159,9 +146,9 @@ export default function ImamsPage() {
                                 </div>
                             ))}
                         </div>
-                    ) : filteredData?.length > 0 ? (
+                    ) : data?.data?.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredData.map((imam: any) => {
+                            {data.data.map((imam: any) => {
                                 const card = {
                                     id: imam.id,
                                     entity: 'imam' as const,
@@ -175,7 +162,7 @@ export default function ImamsPage() {
                                     ]),
                                     typeLabel: locale === 'ar' ? 'إمام' : 'Imam',
                                     typeIcon: '🕌',
-                                   map: imam.google_maps_url || imam.googleMapsUrl,
+                                    map: imam.google_maps_url || imam.googleMapsUrl,
                                     video: imam.video_url || imam.videoUrl,
                                     whatsapp: imam.whatsapp,
                                     online: false,
