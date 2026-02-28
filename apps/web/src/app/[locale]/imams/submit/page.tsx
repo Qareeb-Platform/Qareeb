@@ -203,6 +203,14 @@ export default function SubmitPage() {
                 } catch {
                     hadFailures = true;
                 }
+
+                uploadedBatch.push({ publicId: payload.public_id, secureUrl: payload.secure_url });
+                previewBatch.push(payload.secure_url);
+            }
+
+            if (uploadedBatch.length) {
+                setMediaUploads((prev) => [...prev, ...uploadedBatch].slice(0, maxMaintenanceImages));
+                setImagePreviews((prev) => [...prev, ...previewBatch].slice(0, maxMaintenanceImages));
             }
 
             if (uploadedBatch.length) {
