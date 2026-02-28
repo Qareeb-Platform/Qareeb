@@ -27,6 +27,7 @@ export default function SubmitPage() {
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [uploadingImage, setUploadingImage] = useState(false);
     const [uploadError, setUploadError] = useState('');
+    const [uploadSuccess, setUploadSuccess] = useState('');
     const [draggingImage, setDraggingImage] = useState(false);
     const { register, handleSubmit, watch, setValue } = useForm();
     const [governorates, setGovernorates] = useState<any[]>([]);
@@ -116,6 +117,7 @@ export default function SubmitPage() {
                     additional_info: payload.additionalInfo,
                 });
             } else if (entityType === 'maintenance') {
+                setUploadSuccess('');
                 if (mediaUploads.length > maxMaintenanceImages) {
                     setUploadError(locale === 'ar' ? 'الحد الأقصى لصور الصيانة هو 3 صور.' : 'Maximum maintenance images is 3.');
                     setSubmitting(false);
@@ -150,45 +152,56 @@ export default function SubmitPage() {
         if (!files.length) return;
 
         if (mediaUploads.length >= maxMaintenanceImages) {
+            setUploadSuccess('');
             setUploadError(locale === 'ar' ? 'وصلت للحد الأقصى (3 صور).' : 'You reached the maximum limit (3 images).');
             return;
         }
 
         if (mediaUploads.length + files.length > maxMaintenanceImages) {
+            setUploadSuccess('');
             setUploadError(locale === 'ar' ? 'يمكنك رفع 3 صور كحد أقصى.' : 'You can upload up to 3 images only.');
             return;
         }
 
         const selected = files.slice(0, maxMaintenanceImages - mediaUploads.length);
         setUploadError('');
+        setUploadSuccess('');
         setUploadingImage(true);
         try {
             const uploadedBatch: Array<{ publicId: string; secureUrl: string }> = [];
             const previewBatch: string[] = [];
+            let hadFailures = false;
 
             for (const file of selected) {
                 if (!allowed.includes(file.type) || file.size > 2 * 1024 * 1024) {
-                    setUploadError(locale === 'ar' ? 'بعض الملفات غير مدعومة أو أكبر من 2MB.' : 'Some files are unsupported or larger than 2MB.');
+                    hadFailures = true;
                     continue;
                 }
 
-                const sign = await api.getSignedUploadParams();
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('api_key', sign.api_key);
-                formData.append('timestamp', String(sign.timestamp));
-                formData.append('signature', sign.signature);
-                formData.append('folder', sign.folder);
-                formData.append('allowed_formats', sign.allowed_formats);
+                try {
+                    const sign = await api.getSignedUploadParams();
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('api_key', sign.api_key);
+                    formData.append('timestamp', String(sign.timestamp));
+                    formData.append('signature', sign.signature);
+                    formData.append('folder', sign.folder);
+                    formData.append('allowed_formats', sign.allowed_formats);
 
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${sign.cloud_name}/image/upload`, {
-                    method: 'POST',
-                    body: formData,
-                });
-                const payload = await res.json();
-                if (!res.ok) {
-                    setUploadError(locale === 'ar' ? 'تعذر رفع بعض الصور. حاول مرة أخرى.' : 'Some images failed to upload. Please try again.');
-                    continue;
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${sign.cloud_name}/image/upload`, {
+                        method: 'POST',
+                        body: formData,
+                    });
+                    const payload = await res.json();
+                    if (!res.ok) {
+                        hadFailures = true;
+                        continue;
+                    }
+
+                    uploadedBatch.push({ publicId: payload.public_id, secureUrl: payload.secure_url });
+                    previewBatch.push(payload.secure_url);
+                } catch {
+                    hadFailures = true;
                 }
 
                 uploadedBatch.push({ publicId: payload.public_id, secureUrl: payload.secure_url });
@@ -199,7 +212,23 @@ export default function SubmitPage() {
                 setMediaUploads((prev) => [...prev, ...uploadedBatch].slice(0, maxMaintenanceImages));
                 setImagePreviews((prev) => [...prev, ...previewBatch].slice(0, maxMaintenanceImages));
             }
-            setUploadError(locale === 'ar' ? 'تعذر رفع الصورة. حاول مرة أخرى.' : 'Image upload failed. Please try again.');
+
+            if (uploadedBatch.length) {
+                setMediaUploads((prev) => [...prev, ...uploadedBatch].slice(0, maxMaintenanceImages));
+                setImagePreviews((prev) => [...prev, ...previewBatch].slice(0, maxMaintenanceImages));
+                setUploadSuccess(locale === 'ar'
+                    ? `تم رفع ${uploadedBatch.length} صورة بنجاح.`
+                    : `${uploadedBatch.length} image(s) uploaded successfully.`);
+                setUploadError('');
+                return;
+            }
+
+            setUploadSuccess('');
+            if (hadFailures) {
+                setUploadError(locale === 'ar'
+                    ? 'تعذر رفع الصور المختارة. تأكد من النوع (JPG/PNG/WEBP) والحجم (2MB) ثم حاول مرة أخرى.'
+                    : 'Failed to upload selected images. Check file type (JPG/PNG/WEBP) and max size (2MB), then try again.');
+            }
         } finally {
             setUploadingImage(false);
         }
@@ -209,6 +238,7 @@ export default function SubmitPage() {
         setImagePreviews((prev) => prev.filter((_, idx) => idx !== index));
         setMediaUploads((prev) => prev.filter((_, idx) => idx !== index));
         setUploadError('');
+        setUploadSuccess('');
     };
 
     const renderMaintenanceUploader = () => (
@@ -251,8 +281,9 @@ export default function SubmitPage() {
             </div>
             {uploadingImage && <p className="text-xs text-primary mt-1">{locale === 'ar' ? 'جاري الرفع...' : 'Uploading...'}</p>}
             {uploadError && <p className="text-xs text-red-600 mt-1">{uploadError}</p>}
+            {uploadSuccess && <p className="text-xs text-emerald-600 mt-1">{uploadSuccess}</p>}
             {!!imagePreviews.length && (
-                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {imagePreviews.map((url, i) => (
                         <div key={url} className="relative">
                             <img src={url} alt={`preview-${i}`} className="w-full h-28 object-cover rounded-lg border" />
