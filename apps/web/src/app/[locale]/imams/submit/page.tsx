@@ -192,14 +192,14 @@ export default function SubmitPage() {
                         method: 'POST',
                         body: formData,
                     });
-                    const payload = await res.json();
+                    const uploadPayload = await res.json();
                     if (!res.ok) {
                         hadFailures = true;
                         continue;
                     }
 
-                    uploadedBatch.push({ publicId: payload.public_id, secureUrl: payload.secure_url });
-                    previewBatch.push(payload.secure_url);
+                    uploadedBatch.push({ publicId: uploadPayload.public_id, secureUrl: uploadPayload.secure_url });
+                    previewBatch.push(uploadPayload.secure_url);
                 } catch {
                     hadFailures = true;
                 }
@@ -211,6 +211,23 @@ export default function SubmitPage() {
             if (uploadedBatch.length) {
                 setMediaUploads((prev) => [...prev, ...uploadedBatch].slice(0, maxMaintenanceImages));
                 setImagePreviews((prev) => [...prev, ...previewBatch].slice(0, maxMaintenanceImages));
+            }
+
+            if (uploadedBatch.length) {
+                setMediaUploads((prev) => [...prev, ...uploadedBatch].slice(0, maxMaintenanceImages));
+                setImagePreviews((prev) => [...prev, ...previewBatch].slice(0, maxMaintenanceImages));
+                setUploadSuccess(locale === 'ar'
+                    ? `تم رفع ${uploadedBatch.length} صورة بنجاح.`
+                    : `${uploadedBatch.length} image(s) uploaded successfully.`);
+                setUploadError('');
+                return;
+            }
+
+            setUploadSuccess('');
+            if (hadFailures) {
+                setUploadError(locale === 'ar'
+                    ? 'تعذر رفع الصور المختارة. تأكد من النوع (JPG/PNG/WEBP) والحجم (2MB) ثم حاول مرة أخرى.'
+                    : 'Failed to upload selected images. Check file type (JPG/PNG/WEBP) and max size (2MB), then try again.');
             }
 
             if (uploadedBatch.length) {
