@@ -146,19 +146,19 @@ function Field({
     return (
         <div>
             <label className="block text-sm font-semibold mb-2">{label}</label>
-            <div className="relative">
+            <div className="password-field-wrap">
                 <input
                     type={show ? 'text' : 'password'}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
-                    className={`${inputClass} pe-11`}
+                    className={`${inputClass} password-field-input`}
                     dir="ltr"
                     required
                 />
                 <button
                     type="button"
                     onClick={() => setShow(!show)}
-                    className="absolute inset-y-0 end-0 px-3 text-gray-500 hover:text-gray-700"
+                    className="password-toggle-btn text-gray-500 hover:text-gray-700"
                     aria-label={show ? hideLabel : showLabel}
                     title={show ? hideLabel : showLabel}
                 >

@@ -17,6 +17,38 @@
     @apply bg-background text-text antialiased;
   }
 
+  /* Accessible cross-browser focus style for text-like controls */
+  :where(
+      input[type='text'],
+      input[type='email'],
+      input[type='password'],
+      input[type='search'],
+      input[type='url'],
+      input[type='tel'],
+      input[type='number'],
+      textarea,
+      select
+    ):focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  :where(
+      input[type='text'],
+      input[type='email'],
+      input[type='password'],
+      input[type='search'],
+      input[type='url'],
+      input[type='tel'],
+      input[type='number'],
+      textarea,
+      select
+    ):focus-visible {
+    outline: 2px solid #1b6b45;
+    outline-offset: 1px;
+    box-shadow: 0 0 0 4px rgba(27, 107, 69, 0.18);
+  }
+
   .font-arabic { font-family: var(--font-cairo), var(--font-tajawal), sans-serif; }
   .font-latin { font-family: var(--font-cairo), "Segoe UI", Tahoma, sans-serif; }
 }
@@ -200,27 +232,33 @@
     }
   }
 
-  /* Password visibility icon RTL alignment */
-  [dir="rtl"] .relative > button[type="button"]:has(svg) {
-    inset-inline-start: 0 !important;
-    inset-inline-end: auto !important;
-    padding-left: 3px !important;
-    padding-right: 12px !important;
+  .password-field-wrap {
+    position: relative;
   }
 
-  .relative > input[type="password"],
-  .relative > input.pe-11 {
-    padding-inline-end: 44px;
+  .password-field-input {
+    direction: ltr;
+    text-align: left;
+    unicode-bidi: plaintext;
+    padding-inline-end: 44px !important;
   }
 
-  [dir="rtl"] .relative > input.pe-11 {
+  .password-toggle-btn {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    padding-inline: 12px;
+    color: #64748b;
+  }
+
+  [dir='rtl'] .password-field-input {
     padding-inline-start: 44px !important;
     padding-inline-end: 12px !important;
   }
 
-  [dir="rtl"] .relative > input.pe-12 {
-    padding-inline-start: 48px !important;
-    padding-inline-end: 12px !important;
+  [dir='rtl'] .password-toggle-btn {
+    inset-inline-start: 0;
+    inset-inline-end: auto;
   }
 
   .badge {

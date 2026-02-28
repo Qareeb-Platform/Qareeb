@@ -7,6 +7,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import FAB from '@/components/ui/FAB';
 import ChatWidget from '@/components/chat/ChatWidget';
+import PublicCardModals from '@/components/public/PublicCardModals';
 import Pagination from '@/components/ui/Pagination';
 import { api } from '@/lib/api';
 import { useGeolocationStore } from '@/lib/store';
@@ -206,6 +207,7 @@ export default function HalaqatPage() {
             <Footer />
             <FAB />
             <ChatWidget />
+            <PublicCardModals />
         </div>
     );
 }

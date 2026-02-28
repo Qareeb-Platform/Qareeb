@@ -4,17 +4,14 @@ import { useEffect, useMemo, useState } from 'react';
 import Pagination from '@/components/ui/Pagination';
 import { useLocale } from 'next-intl';
 import { api } from '@/lib/api';
-import AppModal from '@/components/ui/AppModal';
 import UnifiedCard from './UnifiedCard';
-import { useModalStore } from '@/lib/store';
-import { getEmbeddableVideoUrl } from '@/lib/video';
+import PublicCardModals from './PublicCardModals';
 import { formatLocationParts } from '@/lib/location';
 
 type TabType = 'all' | 'imams' | 'halqa' | 'maintenance';
 
 export default function PublicCardsTabs() {
     const locale = useLocale();
-    const { isOpen, type, payload, openModal: _openModal, closeModal } = useModalStore();
     const [tab, setTab] = useState<TabType>('all');
     const [imams, setImams] = useState<any[]>([]);
     const [halaqat, setHalaqat] = useState<any[]>([]);
@@ -96,8 +93,6 @@ export default function PublicCardsTabs() {
         return all.filter((x) => x.entity === 'maintenance');
     }, [tab, imams, halaqat, maintenance, locale]);
 
-    const videoUrl = payload?.video || payload?.video_url;
-    const embedUrl = getEmbeddableVideoUrl(videoUrl);
 
     const handleViewDetails = (card: any) => {
         // open details page in a new tab instead of modal, respecting locale prefix
@@ -184,68 +179,7 @@ export default function PublicCardsTabs() {
                 </div>
             )}
 
-            {/* Video Modal */}
-            <AppModal
-                isOpen={isOpen && type === 'video'}
-                type="video"
-                title={locale === 'ar' ? '🎥 عرض الفيديو' : '🎥 Video'}
-                onClose={closeModal}
-            >
-                {videoUrl ? (
-                    embedUrl ? (
-                        <iframe
-                            src={embedUrl}
-                            className="w-full h-96 rounded-xl border border-border"
-                            allowFullScreen
-                            title="video-modal"
-                        />
-                    ) : (
-                        <div className="space-y-4">
-                            <p className="text-sm text-text-muted">
-                                {locale === 'ar'
-                                    ? 'لا يمكن تضمين هذا الرابط داخل الصفحة.'
-                                    : 'This link cannot be embedded.'}
-                            </p>
-                            <a
-                                className="btn-primary inline-flex"
-                                href={videoUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                {locale === 'ar' ? '🔗 فتح الفيديو' : '🔗 Open Video'}
-                            </a>
-                        </div>
-                    )
-                ) : null}
-            </AppModal>
-
-            {/* Images Modal - للصيانة */}
-            <AppModal
-                isOpen={isOpen && type === 'images'}
-                type="images"
-                title={locale === 'ar' ? '📸 الصور' : '📸 Photos'}
-                onClose={closeModal}
-            >
-                {payload?.images && payload.images.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-3">
-                        {payload.images.map((img: string, idx: number) => (
-                            <a
-                                key={idx}
-                                href={img}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="overflow-hidden rounded-lg"
-                            >
-                                <img
-                                    src={img}
-                                    alt={`Photo ${idx + 1}`}
-                                    className="w-full h-48 object-cover hover:scale-105 transition-transform"
-                                />
-                            </a>
-                        ))}
-                    </div>
-                ) : null}
-            </AppModal>
+            <PublicCardModals />
 
         </section>
     );

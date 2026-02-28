@@ -68,19 +68,19 @@ export default function AdminLoginPage() {
 
                     <div>
                         <label className="block text-sm font-medium mb-2">{t('password')}</label>
-                        <div className="relative">
+                        <div className="password-field-wrap">
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="input-field box-border !pe-12"
+                                className="input-field box-border password-field-input"
                                 dir="ltr"
                                 required
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword((prev) => !prev)}
-                                className="absolute inset-y-0 end-0 px-3 text-text-muted hover:text-text"
+                                className="password-toggle-btn hover:text-text"
                                 aria-label={showPassword ? (locale === 'ar' ? 'إخفاء كلمة المرور' : 'Hide password') : (locale === 'ar' ? 'إظهار كلمة المرور' : 'Show password')}
                                 title={showPassword ? (locale === 'ar' ? 'إخفاء كلمة المرور' : 'Hide password') : (locale === 'ar' ? 'إظهار كلمة المرور' : 'Show password')}
                             >
