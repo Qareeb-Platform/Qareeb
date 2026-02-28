@@ -199,6 +199,7 @@ export default function SubmitPage() {
                 setMediaUploads((prev) => [...prev, ...uploadedBatch].slice(0, maxMaintenanceImages));
                 setImagePreviews((prev) => [...prev, ...previewBatch].slice(0, maxMaintenanceImages));
             }
+            setUploadError(locale === 'ar' ? 'تعذر رفع الصورة. حاول مرة أخرى.' : 'Image upload failed. Please try again.');
         } finally {
             setUploadingImage(false);
         }
@@ -251,7 +252,7 @@ export default function SubmitPage() {
             {uploadingImage && <p className="text-xs text-primary mt-1">{locale === 'ar' ? 'جاري الرفع...' : 'Uploading...'}</p>}
             {uploadError && <p className="text-xs text-red-600 mt-1">{uploadError}</p>}
             {!!imagePreviews.length && (
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {imagePreviews.map((url, i) => (
                         <div key={url} className="relative">
                             <img src={url} alt={`preview-${i}`} className="w-full h-28 object-cover rounded-lg border" />
