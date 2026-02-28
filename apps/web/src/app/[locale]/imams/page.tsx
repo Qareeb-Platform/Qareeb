@@ -175,7 +175,7 @@ export default function ImamsPage() {
                                     ]),
                                     typeLabel: locale === 'ar' ? 'إمام' : 'Imam',
                                     typeIcon: '🕌',
-                                    map: imam.google_maps_url,
+                                   map: imam.google_maps_url || imam.googleMapsUrl,
                                     video: imam.video_url || imam.videoUrl,
                                     whatsapp: imam.whatsapp,
                                     online: false,
