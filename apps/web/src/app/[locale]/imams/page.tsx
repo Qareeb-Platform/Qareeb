@@ -12,6 +12,7 @@ import Pagination from '@/components/ui/Pagination';
 import { api } from '@/lib/api';
 import { useGeolocationStore } from '@/lib/store';
 import { getWhatsAppUrl } from '@/lib/utils';
+import { formatLocationParts } from '@/lib/location';
 import UnifiedCard from '@/components/public/UnifiedCard';
 import { useRouter } from 'next/navigation';
 
@@ -168,15 +169,12 @@ export default function ImamsPage() {
                                     entity: 'imam' as const,
                                     name: imam.imam_name || imam.imamName,
                                     mosque: imam.mosque_name || imam.mosqueName,
-                                    location: imam.area
-                                        ? (locale === 'ar' ? imam.area.nameAr : imam.area.nameEn)
-                                        : [
-                                              imam.governorate,
-                                              imam.city,
-                                              imam.district,
-                                          ]
-                                              .filter(Boolean)
-                                              .join(' — '),
+                                    location: formatLocationParts([
+                                        imam.governorate,
+                                        imam.area ? (locale === 'ar' ? imam.area.nameAr : imam.area.nameEn) : null,
+                                        imam.city,
+                                        imam.district,
+                                    ]),
                                     typeLabel: locale === 'ar' ? 'إمام' : 'Imam',
                                     typeIcon: '🕌',
                                     map: imam.google_maps_url,
