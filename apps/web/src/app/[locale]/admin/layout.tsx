@@ -22,6 +22,8 @@ import {
 import { adminApi } from '@/lib/api';
 import { useAuthStore, useNotificationStore, useThemeStore } from '@/lib/store';
 
+const SOCKET_DISABLED_SESSION_KEY = 'qareeb-admin-socket-disabled';
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const t = useTranslations('admin');
     const locale = useLocale();
@@ -30,7 +32,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     const { token, admin, rememberMe, setAuth, clearAuth } = useAuthStore();
     const { theme, toggleTheme } = useThemeStore();
-    const { unreadCount, items, addNotification, setNotifications, markRead } = useNotificationStore();
+    const { unreadCount, items, setNotifications, markRead } = useNotificationStore();
 
     const [showNotifMenu, setShowNotifMenu] = useState(false);
 
@@ -48,8 +50,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     useEffect(() => {
         let mounted = true;
         let refreshInterval: ReturnType<typeof setInterval> | null = null;
+        let refreshFailed = false;
 
         const tryRefresh = async () => {
+            if (refreshFailed) return;
             try {
                 // Always try to refresh from server using httpOnly cookies
                 const refreshed = await adminApi.refresh();
@@ -58,6 +62,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     setAuth(refreshed.access_token, admin || refreshed.admin, rememberMe);
                 }
             } catch {
+                refreshFailed = true;
+                if (refreshInterval) {
+                    clearInterval(refreshInterval);
+                    refreshInterval = null;
+                }
                 // If refresh fails and rememberMe is true, don't clear auth yet
                 // The token might still be valid from localStorage
                 if (mounted && !rememberMe) {
@@ -82,61 +91,89 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }, [rememberMe, token, admin, setAuth, clearAuth]);
 
     useEffect(() => {
-        const bootstrap = async () => {
+        const mapNotification = (n: any) => ({
+            id: n.id,
+            type: n.type,
+            title: n.title,
+            message: n.message,
+            recordId: n.referenceId,
+            createdAt: n.createdAt,
+            read: n.isRead,
+        });
+
+        const playNotificationSound = () => {
+            if (document.visibilityState !== 'visible') return;
+            const audio = new Audio('/sounds/notification.mp3');
+            audio.play().catch(() => undefined);
+        };
+
+        const syncUnreadNotifications = async (playSoundOnNew = false) => {
             if (!token) return;
             try {
                 const res = await adminApi.getNotifications(token, 'unread');
-                setNotifications((res || []).map((n: any) => ({
-                    id: n.id,
-                    type: n.type,
-                    title: n.title,
-                    message: n.message,
-                    recordId: n.referenceId,
-                    createdAt: n.createdAt,
-                    read: n.isRead,
-                })));
+                const mapped = (res || []).map(mapNotification);
+                const existingIds = new Set(useNotificationStore.getState().items.map((item) => item.id));
+                const hasNewItem = mapped.some((item: any) => !existingIds.has(item.id));
+
+                setNotifications(mapped);
+
+                if (playSoundOnNew && hasNewItem) {
+                    playNotificationSound();
+                }
             } catch {
                 // ignore silent bootstrap failures
             }
         };
 
-        void bootstrap();
+        void syncUnreadNotifications();
+
+        const pollingInterval = setInterval(() => {
+            void syncUnreadNotifications(true);
+        }, 20000);
 
         let socket: Socket | null = null;
-        if (admin?.role) {
+        const socketDisabled = typeof window !== 'undefined' && window.sessionStorage.getItem(SOCKET_DISABLED_SESSION_KEY) === '1';
+
+        if (admin?.role && !socketDisabled) {
             const base = process.env.NEXT_PUBLIC_API_URL?.replace('/v1', '') || 'http://localhost:3001';
             socket = io(`${base}/notifications`, {
-                transports: ['websocket', 'polling'],
-                reconnection: true,
-                reconnectionAttempts: 10,
-                reconnectionDelay: 800,
+                transports: ['polling', 'websocket'],
+                reconnection: false,
+                timeout: 6000,
                 withCredentials: true,
                 query: { role: admin.role },
+                auth: { token },
             });
 
-            socket.on('connect_error', () => undefined);
-
-            socket.on('notification', (payload: any) => {
-                addNotification({
-                    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-                    type: payload?.type || 'generic',
-                    title: payload?.title || 'Notification',
-                    message: payload?.message || '',
-                    recordId: payload?.recordId || '',
-                    createdAt: payload?.createdAt || new Date().toISOString(),
-                    read: false,
-                });
-                if (document.visibilityState === 'visible') {
-                    const audio = new Audio('/sounds/notification.mp3');
-                    audio.play().catch(() => undefined);
+            socket.on('connect', () => {
+                if (typeof window !== 'undefined') {
+                    window.sessionStorage.removeItem(SOCKET_DISABLED_SESSION_KEY);
                 }
+            });
+
+            socket.on('connect_error', (error: any) => {
+                const message = String(error?.message || '').toLowerCase();
+                const description = String(error?.description || '').toLowerCase();
+                const shouldDisableSocket = message.includes('xhr poll error')
+                    || message.includes('404')
+                    || description.includes('404');
+
+                if (shouldDisableSocket && typeof window !== 'undefined') {
+                    window.sessionStorage.setItem(SOCKET_DISABLED_SESSION_KEY, '1');
+                    socket?.disconnect();
+                }
+            });
+
+            socket.on('notification', () => {
+                void syncUnreadNotifications(true);
             });
         }
 
         return () => {
+            clearInterval(pollingInterval);
             socket?.disconnect();
         };
-    }, [token, admin?.role, addNotification, setNotifications]);
+    }, [token, admin?.role, setNotifications]);
 
     const handleLogout = () => {
         clearAuth();
