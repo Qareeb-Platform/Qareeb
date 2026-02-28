@@ -106,10 +106,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (admin?.role) {
             const base = process.env.NEXT_PUBLIC_API_URL?.replace('/v1', '') || 'http://localhost:3001';
             socket = io(`${base}/notifications`, {
-                transports: ['websocket'],
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionAttempts: 10,
+                reconnectionDelay: 800,
                 withCredentials: true,
                 query: { role: admin.role },
             });
+
+            socket.on('connect_error', () => undefined);
 
             socket.on('notification', (payload: any) => {
                 addNotification({

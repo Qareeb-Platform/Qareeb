@@ -167,6 +167,7 @@ export default function SubmitPage() {
         setUploadError('');
         setUploadSuccess('');
         setUploadingImage(true);
+
         try {
             const uploadedBatch: Array<{ publicId: string; secureUrl: string }> = [];
             const previewBatch: string[] = [];
@@ -192,59 +193,43 @@ export default function SubmitPage() {
                         method: 'POST',
                         body: formData,
                     });
+
                     const uploadPayload = await res.json();
-                    if (!res.ok) {
+                    if (!res.ok || !uploadPayload?.public_id || !uploadPayload?.secure_url) {
                         hadFailures = true;
                         continue;
                     }
 
-                    uploadedBatch.push({ publicId: uploadPayload.public_id, secureUrl: uploadPayload.secure_url });
+                    uploadedBatch.push({
+                        publicId: uploadPayload.public_id,
+                        secureUrl: uploadPayload.secure_url,
+                    });
                     previewBatch.push(uploadPayload.secure_url);
                 } catch {
                     hadFailures = true;
                 }
-
-                uploadedBatch.push({ publicId: payload.public_id, secureUrl: payload.secure_url });
-                previewBatch.push(payload.secure_url);
             }
 
             if (uploadedBatch.length) {
                 setMediaUploads((prev) => [...prev, ...uploadedBatch].slice(0, maxMaintenanceImages));
                 setImagePreviews((prev) => [...prev, ...previewBatch].slice(0, maxMaintenanceImages));
+                setUploadSuccess(
+                    locale === 'ar'
+                        ? `تم رفع ${uploadedBatch.length} صورة بنجاح.`
+                        : `${uploadedBatch.length} image(s) uploaded successfully.`,
+                );
+            } else {
+                setUploadSuccess('');
             }
 
-            if (uploadedBatch.length) {
-                setMediaUploads((prev) => [...prev, ...uploadedBatch].slice(0, maxMaintenanceImages));
-                setImagePreviews((prev) => [...prev, ...previewBatch].slice(0, maxMaintenanceImages));
-                setUploadSuccess(locale === 'ar'
-                    ? `تم رفع ${uploadedBatch.length} صورة بنجاح.`
-                    : `${uploadedBatch.length} image(s) uploaded successfully.`);
-                setUploadError('');
-                return;
-            }
-
-            setUploadSuccess('');
             if (hadFailures) {
-                setUploadError(locale === 'ar'
-                    ? 'تعذر رفع الصور المختارة. تأكد من النوع (JPG/PNG/WEBP) والحجم (2MB) ثم حاول مرة أخرى.'
-                    : 'Failed to upload selected images. Check file type (JPG/PNG/WEBP) and max size (2MB), then try again.');
-            }
-
-            if (uploadedBatch.length) {
-                setMediaUploads((prev) => [...prev, ...uploadedBatch].slice(0, maxMaintenanceImages));
-                setImagePreviews((prev) => [...prev, ...previewBatch].slice(0, maxMaintenanceImages));
-                setUploadSuccess(locale === 'ar'
-                    ? `تم رفع ${uploadedBatch.length} صورة بنجاح.`
-                    : `${uploadedBatch.length} image(s) uploaded successfully.`);
+                setUploadError(
+                    locale === 'ar'
+                        ? 'تعذر رفع بعض الصور. تأكد من النوع (JPG/PNG/WEBP) والحجم (2MB) ثم حاول مرة أخرى.'
+                        : 'Some images failed to upload. Check file type (JPG/PNG/WEBP) and max size (2MB), then try again.',
+                );
+            } else {
                 setUploadError('');
-                return;
-            }
-
-            setUploadSuccess('');
-            if (hadFailures) {
-                setUploadError(locale === 'ar'
-                    ? 'تعذر رفع الصور المختارة. تأكد من النوع (JPG/PNG/WEBP) والحجم (2MB) ثم حاول مرة أخرى.'
-                    : 'Failed to upload selected images. Check file type (JPG/PNG/WEBP) and max size (2MB), then try again.');
             }
         } finally {
             setUploadingImage(false);
