@@ -19,6 +19,7 @@ const socialLinks = [
 export default function Footer() {
     const t = useTranslations('nav');
     const locale = useLocale();
+    const isArabic = locale === 'ar';
 
     const [isOpen, setIsOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,25 +35,30 @@ export default function Footer() {
 
     const submitSuggestion = async (event: FormEvent) => {
         event.preventDefault();
+
         if (form.suggestion_text.trim().length < 10) {
-            setError(locale === 'ar' ? 'يرجى كتابة اقتراح لا يقل عن 10 أحرف' : 'Please write at least 10 characters');
+            setError(isArabic ? 'يرجى كتابة اقتراح لا يقل عن 10 أحرف' : 'Please write at least 10 characters');
             return;
         }
 
         try {
             setIsSubmitting(true);
             setError('');
+
             await api.createImprovement({
                 suggestion_text: form.suggestion_text.trim(),
                 name: form.name.trim() || undefined,
                 email: form.email.trim() || undefined,
             });
+
             setForm({ suggestion_text: '', name: '', email: '' });
-            setSuccessMessage(locale === 'ar'
-                ? 'تم إرسال اقتراحك بنجاح، شكرًا لمساهمتك ❤️'
-                : 'Your suggestion was sent successfully. Thank you for your contribution ❤️');
+            setSuccessMessage(
+                isArabic
+                    ? 'تم إرسال اقتراحك بنجاح، شكرًا لمساهمتك.'
+                    : 'Your suggestion was sent successfully. Thank you for your contribution.',
+            );
         } catch {
-            setError(locale === 'ar' ? 'تعذر إرسال الاقتراح، حاول مرة أخرى' : 'Failed to send suggestion, please try again');
+            setError(isArabic ? 'تعذر إرسال الاقتراح، حاول مرة أخرى' : 'Failed to send suggestion, please try again');
         } finally {
             setIsSubmitting(false);
         }
@@ -67,10 +73,10 @@ export default function Footer() {
                             <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center text-white text-xl">
                                 <FaMosque />
                             </div>
-                            <span className="text-xl font-bold text-white">قريب</span>
+                            <span className="text-xl font-bold text-white">{isArabic ? 'قريب' : 'Qareeb'}</span>
                         </div>
                         <p className="text-gray-400 text-sm leading-relaxed">
-                            {locale === 'ar' ? 'منصة مجتمعية غير ربحية لخدمة المسلمين.' : 'A non-profit community platform.'}
+                            {isArabic ? 'منصة مجتمعية غير ربحية لخدمة المسلمين.' : 'A non-profit community platform.'}
                         </p>
                         <div className="flex items-center gap-3 mt-4">
                             {socialLinks.map(({ href, icon: Icon, label }) => (
@@ -93,23 +99,23 @@ export default function Footer() {
 
                     <div>
                         <h3 className="text-white font-semibold mb-4">
-                            {locale === 'ar' ? 'روابط سريعة' : 'Quick Links'}
+                            {isArabic ? 'روابط سريعة' : 'Quick Links'}
                         </h3>
                         <div className="flex flex-col gap-2">
-                            <Link href={`/${locale}/search`} className="text-gray-400 hover:text-primary transition-colors text-sm">{locale === 'ar' ? 'بحث' : 'Search'}</Link>
+                            <Link href={`/${locale}/search`} className="text-gray-400 hover:text-primary transition-colors text-sm">{isArabic ? 'بحث' : 'Search'}</Link>
                             <Link href={`/${locale}/imams`} className="text-gray-400 hover:text-primary transition-colors text-sm">{t('imams')}</Link>
                             <Link href={`/${locale}/halaqat`} className="text-gray-400 hover:text-primary transition-colors text-sm">{t('halaqat')}</Link>
                             <Link href={`/${locale}/maintenance`} className="text-gray-400 hover:text-primary transition-colors text-sm">{t('maintenance')}</Link>
-                            <Link href={`/${locale}/about`} className="text-gray-400 hover:text-primary transition-colors text-sm">{locale === 'ar' ? 'عن قريب' : 'About'}</Link>
+                            <Link href={`/${locale}/about`} className="text-gray-400 hover:text-primary transition-colors text-sm">{isArabic ? 'عن قريب' : 'About'}</Link>
                             <button onClick={openModal} className="text-start text-gray-400 hover:text-primary transition-colors text-sm">
-                                {locale === 'ar' ? 'اقترح تحسين' : 'Suggest improvement'}
+                                {isArabic ? 'اقترح تحسين' : 'Suggest improvement'}
                             </button>
                         </div>
                     </div>
 
                     <div>
                         <h3 className="text-white font-semibold mb-4">
-                            {locale === 'ar' ? 'تواصل' : 'Contact'}
+                            {isArabic ? 'تواصل' : 'Contact'}
                         </h3>
                         <a
                             href="https://wa.me/201551429227"
@@ -126,27 +132,31 @@ export default function Footer() {
             <AppModal
                 isOpen={isOpen}
                 type="edit"
-                title={locale === 'ar' ? 'التحسينات والمقترحات' : 'Improvements & Suggestions'}
+                title={isArabic ? 'التحسينات والمقترحات' : 'Improvements & Suggestions'}
                 onClose={() => setIsOpen(false)}
             >
-                <form onSubmit={submitSuggestion} className="space-y-4">
+                <form
+                    onSubmit={submitSuggestion}
+                    className={`space-y-4 ${isArabic ? 'font-arabic' : 'font-latin'}`}
+                    dir={isArabic ? 'rtl' : 'ltr'}
+                >
                     <div>
                         <label className="block mb-1 text-sm font-semibold text-dark">
-                            {locale === 'ar' ? 'اكتب التحسين المقترح' : 'Write your suggestion'}
+                            {isArabic ? 'اكتب التحسين المقترح' : 'Write your suggestion'}
                         </label>
                         <textarea
                             rows={5}
                             className="input-field"
                             value={form.suggestion_text}
                             onChange={(e) => setForm((s) => ({ ...s, suggestion_text: e.target.value }))}
-                            placeholder={locale === 'ar' ? 'شاركنا فكرة التحسين...' : 'Share your improvement idea...'}
+                            placeholder={isArabic ? 'شاركنا فكرة التحسين...' : 'Share your improvement idea...'}
                             required
                         />
                     </div>
 
                     <div>
                         <label className="block mb-1 text-sm font-semibold text-dark">
-                            {locale === 'ar' ? 'الاسم (اختياري)' : 'Name (optional)'}
+                            {isArabic ? 'الاسم (اختياري)' : 'Name (optional)'}
                         </label>
                         <input
                             className="input-field"
@@ -158,7 +168,7 @@ export default function Footer() {
 
                     <div>
                         <label className="block mb-1 text-sm font-semibold text-dark">
-                            {locale === 'ar' ? 'البريد الإلكتروني (اختياري)' : 'Email (optional)'}
+                            {isArabic ? 'البريد الإلكتروني (اختياري)' : 'Email (optional)'}
                         </label>
                         <input
                             type="email"
@@ -166,6 +176,7 @@ export default function Footer() {
                             value={form.email}
                             onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
                             maxLength={255}
+                            dir="ltr"
                         />
                     </div>
 
@@ -173,7 +184,7 @@ export default function Footer() {
                     {successMessage && <p className="text-sm text-green-700">{successMessage}</p>}
 
                     <button type="submit" disabled={isSubmitting} className="btn-primary disabled:opacity-60">
-                        {isSubmitting ? (locale === 'ar' ? 'جارٍ الإرسال...' : 'Submitting...') : (locale === 'ar' ? 'إرسال' : 'Submit')}
+                        {isSubmitting ? (isArabic ? 'جارٍ الإرسال...' : 'Submitting...') : (isArabic ? 'إرسال' : 'Submit')}
                     </button>
                 </form>
             </AppModal>

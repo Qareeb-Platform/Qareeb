@@ -86,7 +86,7 @@ export default function AppModal({ isOpen, title, onClose, children }: AppModalP
                         className="w-9 h-9 rounded-lg border border-border hover:bg-cream"
                         aria-label="Close modal"
                     >
-                        ×
+                        <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div className="p-5">
