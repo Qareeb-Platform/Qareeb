@@ -20,6 +20,7 @@ export default function PublicCardsTabs() {
     const [imams, setImams] = useState<any[]>([]);
     const [halaqat, setHalaqat] = useState<any[]>([]);
     const [maintenance, setMaintenance] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
     // pagination state per category
     const [pageImams, setPageImams] = useState(1);
@@ -49,6 +50,7 @@ export default function PublicCardsTabs() {
 
     // fetch each category with pagination
     useEffect(() => {
+        setLoading(true);
         const activePageImams = tab === 'all' ? pageAll : pageImams;
         const activePageHalaqat = tab === 'all' ? pageAll : pageHalaqat;
         const activePageMaintenance = tab === 'all' ? pageAll : pageMaintenance;
@@ -95,7 +97,12 @@ export default function PublicCardsTabs() {
                 setMaintenance(ma?.data || []);
                 setMetaMaintenance(ma?.meta || { totalPages: 1 });
             })
-            .catch(() => undefined);
+            .catch(() => {
+                setImams([]);
+                setHalaqat([]);
+                setMaintenance([]);
+            })
+            .finally(() => setLoading(false));
     }, [pageAll, pageImams, pageHalaqat, pageMaintenance, tab, query, governorateId, areaId]);
 
     const cards = useMemo(() => {
@@ -185,20 +192,33 @@ export default function PublicCardsTabs() {
                 ))}
             </div>
 
-            {/* Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {cards.map((card) => (
-                    <UnifiedCard
-                        key={`${card.entity}-${card.id}`}
-                        card={card}
-                        showWhatsApp={card.entity !== 'imam'} // للحلقات والصيانة فقط
-                        showImages={card.entity === 'maintenance'} // للصيانة فقط
-                        onViewDetails={handleViewDetails}
-                    />
-                ))}
-            </div>
+            {loading ? (
+                <div className="py-20 flex flex-col items-center justify-center gap-3">
+                    <div className="w-14 h-14 flex items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-light text-white text-3xl animate-spin">
+                        🕌
+                    </div>
+                    <p className="text-text-muted text-sm font-semibold">
+                        {locale === 'ar' ? 'جارٍ تحميل النتائج...' : 'Loading results...'}
+                    </p>
+                </div>
+            ) : (
+                <>
+                    {/* Cards Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {cards.map((card) => (
+                            <UnifiedCard
+                                key={`${card.entity}-${card.id}`}
+                                card={card}
+                                showWhatsApp={card.entity !== 'imam'} // للحلقات والصيانة فقط
+                                showImages={card.entity === 'maintenance'} // للصيانة فقط
+                                onViewDetails={handleViewDetails}
+                            />
+                        ))}
+                    </div>
+                </>
+            )}
             {/* pagination for current tab */}
-            <div className="mt-8">
+            {!loading && <div className="mt-8">
                 {tab === 'all' && (
                     <Pagination
                         page={pageAll}
@@ -231,10 +251,10 @@ export default function PublicCardsTabs() {
                         locale={locale}
                     />
                 )}
-            </div>
+            </div>}
 
             {/* No Results */}
-            {cards.length === 0 && (
+            {!loading && cards.length === 0 && (
                 <div className="text-center py-16">
                     <div className="text-5xl mb-4">🔍</div>
                     <p className="text-text-muted text-lg">
