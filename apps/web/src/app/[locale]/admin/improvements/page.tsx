@@ -9,6 +9,14 @@ import { useAuthStore, useToastStore } from '@/lib/store';
 
 const statusTabs = ['all', 'pending', 'planned', 'completed', 'rejected'] as const;
 
+const statusLabels: Record<string, { ar: string; en: string }> = {
+    all: { ar: 'الكل', en: 'All' },
+    pending: { ar: 'قيد المراجعة', en: 'Pending' },
+    planned: { ar: 'ضمن الخطة', en: 'Planned' },
+    completed: { ar: 'تم التنفيذ', en: 'Completed' },
+    rejected: { ar: 'مرفوض', en: 'Rejected' },
+};
+
 export default function AdminImprovementsPage() {
     const locale = useLocale();
     const router = useRouter();
@@ -88,9 +96,7 @@ export default function AdminImprovementsPage() {
                             onClick={() => setStatus(tab)}
                             className={`px-4 py-2 rounded-xl text-sm font-bold border ${status === tab ? 'bg-primary text-white border-primary' : 'bg-white border-border'}`}
                         >
-                            {locale === 'ar'
-                                ? ({ all: 'الكل', pending: 'قيد المراجعة', planned: 'ضمن الخطة', completed: 'تم التنفيذ', rejected: 'مرفوض' } as any)[tab]
-                                : ({ all: 'All', pending: 'Pending', planned: 'Planned', completed: 'Completed', rejected: 'Rejected' } as any)[tab]}
+                            {locale === 'ar' ? statusLabels[tab].ar : statusLabels[tab].en}
                         </button>
                     ))}
                 </div>
@@ -120,7 +126,7 @@ export default function AdminImprovementsPage() {
                                         onClick={() => void updateItem(item.id, { status: targetStatus })}
                                         className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${item.status === targetStatus ? 'bg-primary text-white border-primary' : 'bg-white border-border'}`}
                                     >
-                                        {targetStatus}
+                                        {locale === 'ar' ? statusLabels[targetStatus].ar : statusLabels[targetStatus].en}
                                     </button>
                                 ))}
                             </div>

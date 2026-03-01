@@ -32,6 +32,13 @@ export default function AdminMaintenancePage() {
     const [page, setPage] = useState(1);
     const pageSize = 12;
 
+    const getStatusLabel = (status: string) => {
+        if (locale === 'ar') {
+            return ({ pending: 'قيد المراجعة', approved: 'مقبول', rejected: 'مرفوض' } as Record<string, string>)[status] || status;
+        }
+        return status;
+    };
+
     useEffect(() => {
         if (!token) { router.push(`/${locale}/admin`); return; }
         void fetchData();
@@ -259,16 +266,16 @@ export default function AdminMaintenancePage() {
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[760px]">
                         <thead className="bg-gray-50 border-b">
-                            <tr><th className="text-start px-4 py-3 text-sm">Mosque</th><th className="text-start px-4 py-3 text-sm">Types</th><th className="text-start px-4 py-3 text-sm">Status</th><th className="text-start px-4 py-3 text-sm">Actions</th></tr>
+                            <tr><th className="text-start px-4 py-3 text-sm">{locale === 'ar' ? 'المسجد' : 'Mosque'}</th><th className="text-start px-4 py-3 text-sm">{locale === 'ar' ? 'الأنواع' : 'Types'}</th><th className="text-start px-4 py-3 text-sm">{locale === 'ar' ? 'الحالة' : 'Status'}</th><th className="text-start px-4 py-3 text-sm">{locale === 'ar' ? 'الإجراءات' : 'Actions'}</th></tr>
                         </thead>
                         <tbody className="divide-y">
-                            {loading && <tr><td colSpan={4} className="px-4 py-10 text-center">Loading...</td></tr>}
-                            {!loading && !filteredItems.length && <tr><td colSpan={4} className="px-4 py-10 text-center">No data</td></tr>}
+                            {loading && <tr><td colSpan={4} className="px-4 py-10 text-center">{locale === 'ar' ? 'جارٍ التحميل...' : 'Loading...'}</td></tr>}
+                            {!loading && !filteredItems.length && <tr><td colSpan={4} className="px-4 py-10 text-center">{locale === 'ar' ? 'لا توجد بيانات' : 'No data'}</td></tr>}
                             {!loading && paginatedItems.map((item) => (
                                 <tr key={item.id}>
                                     <td className="px-4 py-4 font-semibold">{item.mosqueName}</td>
                                     <td className="px-4 py-4 text-sm text-text-muted">{(item.maintenanceTypes || []).join(', ')}</td>
-                                    <td className="px-4 py-4"><span className={`px-2.5 py-1 rounded-full text-xs font-bold ${item.status === 'approved' ? 'bg-green-100 text-green-700' : item.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{item.status}</span></td>
+                                    <td className="px-4 py-4"><span className={`px-2.5 py-1 rounded-full text-xs font-bold ${item.status === 'approved' ? 'bg-green-100 text-green-700' : item.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{getStatusLabel(item.status)}</span></td>
                                     <td className="px-4 py-4"><div className="flex gap-2">
                                         <IconButton label="view" onClick={() => openModal('view', 'maintenance', item)}><FaEye className="text-slate-700" /></IconButton>
                                         <IconButton label="edit" onClick={() => { void openEditMaintenance(item); }}><FaPenToSquare className="text-blue-700" /></IconButton>
