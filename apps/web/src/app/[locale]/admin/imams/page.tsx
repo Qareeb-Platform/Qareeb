@@ -36,6 +36,13 @@ export default function AdminImamsPage() {
     const [page, setPage] = useState(1);
     const pageSize = 12;
 
+    const getStatusLabel = (status: string) => {
+        if (locale === 'ar') {
+            return ({ pending: 'قيد المراجعة', approved: 'مقبول', rejected: 'مرفوض' } as Record<string, string>)[status] || status;
+        }
+        return status;
+    };
+
     const shareText = async (text: string) => {
         try {
             if (navigator.share) {
@@ -237,7 +244,7 @@ export default function AdminImamsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y">
-                            {loading && <tr><td colSpan={4} className="px-4 py-10 text-center">Loading...</td></tr>}
+                            {loading && <tr><td colSpan={4} className="px-4 py-10 text-center">{locale === 'ar' ? 'جارٍ التحميل...' : 'Loading...'}</td></tr>}
                             {!loading && !filteredItems.length && <tr><td colSpan={4} className="px-4 py-10 text-center">{locale === 'ar' ? 'لا توجد بيانات' : 'No data'}</td></tr>}
                             {!loading && paginatedItems.map((imam) => (
                                 <tr key={imam.id}>
@@ -245,7 +252,7 @@ export default function AdminImamsPage() {
                                     <td className="px-4 py-4 text-sm text-text-muted">{imam.mosqueName}</td>
                                     <td className="px-4 py-4">
                                         <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${imam.status === 'approved' ? 'bg-green-100 text-green-700' : imam.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                            {imam.status}
+                                            {getStatusLabel(imam.status)}
                                         </span>
                                     </td>
                                     <td className="px-4 py-4">
@@ -380,5 +387,4 @@ export default function AdminImamsPage() {
         </div>
     );
 }
-
 
