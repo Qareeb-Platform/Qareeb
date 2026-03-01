@@ -47,6 +47,8 @@ function diffKeys(baseSet, compareSet) {
 function isCorruptedArabicString(value) {
   if (typeof value !== "string") return false;
   if (value.includes("???")) return true;
+  if (value.includes("�")) return true;
+  if (/[ØÙ]{2,}/.test(value)) return true;
   return /\?{2,}/.test(value);
 }
 
