@@ -1,27 +1,28 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { MediaService } from '../media/media.service';
 
 @Injectable()
 export class AdminService {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly mediaService: MediaService,
+    ) { }
 
     async getDashboardStats() {
-        // Pending counts
         const [pendingImams, pendingHalaqat, pendingMaintenance] = await Promise.all([
             this.prisma.imam.count({ where: { status: 'pending' } }),
             this.prisma.halqa.count({ where: { status: 'pending' } }),
             this.prisma.maintenanceRequest.count({ where: { status: 'pending' } }),
         ]);
 
-        // Total counts
         const [totalImams, totalHalaqat, totalMaintenance] = await Promise.all([
             this.prisma.imam.count(),
             this.prisma.halqa.count(),
             this.prisma.maintenanceRequest.count(),
         ]);
 
-        // By governorate — aggregate across all entities
         const imamsByGov = await this.prisma.imam.groupBy({
             by: ['governorate'],
             _count: { id: true },
@@ -33,7 +34,6 @@ export class AdminService {
             count: g._count.id,
         }));
 
-        // Last 30 days submissions
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -52,7 +52,6 @@ export class AdminService {
             select: { createdAt: true },
         });
 
-        // Group by date
         const dateMap = new Map<string, number>();
         [...recentImams, ...recentHalaqat, ...recentMaintenance].forEach((item) => {
             const date = item.createdAt.toISOString().split('T')[0];
@@ -63,7 +62,6 @@ export class AdminService {
             .map(([date, count]) => ({ date, count }))
             .sort((a, b) => a.date.localeCompare(b.date));
 
-        // Maintenance type breakdown
         const allMaintenance = await this.prisma.maintenanceRequest.findMany({
             where: { status: 'approved' },
             select: { maintenanceTypes: true },
@@ -88,7 +86,55 @@ export class AdminService {
         };
     }
 
-    // ── Admin User Management ──
+    async getCloudinaryUsage() {
+        const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+        const apiKey = process.env.CLOUDINARY_API_KEY;
+        const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+        if (!cloudName || !apiKey || !apiSecret) {
+            return {
+                enabled: false,
+                message: 'Cloudinary credentials are not configured',
+            };
+        }
+
+        try {
+            const usage: any = await this.mediaService.getUsage();
+            const storageUsed = Number(usage?.storage?.usage || 0);
+            const storageLimit = Number(usage?.storage?.limit || 0);
+            const remaining = Math.max(storageLimit - storageUsed, 0);
+            const usedPercent = storageLimit > 0 ? Number(((storageUsed / storageLimit) * 100).toFixed(2)) : 0;
+
+            return {
+                enabled: true,
+                plan: usage?.plan || 'unknown',
+                lastUpdated: new Date().toISOString(),
+                storage: {
+                    used: storageUsed,
+                    limit: storageLimit,
+                    remaining,
+                    usedPercent,
+                },
+                resources: usage?.resources || 0,
+                derivedResources: usage?.derived_resources || 0,
+                objects: usage?.objects || 0,
+                bandwidth: {
+                    used: Number(usage?.bandwidth?.usage || 0),
+                    limit: Number(usage?.bandwidth?.limit || 0),
+                },
+                requests: usage?.requests || 0,
+                transformations: {
+                    used: Number(usage?.transformations?.usage || 0),
+                    limit: Number(usage?.transformations?.limit || 0),
+                },
+            };
+        } catch (error: any) {
+            return {
+                enabled: false,
+                message: error?.message || 'Could not fetch Cloudinary usage',
+            };
+        }
+    }
 
     async findAllAdmins() {
         return this.prisma.admin.findMany({
@@ -139,7 +185,6 @@ export class AdminService {
         });
     }
 
-    // ── Audit Logs ──
     async getAuditLogs(params: {
         entityType?: string;
         entityId?: string;

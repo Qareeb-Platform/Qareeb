@@ -36,4 +36,8 @@ export class MediaService {
     async deleteAsset(publicId: string) {
         return cloudinary.uploader.destroy(publicId);
     }
+
+    async getUsage() {
+        return cloudinary.api.usage();
+    }
 }

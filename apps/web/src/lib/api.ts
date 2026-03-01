@@ -105,6 +105,8 @@ export const adminApi = {
 
     getDashboardStats: (token: string) =>
         fetchAPI<any>('/admin/dashboard/stats', { token }),
+    getCloudinaryUsage: (token: string) =>
+        fetchAPI<any>('/admin/dashboard/cloudinary-usage', { token }),
 
     // Imams admin
     getAdminImams: (token: string, params?: string) =>

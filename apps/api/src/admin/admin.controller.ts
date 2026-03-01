@@ -16,6 +16,13 @@ export class AdminController {
         return this.adminService.getDashboardStats();
     }
 
+    @Get('dashboard/cloudinary-usage')
+    @UseGuards(RolesGuard)
+    @Roles('super_admin', 'full_reviewer', 'imam_reviewer', 'halqa_reviewer', 'maintenance_reviewer')
+    getCloudinaryUsage() {
+        return this.adminService.getCloudinaryUsage();
+    }
+
     @Get('users')
     @UseGuards(RolesGuard)
     @Roles('super_admin')

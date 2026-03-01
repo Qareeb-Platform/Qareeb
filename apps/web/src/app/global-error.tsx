@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 type GlobalErrorProps = {
   error: Error;
@@ -46,4 +46,3 @@ export default function GlobalError({ reset }: GlobalErrorProps) {
     </html>
   );
 }
-
