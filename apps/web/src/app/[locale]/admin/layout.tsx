@@ -48,6 +48,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }, [theme]);
 
     useEffect(() => {
+        setShowNotifMenu(false);
+    }, [pathname]);
+
+    useEffect(() => {
         let mounted = true;
         let refreshInterval: ReturnType<typeof setInterval> | null = null;
         let refreshFailed = false;
@@ -320,14 +324,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                     <div className={`absolute end-0 mt-2 w-80 rounded-xl border shadow-xl p-2 ${theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'}`}>
                                         {items.length ? items.slice(0, 6).map((n) => (
                                             <div key={n.id} className={`p-2 rounded-lg text-xs border-b last:border-b-0 ${theme === 'dark' ? 'border-slate-700' : 'border-gray-100'}`}>
-                                                <p className="font-bold">{n.title}</p>
-                                                <p className="opacity-80">{n.message}</p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setShowNotifMenu(false);
+                                                        router.push(`/${locale}/admin/notifications`);
+                                                    }}
+                                                    className="w-full text-start"
+                                                >
+                                                    <p className="font-bold">{n.title}</p>
+                                                    <p className="opacity-80">{n.message}</p>
+                                                </button>
                                                 {!n.read && token && (
                                                     <button
                                                         className="mt-1 text-primary underline"
-                                                        onClick={async () => {
+                                                        onClick={async (e) => {
+                                                            e.stopPropagation();
                                                             await adminApi.markNotificationRead(token, n.id).catch(() => undefined);
                                                             markRead(n.id);
+                                                            setShowNotifMenu(false);
                                                         }}
                                                     >
                                                         {locale === 'ar' ? 'تعيين كمقروء' : 'Mark as read'}
@@ -338,7 +353,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                             <p className="text-xs opacity-75 p-2">{locale === 'ar' ? 'لا توجد إشعارات' : 'No notifications'}</p>
                                         )}
 
-                                        <Link href={`/${locale}/admin/notifications`} className="block text-center text-xs text-primary underline mt-2">
+                                        <Link
+                                            href={`/${locale}/admin/notifications`}
+                                            onClick={() => setShowNotifMenu(false)}
+                                            className="block text-center text-xs text-primary underline mt-2"
+                                        >
                                             {locale === 'ar' ? 'عرض الكل' : 'View all'}
                                         </Link>
                                     </div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useLocale } from 'next-intl';
@@ -119,26 +119,28 @@ export default function NotificationsPage() {
                 </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-card border border-border divide-y">
-                {loading ? <div className="p-6 text-text-muted">Loading...</div> : !items.length ? <div className="p-6 text-text-muted">{locale === 'ar' ? 'لا إشعارات' : 'No notifications'}</div> : (
-                    paginatedItems.map((n) => (
-                        <div key={n.id} className="p-5 flex items-start gap-4">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${n.read ? 'bg-gray-100 text-gray-500' : 'bg-primary/10 text-primary'}`}>🔔</div>
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs font-black uppercase text-primary">{entityLabel(n.type)}</span>
-                                    <span className="text-xs text-text-muted">{new Date(n.createdAt).toLocaleString(locale === 'ar' ? 'ar-EG' : 'en-US')}</span>
-                                    {!n.read && <span className="inline-flex px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-700 rounded-full">{locale === 'ar' ? 'جديد' : 'New'}</span>}
-                                </div>
-                                <p className="font-semibold text-dark mt-1">{n.title}</p>
-                                <p className="text-sm text-text-muted">{n.message}</p>
-                                <div className="flex gap-3 mt-3">
-                                    <button onClick={() => openModal('view', entityLabel(n.type) as any, n)} className="text-primary font-bold text-sm underline">{locale === 'ar' ? 'فتح السجل' : 'Open record'}</button>
-                                    {!n.read && <button onClick={() => onMarkRead(n.id)} className="text-xs text-text-muted hover:text-primary">{locale === 'ar' ? 'كمقروء' : 'Mark read'}</button>}
+            <div className="bg-white rounded-2xl shadow-card border border-border p-4 md:p-5">
+                {loading ? <div className="p-2 text-text-muted">Loading...</div> : !items.length ? <div className="p-2 text-text-muted">{locale === 'ar' ? 'لا إشعارات' : 'No notifications'}</div> : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {paginatedItems.map((n) => (
+                            <div key={n.id} className="p-4 rounded-xl border border-border bg-white hover:shadow-sm transition-shadow flex items-start gap-3">
+                                <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-lg ${n.read ? 'bg-gray-100 text-gray-500' : 'bg-primary/10 text-primary'}`}>🔔</div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="text-xs font-black uppercase text-primary">{entityLabel(n.type)}</span>
+                                        <span className="text-xs text-text-muted">{new Date(n.createdAt).toLocaleString(locale === 'ar' ? 'ar-EG' : 'en-US')}</span>
+                                        {!n.read && <span className="inline-flex px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-700 rounded-full">{locale === 'ar' ? 'جديد' : 'New'}</span>}
+                                    </div>
+                                    <p className="font-semibold text-dark mt-1 line-clamp-2">{n.title}</p>
+                                    <p className="text-sm text-text-muted line-clamp-3">{n.message}</p>
+                                    <div className="flex gap-3 mt-3">
+                                        <button onClick={() => openModal('view', entityLabel(n.type) as any, n)} className="text-primary font-bold text-sm underline">{locale === 'ar' ? 'فتح السجل' : 'Open record'}</button>
+                                        {!n.read && <button onClick={() => onMarkRead(n.id)} className="text-xs text-text-muted hover:text-primary">{locale === 'ar' ? 'كمقروء' : 'Mark read'}</button>}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))
+                        ))}
+                    </div>
                 )}
             </div>
             <Pagination page={page} totalPages={totalPages} onPageChange={setPage} locale={locale} />
