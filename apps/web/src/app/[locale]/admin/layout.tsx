@@ -30,7 +30,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const pathname = usePathname();
     const router = useRouter();
 
-    const { token, admin, rememberMe, setAuth, clearAuth } = useAuthStore();
+    const { token, admin, rememberMe, hasHydrated, setAuth, clearAuth } = useAuthStore();
     const { theme, toggleTheme } = useThemeStore();
     const { unreadCount, items, setNotifications, markRead } = useNotificationStore();
 
@@ -68,11 +68,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     clearInterval(refreshInterval);
                     refreshInterval = null;
                 }
-                // If refresh fails and rememberMe is true, don't clear auth yet
-                // The token might still be valid from localStorage
-                if (mounted && !rememberMe) {
-                    clearAuth();
-                }
+                // Keep existing auth state on transient refresh failures.
+                // Session is validated by protected API calls anyway.
             }
         };
 
@@ -90,7 +87,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             mounted = false;
             if (refreshInterval) clearInterval(refreshInterval);
         };
-    }, [rememberMe, isLoginPage, setAuth, clearAuth]);
+    }, [rememberMe, isLoginPage, setAuth]);
 
     useEffect(() => {
         const mapNotification = (n: any) => ({
@@ -181,6 +178,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         clearAuth();
         router.push(`/${locale}/admin`);
     };
+
+    if (!hasHydrated && !isLoginPage) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-100 text-gray-600">
+                <span className="text-sm font-semibold">{locale === 'ar' ? 'جارٍ تحميل لوحة التحكم...' : 'Loading admin panel...'}</span>
+            </div>
+        );
+    }
 
     if (!token && !isLoginPage) {
         return children;

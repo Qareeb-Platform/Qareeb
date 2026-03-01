@@ -61,17 +61,18 @@ export default function ServiceWorkerCleanup() {
         };
 
         const scheduleCleanup = () => {
-            if ('requestIdleCallback' in window) {
-                (window as Window & { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number }).requestIdleCallback(
-                    () => {
-                        void clearLegacyServiceWorkers();
-                    },
-                    { timeout: 2000 },
-                );
+            const win = window as Window & {
+                requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+            };
+
+            if (typeof win.requestIdleCallback === 'function') {
+                win.requestIdleCallback(() => {
+                    void clearLegacyServiceWorkers();
+                }, { timeout: 2000 });
                 return;
             }
 
-            window.setTimeout(() => {
+            setTimeout(() => {
                 void clearLegacyServiceWorkers();
             }, 500);
         };

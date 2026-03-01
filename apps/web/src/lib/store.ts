@@ -91,8 +91,10 @@ interface AuthState {
     token: string | null;
     admin: { id: string; email: string; role: string } | null;
     rememberMe: boolean;
+    hasHydrated: boolean;
     setAuth: (token: string, admin: any, rememberMe?: boolean) => void;
     clearAuth: () => void;
+    setHasHydrated: (value: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -101,12 +103,22 @@ export const useAuthStore = create<AuthState>()(
             token: null,
             admin: null,
             rememberMe: true,
+            hasHydrated: false,
             setAuth: (token, admin, rememberMe = true) => set({ token, admin, rememberMe }),
             clearAuth: () => set({ token: null, admin: null, rememberMe: true }),
+            setHasHydrated: (value) => set({ hasHydrated: value }),
         }),
         {
             name: 'qareeb-auth',
             storage: createJSONStorage(() => localStorage),
+            partialize: (state) => ({
+                token: state.token,
+                admin: state.admin,
+                rememberMe: state.rememberMe,
+            }),
+            onRehydrateStorage: () => (state) => {
+                state?.setHasHydrated(true);
+            },
         },
     ),
 );
