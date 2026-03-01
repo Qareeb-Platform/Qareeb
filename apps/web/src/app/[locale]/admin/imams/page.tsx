@@ -1,15 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { useAuthStore, useModalStore, useToastStore } from '@/lib/store';
 import { adminApi, api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import AppModal from '@/components/ui/AppModal';
-import { FaCheck, FaEye, FaPenToSquare, FaTrash, FaXmark } from 'react-icons/fa6';
+import { FaCheck, FaEye, FaPenToSquare, FaTrash, FaUpload, FaXmark } from 'react-icons/fa6';
 import PhoneInputField from '@/components/form/PhoneInputField';
 import { getEmbeddableVideoUrl } from '@/lib/video';
 import Pagination from '@/components/ui/Pagination';
+import { downloadCsv, parseCsv } from '@/lib/adminCsv';
 
 function IconButton({ label, onClick, children, className = '' }: { label: string; onClick: () => void; children: React.ReactNode; className?: string }) {
     return (
@@ -34,6 +35,8 @@ export default function AdminImamsPage() {
     const [governorates, setGovernorates] = useState<any[]>([]);
     const [editAreas, setEditAreas] = useState<any[]>([]);
     const [page, setPage] = useState(1);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const importInputRef = useRef<HTMLInputElement | null>(null);
     const pageSize = 12;
 
     const getStatusLabel = (status: string) => {
@@ -75,6 +78,10 @@ export default function AdminImamsPage() {
     useEffect(() => {
         setPage(1);
     }, [searchTerm]);
+
+    useEffect(() => {
+        setSelectedIds([]);
+    }, [statusFilter, searchTerm, page]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -184,6 +191,72 @@ export default function AdminImamsPage() {
         }
     };
 
+    const approveSelected = async () => {
+        if (!selectedIds.length) return;
+        try {
+            await Promise.all(selectedIds.map((id) => adminApi.approveImam(token!, id)));
+            pushToast(locale === 'ar' ? 'تمت الموافقة على العناصر المحددة' : 'Selected records approved', 'success');
+            setSelectedIds([]);
+            await fetchData();
+        } catch {
+            pushToast(locale === 'ar' ? 'فشل الموافقة الجماعية' : 'Bulk approve failed', 'error');
+        }
+    };
+
+    const deleteSelected = async () => {
+        if (!selectedIds.length) return;
+        try {
+            await Promise.all(selectedIds.map((id) => adminApi.deleteImam(token!, id)));
+            pushToast(locale === 'ar' ? 'تم حذف العناصر المحددة' : 'Selected records deleted', 'success');
+            setSelectedIds([]);
+            await fetchData();
+        } catch {
+            pushToast(locale === 'ar' ? 'فشل الحذف الجماعي' : 'Bulk delete failed', 'error');
+        }
+    };
+
+    const exportCurrentTab = () => {
+        downloadCsv(`imams-${statusFilter}.csv`, ['imam_name', 'mosque_name', 'governorate', 'area', 'whatsapp', 'google_maps_url', 'video_url'], items.map((item) => ({
+            imam_name: item.imamName,
+            mosque_name: item.mosqueName,
+            governorate: item.governorate,
+            area: getAreaLabel(item),
+            whatsapp: item.whatsapp,
+            google_maps_url: item.googleMapsUrl || '',
+            video_url: item.videoUrl || '',
+        })));
+    };
+
+    const downloadTemplate = () => {
+        downloadCsv('imams-template.csv', ['imam_name', 'mosque_name', 'governorate', 'city', 'district', 'area_id', 'whatsapp', 'google_maps_url', 'video_url'], []);
+    };
+
+    const importCsv = async (file?: File) => {
+        if (!file) return;
+        try {
+            const rows = parseCsv(await file.text());
+            if (!rows.length) {
+                pushToast(locale === 'ar' ? 'الملف فارغ' : 'File is empty', 'error');
+                return;
+            }
+            await Promise.all(rows.map((row) => api.createImam({
+                imam_name: row.imam_name || '',
+                mosque_name: row.mosque_name || '',
+                governorate: row.governorate || '',
+                city: row.city || row.governorate || '',
+                district: row.district || '',
+                area_id: row.area_id || undefined,
+                whatsapp: row.whatsapp || '',
+                google_maps_url: row.google_maps_url || '',
+                video_url: row.video_url || '',
+            })));
+            pushToast(locale === 'ar' ? 'تم الاستيراد وستظهر في المراجعة' : 'Imported successfully as pending records', 'success');
+            await fetchData();
+        } catch {
+            pushToast(locale === 'ar' ? 'فشل الاستيراد' : 'Import failed', 'error');
+        }
+    };
+
     const filteredItems = items.filter((imam) => {
         if (!searchTerm) return true;
         const q = searchTerm.toLowerCase();
@@ -198,18 +271,49 @@ export default function AdminImamsPage() {
 
     const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
     const paginatedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
+    const allCurrentSelected = paginatedItems.length > 0 && paginatedItems.every((item) => selectedIds.includes(item.id));
 
     return (
         <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <h1 className="text-2xl font-black">{locale === 'ar' ? 'إدارة الأئمة' : 'Manage Imams'}</h1>
                 <div className="flex flex-wrap gap-2 items-center">
+                    <input
+                        ref={importInputRef}
+                        type="file"
+                        accept=".csv"
+                        className="hidden"
+                        onChange={(e) => {
+                            void importCsv(e.target.files?.[0]);
+                            e.currentTarget.value = '';
+                        }}
+                    />
                     <button
                         onClick={() => void fetchData()}
                         className="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-border"
                     >
                         Refresh
                     </button>
+                    <button onClick={exportCurrentTab} className="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-border">
+                        {locale === 'ar' ? 'تصدير CSV' : 'Export CSV'}
+                    </button>
+                    <button onClick={() => importInputRef.current?.click()} className="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-border flex items-center gap-2">
+                        <FaUpload />
+                        {locale === 'ar' ? 'استيراد CSV' : 'Import CSV'}
+                    </button>
+                    <button onClick={downloadTemplate} className="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-border">
+                        {locale === 'ar' ? 'تحميل القالب' : 'Download template'}
+                    </button>
+                    {statusFilter === 'pending' && (
+                        <button onClick={() => void approveSelected()} disabled={!selectedIds.length} className="px-4 py-2 rounded-xl text-sm font-bold bg-green-100 text-green-700 disabled:opacity-50">
+                            {locale === 'ar' ? 'موافقة المحدد' : 'Approve selected'}
+                        </button>
+                    )}
+                    {admin?.role === 'super_admin' && (
+                        <button onClick={() => void deleteSelected()} disabled={!selectedIds.length} className="px-4 py-2 rounded-xl text-sm font-bold bg-red-100 text-red-700 disabled:opacity-50">
+                            {locale === 'ar' ? 'حذف المحدد' : 'Delete selected'}
+                        </button>
+                    )}
                     <input
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -237,6 +341,7 @@ export default function AdminImamsPage() {
                     <table className="w-full min-w-[680px]">
                         <thead className="bg-gray-50 border-b">
                             <tr>
+                                <th className="text-start px-4 py-3 text-sm"><input type="checkbox" checked={allCurrentSelected} onChange={(e) => setSelectedIds(e.target.checked ? paginatedItems.map((item) => item.id) : [])} /></th>
                                 <th className="text-start px-4 py-3 text-sm">{locale === 'ar' ? 'الاسم' : 'Name'}</th>
                                 <th className="text-start px-4 py-3 text-sm">{locale === 'ar' ? 'المسجد' : 'Mosque'}</th>
                                 <th className="text-start px-4 py-3 text-sm">{locale === 'ar' ? 'الحالة' : 'Status'}</th>
@@ -244,10 +349,11 @@ export default function AdminImamsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y">
-                            {loading && <tr><td colSpan={4} className="px-4 py-10 text-center">{locale === 'ar' ? 'جارٍ التحميل...' : 'Loading...'}</td></tr>}
-                            {!loading && !filteredItems.length && <tr><td colSpan={4} className="px-4 py-10 text-center">{locale === 'ar' ? 'لا توجد بيانات' : 'No data'}</td></tr>}
+                            {loading && <tr><td colSpan={5} className="px-4 py-10 text-center">{locale === 'ar' ? 'جارٍ التحميل...' : 'Loading...'}</td></tr>}
+                            {!loading && !filteredItems.length && <tr><td colSpan={5} className="px-4 py-10 text-center">{locale === 'ar' ? 'لا توجد بيانات' : 'No data'}</td></tr>}
                             {!loading && paginatedItems.map((imam) => (
                                 <tr key={imam.id}>
+                                    <td className="px-4 py-4"><input type="checkbox" checked={selectedIds.includes(imam.id)} onChange={(e) => setSelectedIds((prev) => e.target.checked ? [...new Set([...prev, imam.id])] : prev.filter((id) => id !== imam.id))} /></td>
                                     <td className="px-4 py-4 font-semibold">{imam.imamName}</td>
                                     <td className="px-4 py-4 text-sm text-text-muted">{imam.mosqueName}</td>
                                     <td className="px-4 py-4">
@@ -387,4 +493,3 @@ export default function AdminImamsPage() {
         </div>
     );
 }
-

@@ -133,6 +133,8 @@ export const adminApi = {
         fetchAPI<any>(`/admin/halaqat/${id}/reject`, { method: 'PATCH', token, body: JSON.stringify({ reason }) }),
     updateHalqa: (token: string, id: string, data: any) =>
         fetchAPI<any>(`/admin/halaqat/${id}`, { method: 'PATCH', token, body: JSON.stringify(data) }),
+    deleteHalqa: (token: string, id: string) =>
+        fetchAPI<any>(`/admin/halaqat/${id}`, { method: 'DELETE', token }),
 
     // Maintenance admin
     getAdminMaintenance: (token: string, params?: string) =>
@@ -143,6 +145,8 @@ export const adminApi = {
         fetchAPI<any>(`/admin/maintenance/${id}/reject`, { method: 'PATCH', token, body: JSON.stringify({ reason }) }),
     updateMaintenance: (token: string, id: string, data: any) =>
         fetchAPI<any>(`/admin/maintenance/${id}`, { method: 'PATCH', token, body: JSON.stringify(data) }),
+    deleteMaintenance: (token: string, id: string) =>
+        fetchAPI<any>(`/admin/maintenance/${id}`, { method: 'DELETE', token }),
 
     // Improvements admin
     getAdminImprovements: (token: string, params?: string) =>
