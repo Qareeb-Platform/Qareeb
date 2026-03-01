@@ -21,16 +21,7 @@ export function getEmbeddableVideoUrl(rawUrl?: string | null): string | null {
                 ? pathParts[1]
                 : null;
         const videoId = idFromQuery || idFromPath;
-        return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-    }
-
-    if (host.includes('facebook.com') || host.includes('fb.watch')) {
-        return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(rawUrl)}&show_text=false`;
-    }
-
-    if (host.includes('instagram.com')) {
-        const cleanPath = url.pathname.replace(/\/+$/, '');
-        return `${url.origin}${cleanPath}/embed`;
+        return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : null;
     }
 
     if (host.includes('drive.google.com')) {

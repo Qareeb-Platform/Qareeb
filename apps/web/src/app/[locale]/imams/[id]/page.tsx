@@ -27,18 +27,18 @@ function getVideoEmbedUrl(url: string | null | undefined): string | null {
 
         if (host === 'youtu.be') {
             const id = parsed.pathname.split('/').filter(Boolean)[0];
-            return id ? `https://www.youtube.com/embed/${id}` : null;
+            return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
         }
 
         if (host === 'youtube.com' || host === 'm.youtube.com') {
             const videoId = parsed.searchParams.get('v');
-            if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+            if (videoId) return `https://www.youtube-nocookie.com/embed/${videoId}`;
             const pathParts = parsed.pathname.split('/').filter(Boolean);
             if (pathParts[0] === 'embed' && pathParts[1]) {
-                return `https://www.youtube.com/embed/${pathParts[1]}`;
+                return `https://www.youtube-nocookie.com/embed/${pathParts[1]}`;
             }
             if (pathParts[0] === 'shorts' && pathParts[1]) {
-                return `https://www.youtube.com/embed/${pathParts[1]}`;
+                return `https://www.youtube-nocookie.com/embed/${pathParts[1]}`;
             }
         }
 
@@ -63,22 +63,8 @@ function getVideoEmbedUrl(url: string | null | undefined): string | null {
             }
         }
 
-        if (host === 'facebook.com' || host === 'm.facebook.com' || host === 'fb.watch') {
-            const parts = parsed.pathname.split('/').filter(Boolean);
-            const reelIndex = parts.indexOf('reel');
-            if (reelIndex !== -1 && parts[reelIndex + 1]) {
-                const watchUrl = `https://www.facebook.com/watch/?v=${parts[reelIndex + 1]}`;
-                return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(watchUrl)}&show_text=false&width=1280`;
-            }
-            return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&width=1280`;
-        }
-
-        if (host === 'instagram.com' || host === 'www.instagram.com') {
-            const parts = parsed.pathname.split('/').filter(Boolean);
-            if (parts.length >= 2 && ['reel', 'p', 'tv'].includes(parts[0])) {
-                return `https://www.instagram.com/${parts[0]}/${parts[1]}/embed/`;
-            }
-        }
+        // Facebook / Instagram embeds trigger repeated third-party cookie warnings in Chrome.
+        // Keep them as external links fallback (no iframe) to reduce console noise and improve privacy.
     } catch {
         return null;
     }
