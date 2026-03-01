@@ -112,6 +112,43 @@ export default function ChatWidget() {
         return { lat: data.latitude as number, lng: data.longitude as number };
     };
 
+    const resolveReadableLocation = async (coords: { lat: number; lng: number }) => {
+        try {
+            const url = new URL('https://nominatim.openstreetmap.org/reverse');
+            url.searchParams.set('format', 'jsonv2');
+            url.searchParams.set('lat', String(coords.lat));
+            url.searchParams.set('lon', String(coords.lng));
+            url.searchParams.set('zoom', '16');
+            url.searchParams.set('accept-language', locale === 'ar' ? 'ar' : 'en');
+
+            const response = await fetch(url.toString(), {
+                headers: {
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (!response.ok) throw new Error('Reverse geocoding failed');
+
+            const data = await response.json() as {
+                display_name?: string;
+                address?: Record<string, string | undefined>;
+            };
+
+            const parts = [
+                data.address?.suburb,
+                data.address?.city || data.address?.town || data.address?.village,
+                data.address?.state,
+            ].filter(Boolean);
+
+            if (parts.length) return parts.join(' - ');
+            if (data.display_name) return data.display_name;
+        } catch {
+            // Silent fallback to coordinates.
+        }
+
+        return `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`;
+    };
+
     const send = async (text?: string) => {
         const value = (text ?? input).trim();
         if (!value) return;
@@ -192,7 +229,15 @@ export default function ChatWidget() {
         if (Number.isFinite(lat) && Number.isFinite(lng)) {
             setLoadingSearch(true);
             try {
-                await searchByNearest(type, lat as number, lng as number);
+                const coords = { lat: lat as number, lng: lng as number };
+                await searchByNearest(type, coords.lat, coords.lng);
+                const readableLocation = await resolveReadableLocation(coords);
+                addMessage(
+                    'bot',
+                    locale === 'ar'
+                        ? `✅ موقعك الحالي الآن: ${readableLocation}. سنعتمد نفس طريقة القراءة دي لكل نتائج الأقرب.`
+                        : `✅ Your current location is: ${readableLocation}. We'll use this same location reading method for nearest results.`,
+                );
                 setShowLocationChooser(false);
                 setPendingType(null);
             } catch {
@@ -227,6 +272,15 @@ export default function ChatWidget() {
             }
 
             await searchByNearest(pendingType, coords.lat, coords.lng);
+
+            const readableLocation = await resolveReadableLocation(coords);
+            addMessage(
+                'bot',
+                locale === 'ar'
+                    ? `✅ موقعك الحالي الآن: ${readableLocation}. سنعتمد نفس طريقة القراءة دي لكل نتائج الأقرب.`
+                    : `✅ Your current location is: ${readableLocation}. We'll use this same location reading method for nearest results.`,
+            );
+
             if (usedIpFallback) {
                 addMessage(
                     'bot',
@@ -241,8 +295,8 @@ export default function ChatWidget() {
             addMessage(
                 'bot',
                 locale === 'ar'
-                    ? 'تعذر تحديد موقعك الحالي تلقائياً. فعّل إذن الموقع/‏GPS من إعدادات هاتفك أو اللابتوب ثم ارجع للتطبيق وجرب مرة تانية، أو اختر المحافظة والمنطقة.'
-                    : 'Could not determine your current location automatically. Enable location permission/GPS from your phone or laptop settings, return to the app, and try again, or select governorate and area.',
+                    ? 'تعذر تحديد موقعك الحالي تلقائياً. فعّل إذن الموقع/‏GPS من إعدادات الهاتف أو اللابتوب، ثم اعمل تحديث (Refresh) للصفحة وحاول مرة تانية، أو اختر المحافظة والمنطقة.'
+                    : 'Could not determine your current location automatically. Enable location permission/GPS from your phone or laptop settings, refresh the page, and try again, or select governorate and area.',
             );
         }
         setLoadingSearch(false);
