@@ -282,6 +282,7 @@ export default function AdminMaintenancePage() {
                     <p><strong>{locale === 'ar' ? 'المسجد:' : 'Mosque:'}</strong> {payload.mosqueName}</p>
                     <p><strong>{locale === 'ar' ? 'المحافظة:' : 'Governorate:'}</strong> {payload.governorate}</p>
                     <p><strong>{locale === 'ar' ? 'المنطقة:' : 'Area:'}</strong> {getAreaLabel(payload) || '-'}</p>
+                    <p><strong>WhatsApp:</strong> {payload.whatsapp || '-'}</p>
                     <p><strong>{locale === 'ar' ? 'الوصف:' : 'Description:'}</strong> {payload.description}</p>
                     <p><strong>{locale === 'ar' ? 'الأنواع:' : 'Types:'}</strong> {(payload.maintenanceTypes || []).join(', ')}</p>
                     {payload.googleMapsUrl && <div className="flex gap-2"><a className="btn-outline" href={payload.googleMapsUrl} target="_blank" rel="noreferrer">{locale === 'ar' ? 'فتح الخريطة' : 'Open map'}</a><button className="btn-outline" onClick={() => navigator.clipboard.writeText(payload.googleMapsUrl)}>{locale === 'ar' ? 'نسخ الرابط' : 'Copy link'}</button></div>}
