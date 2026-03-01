@@ -17,17 +17,48 @@ interface GeolocationState {
 // simple global loading indicator (used by fetch wrapper)
 interface LoadingState {
     loading: boolean;
+    pendingCount: number;
     setLoading: (val: boolean) => void;
+    setPendingCount: (count: number) => void;
 }
 
 export const useLoadingStore = create<LoadingState>((set) => ({
     loading: false,
+    pendingCount: 0,
     setLoading: (val) => set({ loading: val }),
+    setPendingCount: (count) => set({ pendingCount: Math.max(0, count) }),
 }));
 
-// helper so we can update outside of React components
-export const setGlobalLoading = (val: boolean) => {
-    useLoadingStore.setState({ loading: val });
+let loadingDelayTimer: ReturnType<typeof setTimeout> | null = null;
+const LOADING_DELAY_MS = 180;
+
+// helpers so we can update outside of React components
+export const startGlobalLoading = () => {
+    const current = useLoadingStore.getState().pendingCount;
+    const next = current + 1;
+    useLoadingStore.setState({ pendingCount: next });
+
+    if (next === 1) {
+        if (loadingDelayTimer) clearTimeout(loadingDelayTimer);
+        loadingDelayTimer = setTimeout(() => {
+            const latest = useLoadingStore.getState().pendingCount;
+            if (latest > 0) useLoadingStore.setState({ loading: true });
+        }, LOADING_DELAY_MS);
+    }
+};
+
+export const endGlobalLoading = () => {
+    const current = useLoadingStore.getState().pendingCount;
+    const next = Math.max(0, current - 1);
+    useLoadingStore.setState({ pendingCount: next });
+
+    if (next === 0) {
+        if (loadingDelayTimer) {
+            clearTimeout(loadingDelayTimer);
+            loadingDelayTimer = null;
+        }
+        useLoadingStore.setState({ loading: false });
+    }
 };
 
 export const useGeolocationStore = create<GeolocationState>((set) => ({

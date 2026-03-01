@@ -5,13 +5,16 @@ const API_URL =
 
 interface FetchOptions extends RequestInit {
     token?: string;
+    showGlobalLoading?: boolean;
 }
 
-import { setGlobalLoading } from './store';
+import { startGlobalLoading, endGlobalLoading } from './store';
 
 async function fetchAPI<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
-    const { token, ...init } = options;
-    setGlobalLoading(true);
+    const { token, showGlobalLoading, ...init } = options;
+    const method = (init.method || 'GET').toUpperCase();
+    const shouldShowGlobalLoading = showGlobalLoading ?? method !== 'GET';
+    if (shouldShowGlobalLoading) startGlobalLoading();
     try {
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
@@ -31,7 +34,7 @@ async function fetchAPI<T>(endpoint: string, options: FetchOptions = {}): Promis
 
         return res.json() as Promise<T>;
     } finally {
-        setGlobalLoading(false);
+        if (shouldShowGlobalLoading) endGlobalLoading();
     }
 }
 
