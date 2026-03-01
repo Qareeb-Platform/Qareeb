@@ -1,12 +1,13 @@
-import { getLocale } from 'next-intl/server';
+﻿import { getLocale } from 'next-intl/server';
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { extractLatLngFromGoogleMaps, getGoogleMapsEmbedUrl } from '@/lib/maps';
 import { formatLocationParts } from '@/lib/location';
 import LocationMapSection from '@/components/public/LocationMapSection';
+import VideoEmbedPanel from '@/components/public/VideoEmbedPanel';
 
-export const revalidate = 300; // ISR: 5 min
+export const revalidate = 300;
 
 async function getImam(id: string): Promise<any> {
     try {
@@ -17,58 +18,6 @@ async function getImam(id: string): Promise<any> {
     } catch {
         return null;
     }
-}
-
-function getVideoEmbedUrl(url: string | null | undefined): string | null {
-    if (!url) return null;
-    try {
-        const parsed = new URL(url);
-        const host = parsed.hostname.replace(/^www\./, '').toLowerCase();
-
-        if (host === 'youtu.be') {
-            const id = parsed.pathname.split('/').filter(Boolean)[0];
-            return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
-        }
-
-        if (host === 'youtube.com' || host === 'm.youtube.com') {
-            const videoId = parsed.searchParams.get('v');
-            if (videoId) return `https://www.youtube-nocookie.com/embed/${videoId}`;
-            const pathParts = parsed.pathname.split('/').filter(Boolean);
-            if (pathParts[0] === 'embed' && pathParts[1]) {
-                return `https://www.youtube-nocookie.com/embed/${pathParts[1]}`;
-            }
-            if (pathParts[0] === 'shorts' && pathParts[1]) {
-                return `https://www.youtube-nocookie.com/embed/${pathParts[1]}`;
-            }
-        }
-
-        if (host === 'vimeo.com') {
-            const id = parsed.pathname.split('/').filter(Boolean)[0];
-            return id ? `https://player.vimeo.com/video/${id}` : null;
-        }
-
-        if (host === 'drive.google.com') {
-            const parts = parsed.pathname.split('/').filter(Boolean);
-            const fileIndex = parts.indexOf('file');
-            if (fileIndex !== -1) {
-                const idIndex = parts.indexOf('d');
-                if (idIndex !== -1 && parts[idIndex + 1]) {
-                    return `https://drive.google.com/file/d/${parts[idIndex + 1]}/preview`;
-                }
-            }
-
-            const openId = parsed.searchParams.get('id');
-            if (openId) {
-                return `https://drive.google.com/file/d/${openId}/preview`;
-            }
-        }
-
-        // Facebook / Instagram embeds trigger repeated third-party cookie warnings in Chrome.
-        // Keep them as external links fallback (no iframe) to reduce console noise and improve privacy.
-    } catch {
-        return null;
-    }
-    return null;
 }
 
 export default async function ImamDetailPage({ params }: { params: { id: string } }) {
@@ -94,11 +43,14 @@ export default async function ImamDetailPage({ params }: { params: { id: string 
     const coords = (typeof imam.latitude === 'number' && typeof imam.longitude === 'number' && (imam.latitude !== 0 || imam.longitude !== 0))
         ? { lat: imam.latitude, lng: imam.longitude }
         : extractLatLngFromGoogleMaps(imam.googleMapsUrl || imam.google_maps_url);
-    const mapHref = coords ? `https://www.google.com/maps?q=${encodeURIComponent(`${coords.lat},${coords.lng}`)}&z=15` : (imam.googleMapsUrl || imam.google_maps_url || null);
+
+    const mapHref = coords
+        ? `https://www.google.com/maps?q=${encodeURIComponent(`${coords.lat},${coords.lng}`)}&z=15`
+        : (imam.googleMapsUrl || imam.google_maps_url || null);
+
     const mapEmbedUrl = mapHref ? getGoogleMapsEmbedUrl(mapHref) : null;
     const directionsDestination = coords ? `${coords.lat},${coords.lng}` : (imam.googleMapsUrl || imam.google_maps_url || '');
     const recitationUrl = imam.recitationUrl || imam.recitation_url || imam.videoUrl || imam.video_url || '';
-    const recitationEmbedUrl = getVideoEmbedUrl(recitationUrl);
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
@@ -153,30 +105,11 @@ export default async function ImamDetailPage({ params }: { params: { id: string 
                                         <h3 className="font-black text-primary text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
                                             <span>🔊</span> {locale === 'ar' ? 'نموذج التلاوة' : 'Sample Recitation'}
                                         </h3>
-                                        {recitationEmbedUrl ? (
-                                            <div className="overflow-hidden rounded-2xl border border-primary/10 bg-black/5">
-                                                <div className="aspect-video w-full">
-                                                    <iframe
-                                                        src={recitationEmbedUrl}
-                                                        title={locale === 'ar' ? 'تلاوة الإمام' : 'Imam recitation'}
-                                                        className="h-full w-full"
-                                                        loading="lazy"
-                                                        referrerPolicy="strict-origin-when-cross-origin"
-                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                        allowFullScreen
-                                                    />
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <a
-                                                href={recitationUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-primary font-bold underline break-all"
-                                            >
-                                                {recitationUrl}
-                                            </a>
-                                        )}
+                                        <VideoEmbedPanel
+                                            locale={locale}
+                                            url={recitationUrl}
+                                            title={locale === 'ar' ? 'تلاوة الإمام' : 'Imam recitation'}
+                                        />
                                     </div>
                                 )}
                             </div>
