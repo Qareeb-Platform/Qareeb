@@ -187,7 +187,6 @@ export class MaintenanceService {
     }
 
     async approve(id: string, adminId: string) {
-        const before = await this.prisma.maintenanceRequest.findUnique({ where: { id } });
         const updated = await this.prisma.maintenanceRequest.update({ where: { id }, data: { status: 'approved', adminId, rejectionReason: null } });
         await this.audit.logApprove(adminId, 'maintenance', id, updated);
         await this.notifications.emitAction('maintenance', 'approved', id, 'Maintenance approved', `Maintenance ${updated.mosqueName} approved`);
@@ -196,7 +195,6 @@ export class MaintenanceService {
     }
 
     async reject(id: string, adminId: string, reason?: string) {
-        const before = await this.prisma.maintenanceRequest.findUnique({ where: { id } });
         const updated = await this.prisma.maintenanceRequest.update({ where: { id }, data: { status: 'rejected', adminId, rejectionReason: reason } });
         await this.audit.logReject(adminId, 'maintenance', id, updated);
         await this.notifications.emitAction('maintenance', 'rejected', id, 'Maintenance rejected', `Maintenance ${updated.mosqueName} rejected`);

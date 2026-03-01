@@ -185,7 +185,6 @@ export class HalaqatService {
     }
 
     async approve(id: string, adminId: string) {
-        const before = await this.prisma.halqa.findUnique({ where: { id } });
         const updated = await this.prisma.halqa.update({ where: { id }, data: { status: 'approved', adminId, rejectionReason: null } });
         await this.audit.logApprove(adminId, 'halqa', id, updated);
         await this.notifications.emitAction('halqa', 'approved', id, 'Halqa approved', `Halqa ${updated.circleName} approved`);
@@ -194,7 +193,6 @@ export class HalaqatService {
     }
 
     async reject(id: string, adminId: string, reason?: string) {
-        const before = await this.prisma.halqa.findUnique({ where: { id } });
         const updated = await this.prisma.halqa.update({ where: { id }, data: { status: 'rejected', adminId, rejectionReason: reason } });
         await this.audit.logReject(adminId, 'halqa', id, updated);
         await this.notifications.emitAction('halqa', 'rejected', id, 'Halqa rejected', `Halqa ${updated.circleName} rejected`);

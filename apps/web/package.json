@@ -4,9 +4,10 @@
     "private": true,
     "scripts": {
         "dev": "next dev -p 3000",
-        "build": "next build",
+        "validate:i18n": "node scripts/validate-i18n.js",
+        "build": "npm run validate:i18n && next build",
         "start": "next start",
-        "lint": "next lint"
+        "lint": "npm run validate:i18n && next lint"
     },
     "dependencies": {
         "@hookform/resolvers": "^3.3.4",

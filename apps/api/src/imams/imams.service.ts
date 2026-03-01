@@ -199,7 +199,6 @@ export class ImamsService {
     }
 
     async approve(id: string, adminId: string) {
-        const before = await this.prisma.imam.findUnique({ where: { id } });
         const updated = await this.prisma.imam.update({
             where: { id },
             data: { status: 'approved', adminId, rejectionReason: null },
@@ -211,7 +210,6 @@ export class ImamsService {
     }
 
     async reject(id: string, adminId: string, reason?: string) {
-        const before = await this.prisma.imam.findUnique({ where: { id } });
         const updated = await this.prisma.imam.update({
             where: { id },
             data: { status: 'rejected', adminId, rejectionReason: reason },
