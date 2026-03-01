@@ -46,6 +46,33 @@ function getVideoEmbedUrl(url: string | null | undefined): string | null {
             const id = parsed.pathname.split('/').filter(Boolean)[0];
             return id ? `https://player.vimeo.com/video/${id}` : null;
         }
+
+        if (host === 'drive.google.com') {
+            const parts = parsed.pathname.split('/').filter(Boolean);
+            const fileIndex = parts.indexOf('file');
+            if (fileIndex !== -1) {
+                const idIndex = parts.indexOf('d');
+                if (idIndex !== -1 && parts[idIndex + 1]) {
+                    return `https://drive.google.com/file/d/${parts[idIndex + 1]}/preview`;
+                }
+            }
+
+            const openId = parsed.searchParams.get('id');
+            if (openId) {
+                return `https://drive.google.com/file/d/${openId}/preview`;
+            }
+        }
+
+        if (host === 'facebook.com' || host === 'm.facebook.com' || host === 'fb.watch') {
+            return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&width=1280`;
+        }
+
+        if (host === 'instagram.com' || host === 'www.instagram.com') {
+            const parts = parsed.pathname.split('/').filter(Boolean);
+            if (parts.length >= 2 && ['reel', 'p', 'tv'].includes(parts[0])) {
+                return `https://www.instagram.com/${parts[0]}/${parts[1]}/embed/`;
+            }
+        }
     } catch {
         return null;
     }
