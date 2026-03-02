@@ -139,7 +139,10 @@ export default function AdminDashboard() {
                     <>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <StatCard title={locale === 'ar' ? 'المساحة المستخدمة' : 'Storage used'} value={formatBytes(cloudUsage?.storage?.used || 0)} />
-                            <StatCard title={locale === 'ar' ? 'المساحة المتبقية' : 'Storage remaining'} value={formatBytes(cloudUsage?.storage?.remaining || 0)} />
+                            <StatCard
+                                title={locale === 'ar' ? 'المساحة المتبقية' : 'Storage remaining'}
+                                value={formatUsageValue(cloudUsage?.storage?.remaining, formatBytes, locale)}
+                            />
                             <StatCard title={locale === 'ar' ? 'عدد الملفات' : 'Assets count'} value={cloudUsage?.resources || 0} />
                             <StatCard title={locale === 'ar' ? 'استهلاك الباندويث' : 'Bandwidth used'} value={formatBytes(cloudUsage?.bandwidth?.used || 0)} />
                         </div>
@@ -147,12 +150,12 @@ export default function AdminDashboard() {
                         <div className="space-y-2">
                             <div className="flex items-center justify-between text-xs font-bold text-text-muted">
                                 <span>{locale === 'ar' ? 'نسبة استخدام المساحة' : 'Storage usage'}</span>
-                                <span>{cloudUsage?.storage?.usedPercent || 0}%</span>
+                                <span>{formatPercent(cloudUsage?.storage?.usedPercent ?? cloudUsage?.credits?.usedPercent)}</span>
                             </div>
                             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-primary rounded-full"
-                                    style={{ width: `${Math.min(Number(cloudUsage?.storage?.usedPercent || 0), 100)}%` }}
+                                    style={{ width: `${Math.min(Number(cloudUsage?.storage?.usedPercent ?? cloudUsage?.credits?.usedPercent ?? 0), 100)}%` }}
                                 />
                             </div>
                         </div>
@@ -177,6 +180,23 @@ function StatCard({ title, value, icon }: { title: string; value: string | numbe
             <p className="text-2xl font-black mt-2">{value}</p>
         </div>
     );
+}
+
+
+function formatPercent(value: number | null | undefined) {
+    if (!Number.isFinite(value as number)) return '—';
+    return `${Number(value).toFixed(2).replace(/\.00$/, '')}%`;
+}
+
+function formatUsageValue<T>(
+    value: T | null | undefined,
+    formatter: (value: T) => string,
+    locale: string,
+) {
+    if (value === null || value === undefined) {
+        return locale === 'ar' ? 'غير متاح' : 'N/A';
+    }
+    return formatter(value);
 }
 
 function formatBytes(bytes: number) {

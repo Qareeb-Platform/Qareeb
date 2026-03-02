@@ -102,8 +102,15 @@ export class AdminService {
             const usage: any = await this.mediaService.getUsage();
             const storageUsed = Number(usage?.storage?.usage || 0);
             const storageLimit = Number(usage?.storage?.limit || 0);
-            const remaining = Math.max(storageLimit - storageUsed, 0);
-            const usedPercent = storageLimit > 0 ? Number(((storageUsed / storageLimit) * 100).toFixed(2)) : 0;
+            const hasStorageLimit = storageLimit > 0;
+            const remaining = hasStorageLimit ? Math.max(storageLimit - storageUsed, 0) : null;
+            const usedPercent = hasStorageLimit ? Number(((storageUsed / storageLimit) * 100).toFixed(2)) : null;
+
+            const creditUsed = Number(usage?.credits?.usage || 0);
+            const creditLimit = Number(usage?.credits?.limit || 0);
+            const hasCreditLimit = creditLimit > 0;
+            const creditRemaining = hasCreditLimit ? Math.max(creditLimit - creditUsed, 0) : null;
+            const creditUsedPercent = hasCreditLimit ? Number(((creditUsed / creditLimit) * 100).toFixed(2)) : null;
 
             return {
                 enabled: true,
@@ -111,9 +118,15 @@ export class AdminService {
                 lastUpdated: new Date().toISOString(),
                 storage: {
                     used: storageUsed,
-                    limit: storageLimit,
+                    limit: hasStorageLimit ? storageLimit : null,
                     remaining,
                     usedPercent,
+                },
+                credits: {
+                    used: creditUsed,
+                    limit: hasCreditLimit ? creditLimit : null,
+                    remaining: creditRemaining,
+                    usedPercent: creditUsedPercent,
                 },
                 resources: usage?.resources || 0,
                 derivedResources: usage?.derived_resources || 0,
