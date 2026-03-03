@@ -27,10 +27,10 @@ type FieldDef = {
 
 const GROUP_FIELDS: Record<Group, FieldDef[]> = {
     WHATSAPP: [
-        { key: 'WHAPI_ENABLED', labelAr: '????? ??????', labelEn: 'Enable WhatsApp', placeholder: '', isSecret: false, type: 'checkbox' },
-        { key: 'WHAPI_BASE_URL', labelAr: '???? Whapi', labelEn: 'Whapi Base URL', placeholder: 'https://gate.whapi.cloud', isSecret: false },
-        { key: 'WHAPI_TOKEN', labelAr: '???? Whapi', labelEn: 'Whapi Token', placeholder: 'Update Secret', isSecret: true },
-        { key: 'WHAPI_INSTANCE_ID', labelAr: '????? ?????????', labelEn: 'Instance ID', placeholder: 'Optional', isSecret: false },
+        { key: 'WHAPI_ENABLED', labelAr: 'تفعيل واتساب', labelEn: 'Enable WhatsApp', placeholder: '', isSecret: false, type: 'checkbox' },
+        { key: 'WHAPI_BASE_URL', labelAr: 'رابط Whapi', labelEn: 'Whapi Base URL', placeholder: 'https://gate.whapi.cloud', isSecret: false },
+        { key: 'WHAPI_TOKEN', labelAr: 'توكن Whapi', labelEn: 'Whapi Token', placeholder: 'Update Secret', isSecret: true },
+        { key: 'WHAPI_INSTANCE_ID', labelAr: 'معرف الانستانس', labelEn: 'Instance ID', placeholder: 'Optional', isSecret: false },
     ],
     CLOUDINARY: [
         { key: 'CLOUDINARY_CLOUD_NAME', labelAr: 'Cloud Name', labelEn: 'Cloud Name', placeholder: 'djseokhow', isSecret: false },
@@ -83,7 +83,7 @@ export default function AdminSettingsPage() {
             setSettingsMap(nextMap);
             setForm(nextForm);
         } catch (err: any) {
-            setError(String(err?.message || (isAr ? '???? ????? ?????????' : 'Failed to load settings')));
+            setError(String(err?.message || (isAr ? 'تعذر تحميل الإعدادات' : 'Failed to load settings')));
         } finally {
             setLoading(false);
         }
@@ -135,28 +135,28 @@ export default function AdminSettingsPage() {
                 });
             }
 
-            setMessage(isAr ? '?? ??? ????????? ?????' : 'Settings saved successfully');
+            setMessage(isAr ? 'تم حفظ الإعدادات بنجاح' : 'Settings saved successfully');
             await loadGroup(activeTab);
         } catch (err: any) {
-            setError(String(err?.message || (isAr ? '??? ??? ?????????' : 'Failed to save settings')));
+            setError(String(err?.message || (isAr ? 'فشل حفظ الإعدادات' : 'Failed to save settings')));
         } finally {
             setSaving(false);
         }
     };
 
     if (!token) {
-        return <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm font-semibold text-gray-600">{isAr ? '??? ????? ??????' : 'Login required'}</div>;
+        return <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm font-semibold text-gray-600">{isAr ? 'يجب تسجيل الدخول' : 'Login required'}</div>;
     }
 
     if (admin?.role !== 'super_admin') {
-        return <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm font-semibold text-red-700">{isAr ? '??? ???? ?? ???? ??????' : 'You are not authorized to access this page'}</div>;
+        return <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm font-semibold text-red-700">{isAr ? 'غير مصرح لك بهذه الصفحة' : 'You are not authorized to access this page'}</div>;
     }
 
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-2xl font-black text-gray-900">{isAr ? '??????? ??????' : 'System Settings'}</h1>
-                <p className="text-sm text-gray-500 mt-1">{isAr ? '????? ?????? ? Cloudinary ???? ????? ???' : 'Manage WhatsApp and Cloudinary without redeploy'}</p>
+                <h1 className="text-2xl font-black text-gray-900">{isAr ? 'إعدادات النظام' : 'System Settings'}</h1>
+                <p className="text-sm text-gray-500 mt-1">{isAr ? 'إدارة واتساب و Cloudinary بدون إعادة نشر' : 'Manage WhatsApp and Cloudinary without redeploy'}</p>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -167,14 +167,14 @@ export default function AdminSettingsPage() {
                         onClick={() => setActiveTab(tab)}
                         className={`px-4 py-2 rounded-xl border text-sm font-bold ${activeTab === tab ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-200 hover:border-primary/40'}`}
                     >
-                        {tab === 'WHATSAPP' ? (isAr ? '??????? ??????' : 'WhatsApp Settings') : (isAr ? '??????? Cloudinary' : 'Cloudinary Settings')}
+                        {tab === 'WHATSAPP' ? (isAr ? 'إعدادات واتساب' : 'WhatsApp Settings') : (isAr ? 'إعدادات Cloudinary' : 'Cloudinary Settings')}
                     </button>
                 ))}
             </div>
 
             <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-4">
                 {loading ? (
-                    <p className="text-sm text-gray-500">{isAr ? '???? ???????...' : 'Loading...'}</p>
+                    <p className="text-sm text-gray-500">{isAr ? 'جاري التحميل...' : 'Loading...'}</p>
                 ) : (
                     <>
                         {fields.map((field) => {
@@ -202,12 +202,12 @@ export default function AdminSettingsPage() {
                                         type="text"
                                         value={String(form[field.key] || '')}
                                         onChange={(e) => setForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                                        placeholder={field.isSecret ? (isAr ? '????? ?????? ??????' : 'Update Secret') : field.placeholder}
+                                        placeholder={field.isSecret ? (isAr ? 'تحديث القيمة السرية' : 'Update Secret') : field.placeholder}
                                         className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary"
                                     />
                                     {field.isSecret && setting?.hasValue && (
                                         <p className="text-xs text-gray-500">
-                                            {isAr ? '?????? ???????:' : 'Current value:'} <span className="font-bold">{setting.valueMasked}</span>
+                                            {isAr ? 'القيمة الحالية:' : 'Current value:'} <span className="font-bold">{setting.valueMasked}</span>
                                         </p>
                                     )}
                                 </div>
@@ -224,7 +224,7 @@ export default function AdminSettingsPage() {
                                 disabled={saving}
                                 className="btn-primary !px-6 !py-2.5 text-sm disabled:opacity-60"
                             >
-                                {saving ? (isAr ? '???? ?????...' : 'Saving...') : (isAr ? '??? ?????????' : 'Save Settings')}
+                                {saving ? (isAr ? 'جارٍ الحفظ...' : 'Saving...') : (isAr ? 'حفظ الإعدادات' : 'Save Settings')}
                             </button>
                         </div>
                     </>
