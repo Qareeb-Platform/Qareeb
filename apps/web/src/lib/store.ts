@@ -224,10 +224,19 @@ export const useNotificationStore = create<NotificationState>((set) => ({
         items: [item, ...state.items],
         unreadCount: state.unreadCount + 1,
     })),
-    markRead: (id) => set((state) => ({
-        items: state.items.map((n) => (n.id === id ? { ...n, read: true } : n)),
-        unreadCount: Math.max(0, state.unreadCount - 1),
-    })),
+    markRead: (id) => set((state) => {
+        let decremented = false;
+        const nextItems = state.items.map((n) => {
+            if (n.id !== id) return n;
+            if (!n.read) decremented = true;
+            return { ...n, read: true };
+        });
+
+        return {
+            items: nextItems,
+            unreadCount: decremented ? Math.max(0, state.unreadCount - 1) : state.unreadCount,
+        };
+    }),
     markAllRead: () => set((state) => ({
         items: state.items.map((n) => ({ ...n, read: true })),
         unreadCount: 0,

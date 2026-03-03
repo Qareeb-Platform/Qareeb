@@ -24,7 +24,12 @@ import {
 import { adminApi } from '@/lib/api';
 import { useAuthStore, useNotificationStore, useThemeStore } from '@/lib/store';
 
+
 const SOCKET_DISABLED_SESSION_KEY = 'qareeb-admin-socket-disabled';
+const NOTIFICATION_SOUND_SOURCES = [
+    'https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg',
+    'https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg',
+];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const t = useTranslations('admin');
@@ -99,8 +104,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
-        const audio = new Audio('/sounds/notification.mp3');
+        let sourceIndex = 0;
+        const audio = new Audio(NOTIFICATION_SOUND_SOURCES[sourceIndex]);
         audio.preload = 'auto';
+
+        const onAudioError = () => {
+            if (sourceIndex >= NOTIFICATION_SOUND_SOURCES.length - 1) return;
+            sourceIndex += 1;
+            audio.src = NOTIFICATION_SOUND_SOURCES[sourceIndex];
+            audio.load();
+        };
+
+        audio.addEventListener('error', onAudioError);
         notificationAudioRef.current = audio;
 
         const unlockAudio = () => {
@@ -119,6 +134,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         window.addEventListener('keydown', unlockAudio, { once: true });
 
         return () => {
+            audio.removeEventListener('error', onAudioError);
             window.removeEventListener('pointerdown', unlockAudio);
             window.removeEventListener('keydown', unlockAudio);
             notificationAudioRef.current = null;
@@ -136,12 +152,42 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             read: n.isRead,
         });
 
+        const playFallbackBeep = () => {
+            try {
+                const context = new window.AudioContext();
+                const oscillator = context.createOscillator();
+                const gain = context.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 880;
+                oscillator.connect(gain);
+                gain.connect(context.destination);
+
+                gain.gain.setValueAtTime(0.0001, context.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.2, context.currentTime + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.18);
+
+                oscillator.start();
+                oscillator.stop(context.currentTime + 0.2);
+                oscillator.onended = () => {
+                    void context.close();
+                };
+            } catch {
+                // Ignore fallback beep failures silently.
+            }
+        };
+
         const playNotificationSound = () => {
             if (document.visibilityState !== 'visible') return;
             const audio = notificationAudioRef.current;
-            if (!audio) return;
+            if (!audio) {
+                playFallbackBeep();
+                return;
+            }
             audio.currentTime = 0;
-            audio.play().catch(() => undefined);
+            audio.play().catch(() => {
+                playFallbackBeep();
+            });
         };
 
         const syncUnreadNotifications = async (playSoundOnNew = false) => {
