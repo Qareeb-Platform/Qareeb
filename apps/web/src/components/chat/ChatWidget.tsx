@@ -34,6 +34,7 @@ export default function ChatWidget() {
     const [locationStatus, setLocationStatus] = useState<'idle' | 'loading' | 'ready'>('idle');
     const [locationLabel, setLocationLabel] = useState<string>('');
     const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
+    const [panelSize, setPanelSize] = useState<'sm' | 'md' | 'lg'>('md');
 
     const [governorates, setGovernorates] = useState<any[]>([]);
     const [areas, setAreas] = useState<any[]>([]);
@@ -247,12 +248,6 @@ export default function ChatWidget() {
         if (!pendingType) return;
         setLoadingSearch(true);
         setLocationStatus('loading');
-        addMessage(
-            'bot',
-            locale === 'ar'
-                ? 'انت كده اللوكيشن بتاعك اهو.. جاري البحث عن الأقرب.'
-                : 'Got it — using your current location. Searching for nearest results.',
-        );
         let coords: { lat: number; lng: number };
         let usedIpFallback = false;
 
@@ -352,6 +347,12 @@ export default function ChatWidget() {
         },
     ];
 
+    const sizeConfig = {
+        sm: { panel: 'w-72 sm:w-80', body: 'h-64' },
+        md: { panel: 'w-80 sm:w-96', body: 'h-80' },
+        lg: { panel: 'w-[90vw] max-w-[460px] sm:w-[420px]', body: 'h-[420px]' },
+    } as const;
+
     if (!isOpen) {
         return (
             <button
@@ -365,13 +366,41 @@ export default function ChatWidget() {
     }
 
     return (
-        <div className="fixed bottom-6 start-6 z-40 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-border overflow-hidden">
+        <div className={`fixed bottom-6 start-6 z-40 ${sizeConfig[panelSize].panel} bg-white rounded-2xl shadow-2xl border border-border overflow-hidden`}>
             <div className="bg-gradient-to-r from-primary to-primary-light px-5 py-4 flex items-center justify-between text-white">
-                <span className="font-black">{locale === 'ar' ? 'مساعد قريب' : 'Qareeb Assistant'}</span>
+                <div className="flex items-center gap-2">
+                    <span className="font-black">{locale === 'ar' ? 'مساعد قريب' : 'Qareeb Assistant'}</span>
+                    <div className="flex items-center gap-1 bg-white/15 rounded-full px-2 py-1 text-[10px]">
+                        <button
+                            onClick={() => setPanelSize('sm')}
+                            className={`px-1.5 rounded-full ${panelSize === 'sm' ? 'bg-white/70 text-primary' : 'hover:bg-white/20'}`}
+                            aria-label={locale === 'ar' ? 'تصغير' : 'Small'}
+                            title={locale === 'ar' ? 'تصغير' : 'Small'}
+                        >
+                            A-
+                        </button>
+                        <button
+                            onClick={() => setPanelSize('md')}
+                            className={`px-1.5 rounded-full ${panelSize === 'md' ? 'bg-white/70 text-primary' : 'hover:bg-white/20'}`}
+                            aria-label={locale === 'ar' ? 'حجم متوسط' : 'Medium'}
+                            title={locale === 'ar' ? 'حجم متوسط' : 'Medium'}
+                        >
+                            A
+                        </button>
+                        <button
+                            onClick={() => setPanelSize('lg')}
+                            className={`px-1.5 rounded-full ${panelSize === 'lg' ? 'bg-white/70 text-primary' : 'hover:bg-white/20'}`}
+                            aria-label={locale === 'ar' ? 'تكبير' : 'Large'}
+                            title={locale === 'ar' ? 'تكبير' : 'Large'}
+                        >
+                            A+
+                        </button>
+                    </div>
+                </div>
                 <button onClick={toggleChat} aria-label="close">×</button>
             </div>
 
-            <div className="h-80 overflow-y-auto p-4 space-y-3 bg-cream/30">
+            <div className={`${sizeConfig[panelSize].body} overflow-y-auto p-4 space-y-3 bg-cream/30`}>
                 <div className="text-xs bg-white border border-border rounded-xl p-3">
                     {locale === 'ar' ? 'اختَر الخدمة المطلوبة وسنبحث لك عن الأقرب.' : 'Choose the needed service and we will find the nearest options.'}
                 </div>
@@ -392,12 +421,21 @@ export default function ChatWidget() {
                     ))}
                 </div>
 
+                {messages.map((msg, i) => (
+                    <div key={i} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[88%] rounded-2xl px-3 py-2 text-sm ${msg.from === 'user' ? 'bg-primary text-white' : 'bg-white border border-border text-dark'}`}>{msg.text}</div>
+                    </div>
+                ))}
+
                 {showLocationChooser && pendingType && (
-                    <div className="bg-white border border-border rounded-xl p-3 space-y-2 text-xs">
+                    <div className="bg-white border border-border rounded-xl p-3 space-y-3 text-xs">
                         <p className="font-bold">{locale === 'ar' ? 'حدد موقعك للبحث' : 'Choose location for search'}</p>
                         <div className="space-y-2">
+                            <div className="text-[11px] font-semibold text-text-muted">
+                                {locale === 'ar' ? 'الخيار 1: الموقع الحالي' : 'Option 1: Current location'}
+                            </div>
                             <div
-                                className="flex items-center gap-2 bg-cream rounded-xl px-3 py-2 border max-w-[260px] cursor-pointer transition-colors border-transparent hover:border-primary/20"
+                                className="flex items-center gap-2 bg-cream rounded-xl px-3 py-2 border max-w-[260px] cursor-pointer transition-colors border border-primary/20 hover:border-primary/40"
                                 role="button"
                                 tabIndex={0}
                                 title={locale === 'ar' ? 'تحديث الموقع' : 'Refresh location'}
@@ -433,31 +471,30 @@ export default function ChatWidget() {
                                 </div>
                             )}
                         </div>
-                        <div className="grid grid-cols-1 gap-2">
-                            <select value={governorateId} onChange={(e) => setGovernorateId(e.target.value)} className="px-2 py-2 rounded-lg border border-border bg-white">
-                                <option value="">{locale === 'ar' ? 'اختر المحافظة' : 'Select governorate'}</option>
-                                {governorates.map((g) => (
-                                    <option key={g.id} value={g.id}>{locale === 'ar' ? g.nameAr : g.nameEn}</option>
-                                ))}
-                            </select>
-                            <select value={areaId} onChange={(e) => setAreaId(e.target.value)} disabled={!governorateId} className="px-2 py-2 rounded-lg border border-border bg-white disabled:opacity-50">
-                                <option value="">{locale === 'ar' ? 'كل المناطق' : 'All areas'}</option>
-                                {areas.map((a) => (
-                                    <option key={a.id} value={a.id}>{locale === 'ar' ? a.nameAr : a.nameEn}</option>
-                                ))}
-                            </select>
-                            <button onClick={searchWithSelectedAddress} className="btn-primary !py-1.5 !px-3 text-xs" disabled={loadingSearch}>
-                                {loadingSearch ? (locale === 'ar' ? 'جارٍ البحث...' : 'Searching...') : (locale === 'ar' ? 'ابحث حسب العنوان' : 'Search by address')}
-                            </button>
+                        <div className="space-y-2 pt-1 border-t border-border/60">
+                            <div className="text-[11px] font-semibold text-text-muted">
+                                {locale === 'ar' ? 'الخيار 2: اختيار العنوان' : 'Option 2: Select address'}
+                            </div>
+                            <div className="grid grid-cols-1 gap-2">
+                                <select value={governorateId} onChange={(e) => setGovernorateId(e.target.value)} className="px-2 py-2 rounded-lg border border-border bg-white">
+                                    <option value="">{locale === 'ar' ? 'اختر المحافظة' : 'Select governorate'}</option>
+                                    {governorates.map((g) => (
+                                        <option key={g.id} value={g.id}>{locale === 'ar' ? g.nameAr : g.nameEn}</option>
+                                    ))}
+                                </select>
+                                <select value={areaId} onChange={(e) => setAreaId(e.target.value)} disabled={!governorateId} className="px-2 py-2 rounded-lg border border-border bg-white disabled:opacity-50">
+                                    <option value="">{locale === 'ar' ? 'كل المناطق' : 'All areas'}</option>
+                                    {areas.map((a) => (
+                                        <option key={a.id} value={a.id}>{locale === 'ar' ? a.nameAr : a.nameEn}</option>
+                                    ))}
+                                </select>
+                                <button onClick={searchWithSelectedAddress} className="btn-primary !py-1.5 !px-3 text-xs" disabled={loadingSearch}>
+                                    {loadingSearch ? (locale === 'ar' ? 'جارٍ البحث...' : 'Searching...') : (locale === 'ar' ? 'ابحث حسب العنوان' : 'Search by address')}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
-
-                {messages.map((msg, i) => (
-                    <div key={i} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[88%] rounded-2xl px-3 py-2 text-sm ${msg.from === 'user' ? 'bg-primary text-white' : 'bg-white border border-border text-dark'}`}>{msg.text}</div>
-                    </div>
-                ))}
 
                 {cards.length > 0 && (
                     <div className="space-y-2">
