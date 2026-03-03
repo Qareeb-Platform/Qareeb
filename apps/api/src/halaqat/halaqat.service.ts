@@ -195,7 +195,8 @@ export class HalaqatService {
         await this.notifications.emitAction('halqa', 'approved', id, 'Halqa approved', `Halqa ${updated.circleName} approved`);
         try {
             const frontUrl = (process.env.NEXTAUTH_URL || process.env.FRONT_URL || 'http://localhost:3000').replace(/\/+$/, '');
-            const detailsUrl = `${frontUrl}/halaqat/${updated.id}`;
+            const localePrefix = (process.env.FRONT_LOCALE || 'ar').replace(/^\/+|\/+$/g, '');
+            const detailsUrl = `${frontUrl}/${localePrefix}/halaqat/${updated.id}`;
             const message = [
                 `السلام عليكم ${updated.circleName}،`,
                 'تمت الموافقة على طلب إضافة دار التحفيظ 📖',

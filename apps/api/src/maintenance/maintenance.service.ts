@@ -197,7 +197,8 @@ export class MaintenanceService {
         await this.notifications.emitAction('maintenance', 'approved', id, 'Maintenance approved', `Maintenance ${updated.mosqueName} approved`);
         try {
             const frontUrl = (process.env.NEXTAUTH_URL || process.env.FRONT_URL || 'http://localhost:3000').replace(/\/+$/, '');
-            const detailsUrl = `${frontUrl}/maintenance/${updated.id}`;
+            const localePrefix = (process.env.FRONT_LOCALE || 'ar').replace(/^\/+|\/+$/g, '');
+            const detailsUrl = `${frontUrl}/${localePrefix}/maintenance/${updated.id}`;
             const message = [
                 `السلام عليكم ${updated.mosqueName}،`,
                 'تمت الموافقة على طلب الصيانة 🔧',

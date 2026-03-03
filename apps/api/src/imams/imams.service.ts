@@ -212,7 +212,8 @@ export class ImamsService {
         await this.notifications.emitAction('imam', 'approved', id, 'Imam approved', `Imam ${updated.imamName} approved`);
         try {
             const frontUrl = (process.env.NEXTAUTH_URL || process.env.FRONT_URL || 'http://localhost:3000').replace(/\/+$/, '');
-            const detailsUrl = `${frontUrl}/imams/${updated.id}`;
+            const localePrefix = (process.env.FRONT_LOCALE || 'ar').replace(/^\/+|\/+$/g, '');
+            const detailsUrl = `${frontUrl}/${localePrefix}/imams/${updated.id}`;
             const message = [
                 `السلام عليكم ${updated.imamName}،`,
                 'تمت الموافقة على طلب إضافة الإمام 🙏',
