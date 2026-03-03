@@ -1,8 +1,8 @@
 'use client';
 
 import 'leaflet/dist/leaflet.css';
-import { useMemo } from 'react';
-import { CircleMarker, MapContainer, TileLayer, useMapEvents } from 'react-leaflet';
+import { useEffect, useMemo } from 'react';
+import { CircleMarker, MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
 type Coordinates = {
     lat: number;
@@ -12,6 +12,7 @@ type Coordinates = {
 type Props = {
     value: Coordinates | null;
     onChange: (next: Coordinates) => void;
+    isOpen: boolean;
 };
 
 const DEFAULT_CENTER: Coordinates = { lat: 30.04442, lng: 31.235712 };
@@ -26,7 +27,21 @@ function PickerEvents({ onChange }: { onChange: (next: Coordinates) => void }) {
     return null;
 }
 
-export default function MapPickerCanvas({ value, onChange }: Props) {
+function MapResizer({ isOpen }: { isOpen: boolean }) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const timeout = window.setTimeout(() => {
+            map.invalidateSize();
+        }, 120);
+        return () => window.clearTimeout(timeout);
+    }, [isOpen, map]);
+
+    return null;
+}
+
+export default function MapPickerCanvas({ value, onChange, isOpen }: Props) {
     const center = useMemo(() => value || DEFAULT_CENTER, [value]);
 
     return (
@@ -35,6 +50,7 @@ export default function MapPickerCanvas({ value, onChange }: Props) {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            <MapResizer isOpen={isOpen} />
             <PickerEvents onChange={onChange} />
             {value && (
                 <CircleMarker center={[value.lat, value.lng]} radius={8} pathOptions={{ color: '#1B6B45', fillColor: '#1B6B45', fillOpacity: 0.85 }} />

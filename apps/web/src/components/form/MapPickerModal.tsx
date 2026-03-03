@@ -50,6 +50,7 @@ export default function MapPickerModal({
 
                 <MapPickerCanvas
                     value={selected}
+                    isOpen={isOpen}
                     onChange={(next) => setSelected(next)}
                 />
 

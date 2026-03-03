@@ -63,6 +63,7 @@ export default function SubmitPage() {
     const whatsappValue = watch('whatsapp');
     const selectedLat = watch('lat');
     const selectedLng = watch('lng');
+    const googleMapsUrlValue = watch('googleMapsUrl');
     const entityTitle = entityType === 'imam'
         ? (locale === 'ar' ? 'إضافة إمام' : 'Add Imam')
         : entityType === 'halqa'
@@ -135,6 +136,13 @@ export default function SubmitPage() {
             clearFieldError('googleMapsUrl');
             setSubmitError('');
         }
+    };
+
+    const handleOpenMapPicker = async () => {
+        if (googleMapsUrlValue) {
+            await syncCoordinatesFromLink(String(googleMapsUrlValue));
+        }
+        setIsMapPickerOpen(true);
     };
 
     const onSubmit = async (data: any) => {
@@ -643,7 +651,9 @@ export default function SubmitPage() {
                                     <div className="mt-3 flex flex-wrap items-center gap-3">
                                         <button
                                             type="button"
-                                            onClick={() => setIsMapPickerOpen(true)}
+                                            onClick={() => {
+                                                void handleOpenMapPicker();
+                                            }}
                                             className="btn-outline !px-4 !py-2 text-xs"
                                         >
                                             {locale === 'ar' ? 'اختيار الموقع من الخريطة' : 'Select location from map'}

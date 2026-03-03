@@ -12,7 +12,7 @@ const cspDirectives = [
     "object-src 'none'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://res.cloudinary.com",
+    "img-src 'self' data: blob: https://res.cloudinary.com https://tile.openstreetmap.org https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org",
     "font-src 'self' data:",
     `connect-src 'self' ${apiOrigin} https://res.cloudinary.com wss: https:`,
     "media-src 'self' blob: https://res.cloudinary.com",
