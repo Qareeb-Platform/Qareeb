@@ -31,6 +31,9 @@ export default function ChatWidget() {
     const [pendingType, setPendingType] = useState<SearchType | null>(null);
     const [showLocationChooser, setShowLocationChooser] = useState(false);
     const [loadingSearch, setLoadingSearch] = useState(false);
+    const [locationStatus, setLocationStatus] = useState<'idle' | 'loading' | 'ready'>('idle');
+    const [locationLabel, setLocationLabel] = useState<string>('');
+    const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
 
     const [governorates, setGovernorates] = useState<any[]>([]);
     const [areas, setAreas] = useState<any[]>([]);
@@ -77,7 +80,7 @@ export default function ChatWidget() {
         googleMapUrl: item.google_maps_url || item.googleMapsUrl || '',
     });
 
-    const getBrowserCoords = async (): Promise<{ lat: number; lng: number }> => {
+    const getBrowserCoords = async (forceFresh = false): Promise<{ lat: number; lng: number }> => {
         if (!navigator.geolocation) throw new Error('Geolocation not supported');
 
         const getPosition = (options: PositionOptions) => new Promise<{ lat: number; lng: number }>((resolve, reject) => {
@@ -92,13 +95,13 @@ export default function ChatWidget() {
             return await getPosition({
                 enableHighAccuracy: false,
                 timeout: 15000,
-                maximumAge: 60_000,
+                maximumAge: forceFresh ? 0 : 60_000,
             });
         } catch {
             return getPosition({
                 enableHighAccuracy: true,
                 timeout: 15000,
-                maximumAge: 60_000,
+                maximumAge: forceFresh ? 0 : 60_000,
             });
         }
     };
@@ -227,54 +230,47 @@ export default function ChatWidget() {
         addMessage('user', promptLabel);
         setCards([]);
 
-        if (Number.isFinite(lat) && Number.isFinite(lng)) {
-            setLoadingSearch(true);
-            try {
-                const coords = { lat: lat as number, lng: lng as number };
-                await searchByNearest(type, coords.lat, coords.lng);
-                const readableLocation = await resolveReadableLocation(coords);
-                addMessage(
-                    'bot',
-                    locale === 'ar'
-                        ? `موقعك الحالي الآن: ${readableLocation}. سنعتمد نفس طريقة القراءة دي لكل نتائج الأقرب.`
-                        : `Your current location is: ${readableLocation}. We'll use this same location reading method for nearest results.`,
-                );
-                setShowLocationChooser(false);
-                setPendingType(null);
-            } catch {
-                addMessage('bot', locale === 'ar' ? 'تعذر البحث بالموقع الحالي.' : 'Could not search by current location.');
-            }
-            setLoadingSearch(false);
-            return;
-        }
-
         setPendingType(type);
         setShowLocationChooser(true);
+        setLocationStatus('idle');
+        setLocationLabel('');
+        setLocationCoords(null);
         addMessage(
             'bot',
             locale === 'ar'
-                ? 'حدد موقعك: استخدم الموقع الحالي أو اختر المحافظة والمنطقة.'
+                ? 'حدد موقعك للبحث: اختار الموقع الحالي أو المحافظة والمنطقة.'
                 : 'Choose location: use current location or select governorate/area.',
         );
     };
 
-    const useCurrentLocationNow = async () => {
+    const useCurrentLocationNow = async (forceFresh = false) => {
         if (!pendingType) return;
         setLoadingSearch(true);
+        setLocationStatus('loading');
+        addMessage(
+            'bot',
+            locale === 'ar'
+                ? 'انت كده اللوكيشن بتاعك اهو.. جاري البحث عن الأقرب.'
+                : 'Got it — using your current location. Searching for nearest results.',
+        );
         try {
             let coords: { lat: number; lng: number };
             let usedIpFallback = false;
 
             try {
-                coords = await getBrowserCoords();
+                coords = await getBrowserCoords(forceFresh);
             } catch {
                 coords = await getLocationByIP();
                 usedIpFallback = true;
             }
 
+            setLocationCoords(coords);
+            const readableLocation = await resolveReadableLocation(coords);
+            setLocationLabel(readableLocation);
+            setLocationStatus('ready');
+
             await searchByNearest(pendingType, coords.lat, coords.lng);
 
-            const readableLocation = await resolveReadableLocation(coords);
             addMessage(
                 'bot',
                 locale === 'ar'
@@ -293,6 +289,7 @@ export default function ChatWidget() {
             setShowLocationChooser(false);
             setPendingType(null);
         } catch {
+            setLocationStatus('idle');
             addMessage(
                 'bot',
                 locale === 'ar'
@@ -385,9 +382,44 @@ export default function ChatWidget() {
                 {showLocationChooser && pendingType && (
                     <div className="bg-white border border-border rounded-xl p-3 space-y-2 text-xs">
                         <p className="font-bold">{locale === 'ar' ? 'حدد موقعك للبحث' : 'Choose location for search'}</p>
-                        <button onClick={useCurrentLocationNow} className="btn-outline !py-1 !px-2 text-[11px]" disabled={loadingSearch}>
-                            {locale === 'ar' ? 'استخدم موقعي الحالي' : 'Use current location'}
-                        </button>
+                        <div className="space-y-2">
+                            <div
+                                className="flex items-center gap-2 bg-cream rounded-xl px-3 py-2 border max-w-[260px] cursor-pointer transition-colors border-transparent hover:border-primary/20"
+                                role="button"
+                                tabIndex={0}
+                                title={locale === 'ar' ? 'تحديث الموقع' : 'Refresh location'}
+                                onClick={() => useCurrentLocationNow(false)}
+                                onKeyDown={(e) => e.key === 'Enter' && useCurrentLocationNow(false)}
+                            >
+                                <svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"></path>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 10a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"></path>
+                                </svg>
+                                <span className="text-[11px] font-bold truncate text-dark">
+                                    {locationStatus === 'loading'
+                                        ? (locale === 'ar' ? 'جارٍ تحديد الموقع...' : 'Locating...')
+                                        : (locationLabel || (locale === 'ar' ? 'اضغط لتحديد موقعك الحالي' : 'Tap to use current location'))}
+                                </span>
+                                <button
+                                    className="p-1 rounded-lg text-primary hover:bg-primary/10 transition-colors"
+                                    aria-label={locale === 'ar' ? 'تحديث الموقع' : 'Refresh location'}
+                                    title={locale === 'ar' ? 'تحديث الموقع' : 'Refresh location'}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        void useCurrentLocationNow(true);
+                                    }}
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m14.836 2A8.003 8.003 0 005.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-13.837-2m13.837 2H15"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            {locationCoords && (
+                                <div className="text-[11px] text-text-muted">
+                                    {locationCoords.lat.toFixed(5)}, {locationCoords.lng.toFixed(5)}
+                                </div>
+                            )}
+                        </div>
                         <div className="grid grid-cols-1 gap-2">
                             <select value={governorateId} onChange={(e) => setGovernorateId(e.target.value)} className="px-2 py-2 rounded-lg border border-border bg-white">
                                 <option value="">{locale === 'ar' ? 'اختر المحافظة' : 'Select governorate'}</option>
