@@ -119,6 +119,12 @@ export const adminApi = {
         fetchAPI<any>('/admin/dashboard/stats', { token }),
     getCloudinaryUsage: (token: string) =>
         fetchAPI<any>('/admin/dashboard/cloudinary-usage', { token }),
+    getSettingsByGroup: (token: string, group: 'WHATSAPP' | 'CLOUDINARY' | 'GENERAL') =>
+        fetchAPI<any>(`/admin/settings/group/${group}`, { token }),
+    upsertSetting: (token: string, data: { key: string; value: string; group: 'WHATSAPP' | 'CLOUDINARY' | 'GENERAL'; isSecret?: boolean }) =>
+        fetchAPI<any>('/admin/settings', { method: 'POST', token, body: JSON.stringify(data) }),
+    updateSetting: (token: string, key: string, data: { value?: string; group?: 'WHATSAPP' | 'CLOUDINARY' | 'GENERAL'; isSecret?: boolean }) =>
+        fetchAPI<any>(`/admin/settings/${encodeURIComponent(key)}`, { method: 'PATCH', token, body: JSON.stringify(data) }),
 
     // Imams admin
     getAdminImams: (token: string, params?: string) =>

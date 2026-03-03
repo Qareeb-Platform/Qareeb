@@ -5,6 +5,7 @@ import { resolveSubmissionLocation } from '../common/location.util';
 import { AuditService } from '../audit/audit.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CacheService } from '../cache/cache.service';
+import { WhatsappService } from '../modules/whatsapp/whatsapp.service';
 
 @Injectable()
 export class HalaqatService {
@@ -13,6 +14,7 @@ export class HalaqatService {
         private readonly audit: AuditService,
         private readonly notifications: NotificationsService,
         private readonly cache: CacheService,
+        private readonly whatsappService: WhatsappService,
     ) { }
 
     private async invalidateCache() {
@@ -191,6 +193,21 @@ export class HalaqatService {
         const updated = await this.prisma.halqa.update({ where: { id }, data: { status: 'approved', adminId, rejectionReason: null } });
         await this.audit.logApprove(adminId, 'halqa', id, updated);
         await this.notifications.emitAction('halqa', 'approved', id, 'Halqa approved', `Halqa ${updated.circleName} approved`);
+        try {
+            const frontUrl = (process.env.FRONT_URL || 'http://localhost:3000').replace(/\/+$/, '');
+            const detailsUrl = `${frontUrl}/halaqat/${updated.id}`;
+            const message = [
+                `السلام عليكم ${updated.circleName}،`,
+                'تمت الموافقة على طلب إضافة دار التحفيظ 📖',
+                `تفاصيل الطلب: ${detailsUrl}`,
+                'شكرًا لمساهمتك مع منصة قريب.',
+            ].join('\n');
+            await this.whatsappService.sendTextMessage(updated.whatsapp, message);
+        } catch (error) {
+            // WhatsApp failure must not block approval
+            // eslint-disable-next-line no-console
+            console.warn(`WhatsApp send failed for halqa ${updated.id}:`, error);
+        }
         await this.invalidateCache();
         return updated;
     }

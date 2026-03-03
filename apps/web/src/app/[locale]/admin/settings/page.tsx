@@ -1,169 +1,234 @@
-﻿'use client';
+'use client';
 
-import { FormEvent, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
-import { useRouter } from 'next/navigation';
-import { FaEye, FaEyeSlash, FaLock } from 'react-icons/fa';
 import { adminApi } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
 
+type Group = 'WHATSAPP' | 'CLOUDINARY';
+
+type SettingView = {
+    key: string;
+    valueMasked: string;
+    group: string;
+    isSecret: boolean;
+    hasValue: boolean;
+    updatedAt: string;
+};
+
+type FieldDef = {
+    key: string;
+    labelAr: string;
+    labelEn: string;
+    placeholder: string;
+    isSecret: boolean;
+    type?: 'text' | 'checkbox';
+};
+
+const GROUP_FIELDS: Record<Group, FieldDef[]> = {
+    WHATSAPP: [
+        { key: 'WHAPI_ENABLED', labelAr: '????? ??????', labelEn: 'Enable WhatsApp', placeholder: '', isSecret: false, type: 'checkbox' },
+        { key: 'WHAPI_BASE_URL', labelAr: '???? Whapi', labelEn: 'Whapi Base URL', placeholder: 'https://gate.whapi.cloud', isSecret: false },
+        { key: 'WHAPI_TOKEN', labelAr: '???? Whapi', labelEn: 'Whapi Token', placeholder: 'Update Secret', isSecret: true },
+        { key: 'WHAPI_INSTANCE_ID', labelAr: '????? ?????????', labelEn: 'Instance ID', placeholder: 'Optional', isSecret: false },
+    ],
+    CLOUDINARY: [
+        { key: 'CLOUDINARY_CLOUD_NAME', labelAr: 'Cloud Name', labelEn: 'Cloud Name', placeholder: 'djseokhow', isSecret: false },
+        { key: 'CLOUDINARY_API_KEY', labelAr: 'Cloudinary API Key', labelEn: 'Cloudinary API Key', placeholder: 'Update Secret', isSecret: true },
+        { key: 'CLOUDINARY_API_SECRET', labelAr: 'Cloudinary API Secret', labelEn: 'Cloudinary API Secret', placeholder: 'Update Secret', isSecret: true },
+        { key: 'CLOUDINARY_URL', labelAr: 'Cloudinary URL', labelEn: 'Cloudinary URL', placeholder: 'Optional', isSecret: false },
+    ],
+};
+
 export default function AdminSettingsPage() {
     const locale = useLocale();
-    const router = useRouter();
-    const { token } = useAuthStore();
+    const isAr = locale === 'ar';
+    const { token, admin } = useAuthStore();
 
-    const [currentPassword, setCurrentPassword] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-
-    const [showCurrent, setShowCurrent] = useState(false);
-    const [showNew, setShowNew] = useState(false);
-    const [showConfirm, setShowConfirm] = useState(false);
-
-    const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState<Group>('WHATSAPP');
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [message, setMessage] = useState('');
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
+    const [settingsMap, setSettingsMap] = useState<Record<string, SettingView>>({});
+    const [form, setForm] = useState<Record<string, string | boolean>>({});
 
-    const labels = useMemo(() => ({
-        title: locale === 'ar' ? 'إعدادات الحساب' : 'Account Settings',
-        subtitle: locale === 'ar' ? 'يمكنك تغيير كلمة المرور بأمان من هنا' : 'You can securely change your password from here',
-        current: locale === 'ar' ? 'كلمة المرور الحالية' : 'Current password',
-        next: locale === 'ar' ? 'كلمة المرور الجديدة' : 'New password',
-        confirm: locale === 'ar' ? 'تأكيد كلمة المرور الجديدة' : 'Confirm new password',
-        save: locale === 'ar' ? 'حفظ كلمة المرور الجديدة' : 'Save new password',
-        success: locale === 'ar' ? 'تم تحديث كلمة المرور بنجاح' : 'Password updated successfully',
-        mismatch: locale === 'ar' ? 'تأكيد كلمة المرور غير مطابق' : 'Password confirmation does not match',
-        unauthorized: locale === 'ar' ? 'يجب تسجيل الدخول أولاً' : 'You need to sign in first',
-        policy: locale === 'ar' ? '8 أحرف على الأقل وتتضمن حرفًا كبيرًا وصغيرًا ورقمًا ورمزًا' : 'At least 8 chars with uppercase, lowercase, number, and symbol',
-        show: locale === 'ar' ? 'إظهار كلمة المرور' : 'Show password',
-        hide: locale === 'ar' ? 'إخفاء كلمة المرور' : 'Hide password',
-        saving: locale === 'ar' ? 'جارٍ الحفظ...' : 'Saving...',
-    }), [locale]);
+    const fields = useMemo(() => GROUP_FIELDS[activeTab], [activeTab]);
 
-    if (!token) {
-        router.push(`/${locale}/admin`);
-        return null;
-    }
-
-    const onSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setSuccess('');
-
-        if (newPassword !== confirmPassword) {
-            setError(labels.mismatch);
-            return;
-        }
-
+    const loadGroup = async (group: Group) => {
+        if (!token) return;
         setLoading(true);
+        setError('');
+        setMessage('');
         try {
-            await adminApi.changePassword(token, currentPassword, newPassword);
-            setSuccess(labels.success);
-            setCurrentPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
+            const rows = await adminApi.getSettingsByGroup(token, group) as SettingView[];
+            const nextMap: Record<string, SettingView> = {};
+            const nextForm: Record<string, string | boolean> = {};
+
+            for (const row of rows) {
+                nextMap[row.key] = row;
+                if (row.key === 'WHAPI_ENABLED') {
+                    nextForm[row.key] = row.valueMasked.toLowerCase() === 'true';
+                } else {
+                    nextForm[row.key] = row.isSecret ? '' : (row.valueMasked || '');
+                }
+            }
+
+            for (const def of GROUP_FIELDS[group]) {
+                if (!(def.key in nextForm)) {
+                    nextForm[def.key] = def.type === 'checkbox' ? false : '';
+                }
+            }
+
+            setSettingsMap(nextMap);
+            setForm(nextForm);
         } catch (err: any) {
-            setError(err?.message || labels.unauthorized);
+            setError(String(err?.message || (isAr ? '???? ????? ?????????' : 'Failed to load settings')));
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
-    const inputClass = 'w-full rounded-lg border px-3 py-2.5 text-sm bg-white text-gray-900 border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary';
+    useEffect(() => {
+        void loadGroup(activeTab);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab, token]);
+
+    const save = async () => {
+        if (!token) return;
+        setSaving(true);
+        setError('');
+        setMessage('');
+        try {
+            for (const field of fields) {
+                const rawValue = form[field.key];
+                const existing = settingsMap[field.key];
+
+                if (field.type === 'checkbox') {
+                    await adminApi.upsertSetting(token, {
+                        key: field.key,
+                        group: activeTab,
+                        value: rawValue ? 'true' : 'false',
+                        isSecret: field.isSecret,
+                    });
+                    continue;
+                }
+
+                const nextValue = String(rawValue || '').trim();
+                if (field.isSecret && !nextValue) {
+                    if (!existing?.hasValue) {
+                        await adminApi.upsertSetting(token, {
+                            key: field.key,
+                            group: activeTab,
+                            value: '',
+                            isSecret: true,
+                        });
+                    }
+                    continue;
+                }
+
+                await adminApi.upsertSetting(token, {
+                    key: field.key,
+                    group: activeTab,
+                    value: nextValue,
+                    isSecret: field.isSecret,
+                });
+            }
+
+            setMessage(isAr ? '?? ??? ????????? ?????' : 'Settings saved successfully');
+            await loadGroup(activeTab);
+        } catch (err: any) {
+            setError(String(err?.message || (isAr ? '??? ??? ?????????' : 'Failed to save settings')));
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (!token) {
+        return <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm font-semibold text-gray-600">{isAr ? '??? ????? ??????' : 'Login required'}</div>;
+    }
+
+    if (admin?.role !== 'super_admin') {
+        return <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm font-semibold text-red-700">{isAr ? '??? ???? ?? ???? ??????' : 'You are not authorized to access this page'}</div>;
+    }
 
     return (
-        <section className="max-w-2xl">
-            <div className="mb-5">
-                <h1 className="text-2xl font-black flex items-center gap-2">
-                    <FaLock className="text-primary" />
-                    <span>{labels.title}</span>
-                </h1>
-                <p className="text-sm opacity-75 mt-1">{labels.subtitle}</p>
+        <div className="space-y-6">
+            <div>
+                <h1 className="text-2xl font-black text-gray-900">{isAr ? '??????? ??????' : 'System Settings'}</h1>
+                <p className="text-sm text-gray-500 mt-1">{isAr ? '????? ?????? ? Cloudinary ???? ????? ???' : 'Manage WhatsApp and Cloudinary without redeploy'}</p>
             </div>
 
-            <form onSubmit={onSubmit} className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-4 shadow-sm">
-                {error && <div className="rounded-lg bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>}
-                {success && <div className="rounded-lg bg-emerald-50 text-emerald-700 text-sm px-3 py-2">{success}</div>}
+            <div className="flex flex-wrap gap-2">
+                {(['WHATSAPP', 'CLOUDINARY'] as Group[]).map((tab) => (
+                    <button
+                        key={tab}
+                        type="button"
+                        onClick={() => setActiveTab(tab)}
+                        className={`px-4 py-2 rounded-xl border text-sm font-bold ${activeTab === tab ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-200 hover:border-primary/40'}`}
+                    >
+                        {tab === 'WHATSAPP' ? (isAr ? '??????? ??????' : 'WhatsApp Settings') : (isAr ? '??????? Cloudinary' : 'Cloudinary Settings')}
+                    </button>
+                ))}
+            </div>
 
-                <Field
-                    label={labels.current}
-                    value={currentPassword}
-                    onChange={setCurrentPassword}
-                    show={showCurrent}
-                    setShow={setShowCurrent}
-                    inputClass={inputClass}
-                    showLabel={labels.show}
-                    hideLabel={labels.hide}
-                />
-                <Field
-                    label={labels.next}
-                    value={newPassword}
-                    onChange={setNewPassword}
-                    show={showNew}
-                    setShow={setShowNew}
-                    inputClass={inputClass}
-                    showLabel={labels.show}
-                    hideLabel={labels.hide}
-                />
-                <p className="text-xs opacity-70">{labels.policy}</p>
-                <Field
-                    label={labels.confirm}
-                    value={confirmPassword}
-                    onChange={setConfirmPassword}
-                    show={showConfirm}
-                    setShow={setShowConfirm}
-                    inputClass={inputClass}
-                    showLabel={labels.show}
-                    hideLabel={labels.hide}
-                />
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 space-y-4">
+                {loading ? (
+                    <p className="text-sm text-gray-500">{isAr ? '???? ???????...' : 'Loading...'}</p>
+                ) : (
+                    <>
+                        {fields.map((field) => {
+                            const setting = settingsMap[field.key];
+                            const label = isAr ? field.labelAr : field.labelEn;
 
-                <button type="submit" disabled={loading} className="btn-primary w-full md:w-auto">
-                    {loading ? labels.saving : labels.save}
-                </button>
-            </form>
-        </section>
-    );
-}
+                            if (field.type === 'checkbox') {
+                                return (
+                                    <label key={field.key} className="flex items-center gap-3 text-sm font-bold text-gray-800">
+                                        <input
+                                            type="checkbox"
+                                            checked={Boolean(form[field.key])}
+                                            onChange={(e) => setForm((prev) => ({ ...prev, [field.key]: e.target.checked }))}
+                                            className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
+                                        />
+                                        <span>{label}</span>
+                                    </label>
+                                );
+                            }
 
-function Field({
-    label,
-    value,
-    onChange,
-    show,
-    setShow,
-    inputClass,
-    showLabel,
-    hideLabel,
-}: {
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-    show: boolean;
-    setShow: (value: boolean) => void;
-    inputClass: string;
-    showLabel: string;
-    hideLabel: string;
-}) {
-    return (
-        <div>
-            <label className="block text-sm font-semibold mb-2">{label}</label>
-            <div className="password-field-wrap">
-                <input
-                    type={show ? 'text' : 'password'}
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    className={`${inputClass} password-field-input`}
-                    dir="ltr"
-                    required
-                />
-                <button
-                    type="button"
-                    onClick={() => setShow(!show)}
-                    className="password-toggle-btn text-gray-500 hover:text-gray-700"
-                    aria-label={show ? hideLabel : showLabel}
-                    title={show ? hideLabel : showLabel}
-                >
-                    {show ? <FaEyeSlash /> : <FaEye />}
-                </button>
+                            return (
+                                <div key={field.key} className="space-y-1.5">
+                                    <label className="text-sm font-bold text-gray-800 block">{label}</label>
+                                    <input
+                                        type="text"
+                                        value={String(form[field.key] || '')}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                                        placeholder={field.isSecret ? (isAr ? '????? ?????? ??????' : 'Update Secret') : field.placeholder}
+                                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary"
+                                    />
+                                    {field.isSecret && setting?.hasValue && (
+                                        <p className="text-xs text-gray-500">
+                                            {isAr ? '?????? ???????:' : 'Current value:'} <span className="font-bold">{setting.valueMasked}</span>
+                                        </p>
+                                    )}
+                                </div>
+                            );
+                        })}
+
+                        {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{error}</div>}
+                        {message && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">{message}</div>}
+
+                        <div className="pt-2">
+                            <button
+                                type="button"
+                                onClick={() => { void save(); }}
+                                disabled={saving}
+                                className="btn-primary !px-6 !py-2.5 text-sm disabled:opacity-60"
+                            >
+                                {saving ? (isAr ? '???? ?????...' : 'Saving...') : (isAr ? '??? ?????????' : 'Save Settings')}
+                            </button>
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );

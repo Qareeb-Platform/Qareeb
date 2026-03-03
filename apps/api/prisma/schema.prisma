@@ -275,3 +275,16 @@ model Notification {
   @@index([type])
   @@map("notifications")
 }
+
+model SystemSetting {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @unique @db.VarChar(120)
+  value     String
+  group     String   @db.VarChar(30)
+  isSecret  Boolean  @default(false) @map("is_secret")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([group])
+  @@map("system_settings")
+}

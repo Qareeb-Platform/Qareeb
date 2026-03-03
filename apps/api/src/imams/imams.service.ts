@@ -5,6 +5,7 @@ import { resolveSubmissionLocation } from '../common/location.util';
 import { AuditService } from '../audit/audit.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CacheService } from '../cache/cache.service';
+import { WhatsappService } from '../modules/whatsapp/whatsapp.service';
 
 @Injectable()
 export class ImamsService {
@@ -13,6 +14,7 @@ export class ImamsService {
         private readonly audit: AuditService,
         private readonly notifications: NotificationsService,
         private readonly cache: CacheService,
+        private readonly whatsappService: WhatsappService,
     ) { }
 
     private async invalidateCache() {
@@ -208,6 +210,21 @@ export class ImamsService {
         });
         await this.audit.logApprove(adminId, 'imam', id, updated);
         await this.notifications.emitAction('imam', 'approved', id, 'Imam approved', `Imam ${updated.imamName} approved`);
+        try {
+            const frontUrl = (process.env.FRONT_URL || 'http://localhost:3000').replace(/\/+$/, '');
+            const detailsUrl = `${frontUrl}/imams/${updated.id}`;
+            const message = [
+                `السلام عليكم ${updated.imamName}،`,
+                'تمت الموافقة على طلب إضافة الإمام 🙏',
+                `تفاصيل الطلب: ${detailsUrl}`,
+                'شكرًا لمساهمتك مع منصة قريب.',
+            ].join('\n');
+            await this.whatsappService.sendTextMessage(updated.whatsapp, message);
+        } catch (error) {
+            // WhatsApp failure must not block approval
+            // eslint-disable-next-line no-console
+            console.warn(`WhatsApp send failed for imam ${updated.id}:`, error);
+        }
         await this.invalidateCache();
         return updated;
     }

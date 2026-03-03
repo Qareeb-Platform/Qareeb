@@ -5,6 +5,7 @@ import { resolveSubmissionLocation } from '../common/location.util';
 import { AuditService } from '../audit/audit.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CacheService } from '../cache/cache.service';
+import { WhatsappService } from '../modules/whatsapp/whatsapp.service';
 
 
 @Injectable()
@@ -14,6 +15,7 @@ export class MaintenanceService {
         private readonly audit: AuditService,
         private readonly notifications: NotificationsService,
         private readonly cache: CacheService,
+        private readonly whatsappService: WhatsappService,
     ) { }
 
     private async invalidateCache() {
@@ -193,6 +195,21 @@ export class MaintenanceService {
         const updated = await this.prisma.maintenanceRequest.update({ where: { id }, data: { status: 'approved', adminId, rejectionReason: null } });
         await this.audit.logApprove(adminId, 'maintenance', id, updated);
         await this.notifications.emitAction('maintenance', 'approved', id, 'Maintenance approved', `Maintenance ${updated.mosqueName} approved`);
+        try {
+            const frontUrl = (process.env.FRONT_URL || 'http://localhost:3000').replace(/\/+$/, '');
+            const detailsUrl = `${frontUrl}/maintenance/${updated.id}`;
+            const message = [
+                `السلام عليكم ${updated.mosqueName}،`,
+                'تمت الموافقة على طلب الصيانة 🔧',
+                `تفاصيل الطلب: ${detailsUrl}`,
+                'شكرًا لمساهمتك مع منصة قريب.',
+            ].join('\n');
+            await this.whatsappService.sendTextMessage(updated.whatsapp, message);
+        } catch (error) {
+            // WhatsApp failure must not block approval
+            // eslint-disable-next-line no-console
+            console.warn(`WhatsApp send failed for maintenance ${updated.id}:`, error);
+        }
         await this.invalidateCache();
         return updated;
     }

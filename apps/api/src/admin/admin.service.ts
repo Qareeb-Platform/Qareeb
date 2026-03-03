@@ -87,17 +87,6 @@ export class AdminService {
     }
 
     async getCloudinaryUsage() {
-        const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-        const apiKey = process.env.CLOUDINARY_API_KEY;
-        const apiSecret = process.env.CLOUDINARY_API_SECRET;
-
-        if (!cloudName || !apiKey || !apiSecret) {
-            return {
-                enabled: false,
-                message: 'Cloudinary credentials are not configured',
-            };
-        }
-
         try {
             const usage: any = await this.mediaService.getUsage();
             const storageUsed = Number(usage?.storage?.usage || 0);

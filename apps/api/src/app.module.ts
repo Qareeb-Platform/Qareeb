@@ -18,6 +18,7 @@ import { SearchModule } from './search/search.module';
 import { CacheModule } from './cache/cache.module';
 import { GeoModule } from './geo/geo.module';
 import { ImprovementsModule } from './improvements/improvements.module';
+import { SettingsModule } from './modules/settings/settings.module';
 
 @Module({
     imports: [
@@ -46,6 +47,7 @@ import { ImprovementsModule } from './improvements/improvements.module';
         CacheModule,
         GeoModule,
         ImprovementsModule,
+        SettingsModule,
     ],
     providers: [
         {
