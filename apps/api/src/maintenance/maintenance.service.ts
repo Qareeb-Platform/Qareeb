@@ -196,7 +196,7 @@ export class MaintenanceService {
         await this.audit.logApprove(adminId, 'maintenance', id, updated);
         await this.notifications.emitAction('maintenance', 'approved', id, 'Maintenance approved', `Maintenance ${updated.mosqueName} approved`);
         try {
-            const frontUrl = (process.env.FRONT_URL || 'http://localhost:3000').replace(/\/+$/, '');
+            const frontUrl = (process.env.NEXTAUTH_URL || process.env.FRONT_URL || 'http://localhost:3000').replace(/\/+$/, '');
             const detailsUrl = `${frontUrl}/maintenance/${updated.id}`;
             const message = [
                 `السلام عليكم ${updated.mosqueName}،`,
