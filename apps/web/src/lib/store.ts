@@ -140,11 +140,18 @@ interface ChatMessage {
     text: string;
 }
 
+interface ChatLink {
+    label: string;
+    path: string;
+}
+
 interface ChatState {
     isOpen: boolean;
     messages: ChatMessage[];
+    actionLinks: ChatLink[];
     toggleChat: () => void;
     addMessage: (from: 'user' | 'bot', text: string) => void;
+    setActionLinks: (links: ChatLink[]) => void;
     clearMessages: () => void;
 }
 
@@ -153,8 +160,10 @@ export const useChatStore = create<ChatState>()(
         (set) => ({
             isOpen: false,
             messages: [],
+            actionLinks: [],
             toggleChat: () => set((state) => ({ isOpen: !state.isOpen })),
             addMessage: (from, text) => set((state) => ({ messages: [...state.messages, { from, text }] })),
+            setActionLinks: (links) => set({ actionLinks: links }),
             clearMessages: () => set({ messages: [] }),
         }),
         {
@@ -163,6 +172,7 @@ export const useChatStore = create<ChatState>()(
             partialize: (state) => ({
                 isOpen: state.isOpen,
                 messages: state.messages.slice(-30),
+                actionLinks: state.actionLinks,
             }),
         },
     ),

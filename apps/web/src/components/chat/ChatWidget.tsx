@@ -22,12 +22,11 @@ type ChatCard = {
 export default function ChatWidget() {
     const locale = useLocale();
     const router = useRouter();
-    const { isOpen, messages, toggleChat, addMessage } = useChatStore();
+    const { isOpen, messages, actionLinks, toggleChat, addMessage, setActionLinks } = useChatStore();
     const { lat, lng, requestLocation } = useGeolocationStore();
 
     const [input, setInput] = useState('');
     const [cards, setCards] = useState<ChatCard[]>([]);
-    const [actionLinks, setActionLinks] = useState<{ label: string; path: string }[]>([]);
 
     const [pendingType, setPendingType] = useState<SearchType | null>(null);
     const [showLocationChooser, setShowLocationChooser] = useState(false);
