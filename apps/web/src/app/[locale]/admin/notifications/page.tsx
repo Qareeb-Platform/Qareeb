@@ -15,6 +15,7 @@ export default function NotificationsPage() {
     const { isOpen, payload, openModal, closeModal } = useModalStore();
     const [status, setStatus] = useState<'unread' | 'all'>('unread');
     const [loading, setLoading] = useState(true);
+    const [markAllLoading, setMarkAllLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
     const limit = 10;
@@ -54,9 +55,21 @@ export default function NotificationsPage() {
     };
 
     const onMarkAll = async () => {
-        if (!token) return;
-        await adminApi.markAllNotificationsRead(token);
+        if (!token || markAllLoading) return;
+        const unreadBefore = items.filter((item) => !item.read).length;
+        if (unreadBefore === 0) return;
+
+        setMarkAllLoading(true);
         markAllRead();
+
+        try {
+            await adminApi.markAllNotificationsRead(token);
+        } catch (error) {
+            console.error('Mark all notifications read failed', error);
+            void fetchNotifications();
+        } finally {
+            setMarkAllLoading(false);
+        }
     };
 
     const entityLabel = (type: string) => type.includes('imam') ? 'imam' : type.includes('halqa') ? 'halqa' : 'maintenance';
@@ -113,9 +126,12 @@ export default function NotificationsPage() {
                     </button>
                     <button
                         onClick={onMarkAll}
+                        disabled={markAllLoading}
                         className="px-4 py-2 rounded-btn text-sm font-bold bg-cream text-text hover:bg-primary/10"
                     >
-                        {locale === 'ar' ? 'تعيين الكل كمقروء' : 'Mark all read'}
+                        {markAllLoading
+                            ? (locale === 'ar' ? 'جارٍ التحديث...' : 'Updating...')
+                            : (locale === 'ar' ? 'تعيين الكل كمقروء' : 'Mark all read')}
                     </button>
                 </div>
             </div>
