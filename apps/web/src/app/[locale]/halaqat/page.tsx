@@ -15,7 +15,7 @@ import UnifiedCard from '@/components/public/UnifiedCard';
 import { useRouter } from 'next/navigation';
 import { formatLocationParts } from '@/lib/location';
 import { normalizeArabicSearch } from '@/lib/utils';
-import AppIcon from '@/components/ui/AppIcon';
+import AppIcon, { AppIconName } from '@/components/ui/AppIcon';
 
 const typeLabels: Record<string, Record<string, string>> = {
     ar: { men: 'رجال', women: 'نساء', children: 'أطفال' },
@@ -168,7 +168,7 @@ export default function HalaqatPage() {
                                         halqa.district,
                                     ]),
                                     typeLabel: typeLabels[locale]?.[halqaType] || halqaType || (locale === 'ar' ? 'حلقة' : 'Circle'),
-                                    typeIcon: 'halqa',
+                                    typeIcon: 'halqa' as AppIconName,
                                     map: halqa.google_maps_url || halqa.googleMapsUrl,
                                     video: halqa.video_url || halqa.videoUrl,
                                     whatsapp: halqa.whatsapp,
