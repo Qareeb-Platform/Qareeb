@@ -205,7 +205,6 @@ export default function AdminImprovementsPage() {
                 </>
             )}
 
-            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} locale={locale} />
         </div>
     );
 }
