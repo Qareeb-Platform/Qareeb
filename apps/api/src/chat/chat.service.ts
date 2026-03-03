@@ -14,8 +14,40 @@ export class ChatService {
         return null;
     }
 
+    private parseAddIntent(text: string): EntityType | 'all' | null {
+        if (!/(add|submit|اضيف|أضيف|اضافة|إضافة|ضيف|يضيف)/i.test(text)) return null;
+        if (/(imam|إمام|امام|مسجد|المساجد)/i.test(text)) return 'imam';
+        if (/(halqa|halaqa|حلقة|حلقات)/i.test(text)) return 'halqa';
+        if (/(maintenance|صيانة|اعمار|إعمار)/i.test(text)) return 'maintenance';
+        return 'all';
+    }
+
     async findNearest(text: string, userLat?: number, userLng?: number) {
         if (!text || !text.trim()) throw new BadRequestException('text is required');
+
+        const addIntent = this.parseAddIntent(text);
+        if (addIntent) {
+            const links = addIntent === 'all'
+                ? [
+                    { type: 'imam', path: '/imams/submit', labelAr: 'إضافة إمام/مسجد', labelEn: 'Add Imam/Mosque' },
+                    { type: 'halqa', path: '/halaqat/submit', labelAr: 'إضافة حلقة', labelEn: 'Add Halqa' },
+                    { type: 'maintenance', path: '/maintenance/submit', labelAr: 'طلب صيانة مسجد', labelEn: 'Request Maintenance' },
+                ]
+                : [
+                    addIntent === 'imam'
+                        ? { type: 'imam', path: '/imams/submit', labelAr: 'إضافة إمام/مسجد', labelEn: 'Add Imam/Mosque' }
+                        : addIntent === 'halqa'
+                            ? { type: 'halqa', path: '/halaqat/submit', labelAr: 'إضافة حلقة', labelEn: 'Add Halqa' }
+                            : { type: 'maintenance', path: '/maintenance/submit', labelAr: 'طلب صيانة مسجد', labelEn: 'Request Maintenance' },
+                ];
+
+            return {
+                mode: 'add',
+                message: 'تمام — تقدر تضيف من الروابط دي:',
+                links,
+                cards: [],
+            };
+        }
 
         const intent = this.parseLocationIntent(text);
         if (intent && Number.isFinite(userLat) && Number.isFinite(userLng)) {
@@ -39,9 +71,17 @@ export class ChatService {
             };
         }
 
+        if (intent) {
+            return {
+                mode: 'need_location',
+                message: 'عشان أقدر أجيب الأقرب، اختار موقعك الحالي أو حدّد المحافظة والمنطقة.',
+                cards: [],
+            };
+        }
+
         return {
             mode: 'guided',
-            message: 'هذا المساعد مخصص للعثور على الخدمات القريبة فقط. اختر: أقرب مسجد، أقرب حلقة، أو مسجد يحتاج صيانة.',
+            message: 'أنا أقدر أساعدك في حاجتين: البحث عن الأقرب، أو إضافة إمام/حلقة/صيانة. قول لي عايز تعمل إيه.',
             cards: [],
         };
     }

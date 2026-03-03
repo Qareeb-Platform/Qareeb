@@ -27,6 +27,7 @@ export default function ChatWidget() {
 
     const [input, setInput] = useState('');
     const [cards, setCards] = useState<ChatCard[]>([]);
+    const [actionLinks, setActionLinks] = useState<{ label: string; path: string }[]>([]);
 
     const [pendingType, setPendingType] = useState<SearchType | null>(null);
     const [showLocationChooser, setShowLocationChooser] = useState(false);
@@ -160,6 +161,7 @@ export default function ChatWidget() {
 
         addMessage('user', value);
         setInput('');
+        setActionLinks([]);
 
         try {
             const res = await api.chatNearest({ text: value, lat: lat ?? undefined, lng: lng ?? undefined });
@@ -172,9 +174,21 @@ export default function ChatWidget() {
                 address: c.address,
                 googleMapUrl: c.googleMapUrl,
             })));
+            const serverLinks = Array.isArray(res?.links) ? (res.links as any[]) : [];
+            if (serverLinks.length) {
+                setActionLinks(
+                    serverLinks
+                        .map((link) => ({
+                            label: locale === 'ar' ? (link.labelAr || link.label || '') : (link.labelEn || link.label || ''),
+                            path: link.path,
+                        }))
+                        .filter((x) => x.label && x.path),
+                );
+            }
         } catch {
             addMessage('bot', locale === 'ar' ? 'حدث خطأ غير متوقع.' : 'Something went wrong.');
             setCards([]);
+            setActionLinks([]);
         }
     };
 
@@ -230,6 +244,7 @@ export default function ChatWidget() {
     const quickSearch = async (type: SearchType, promptLabel: string) => {
         addMessage('user', promptLabel);
         setCards([]);
+        setActionLinks([]);
 
         setPendingType(type);
         setShowLocationChooser(true);
@@ -426,6 +441,23 @@ export default function ChatWidget() {
                         <div className={`max-w-[88%] rounded-2xl px-3 py-2 text-sm ${msg.from === 'user' ? 'bg-primary text-white' : 'bg-white border border-border text-dark'}`}>{msg.text}</div>
                     </div>
                 ))}
+
+                {actionLinks.length > 0 && (
+                    <div className="bg-white border border-border rounded-xl p-3 space-y-2 text-xs">
+                        <p className="font-bold">{locale === 'ar' ? 'روابط الإضافة' : 'Submission links'}</p>
+                        <div className="flex flex-wrap gap-2">
+                            {actionLinks.map((link) => (
+                                <button
+                                    key={link.path}
+                                    className="btn-outline !py-1.5 !px-3 text-xs"
+                                    onClick={() => router.push(`/${locale}${link.path}`)}
+                                >
+                                    {link.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {showLocationChooser && pendingType && (
                     <div className="bg-white border border-border rounded-xl p-3 space-y-3 text-xs">
