@@ -2,7 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import { json, urlencoded } from 'express';
+import { json, urlencoded, Request, Response } from 'express';
 import { AppModule } from './app.module';
 
 export async function createApp() {
@@ -85,12 +85,12 @@ export async function createApp() {
 </body>
 </html>`;
 
-    httpAdapter.get('/', (_req, res) => {
+    httpAdapter.get('/', (_req: Request, res: Response) => {
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.status(200).send(renderLanding());
     });
 
-    httpAdapter.get('/v1', (_req, res) => {
+    httpAdapter.get('/v1', (_req: Request, res: Response) => {
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.status(200).send({
             message: 'Qareeb API root. Use /v1/{resource}.',
