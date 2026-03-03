@@ -26,10 +26,6 @@ import { useAuthStore, useNotificationStore, useThemeStore } from '@/lib/store';
 
 
 const SOCKET_DISABLED_SESSION_KEY = 'qareeb-admin-socket-disabled';
-const NOTIFICATION_SOUND_SOURCES = [
-    'https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg',
-    'https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg',
-];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const t = useTranslations('admin');
@@ -104,14 +100,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
+        const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace('/v1', '') || 'http://localhost:3001';
+        const notificationSoundSources = [
+            `${apiBase}/sounds/notification.mp3?v=${Date.now()}`,
+            'https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg',
+            'https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg',
+        ];
+
         let sourceIndex = 0;
-        const audio = new Audio(NOTIFICATION_SOUND_SOURCES[sourceIndex]);
+        const audio = new Audio(notificationSoundSources[sourceIndex]);
         audio.preload = 'auto';
 
         const onAudioError = () => {
-            if (sourceIndex >= NOTIFICATION_SOUND_SOURCES.length - 1) return;
+            if (sourceIndex >= notificationSoundSources.length - 1) return;
             sourceIndex += 1;
-            audio.src = NOTIFICATION_SOUND_SOURCES[sourceIndex];
+            audio.src = notificationSoundSources[sourceIndex];
             audio.load();
         };
 
