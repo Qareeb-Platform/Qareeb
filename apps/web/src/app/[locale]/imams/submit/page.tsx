@@ -10,6 +10,7 @@ import { api } from '@/lib/api';
 import EgyptWhatsAppInput from '@/components/form/EgyptWhatsAppInput';
 import MapPickerModal from '@/components/form/MapPickerModal';
 import { generateGoogleMapsLink, resolveCoordinatesFromGoogleMapsInput, validateCoordinates } from '@/lib/maps';
+import { useGeolocationStore } from '@/lib/store';
 
 type FormStep = 'type' | 'info' | 'contact' | 'review';
 const ALLOWED_MAINTENANCE_TYPES = ['Plumbing', 'Electrical', 'Carpentry', 'Painting', 'AC_Repair', 'Cleaning', 'Other'] as const;
@@ -30,6 +31,11 @@ const normalizeEgyptWhatsapp = (value: unknown): string => {
 };
 
 const isValidEgyptWhatsapp = (value: string): boolean => /^201\d{9}$/.test(value);
+const toOptionalNumber = (value: unknown): number | undefined => {
+    if (value === '' || value === null || value === undefined) return undefined;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+};
 
 export default function SubmitPage() {
     const t = useTranslations('submit');
@@ -54,6 +60,7 @@ export default function SubmitPage() {
     const [submitError, setSubmitError] = useState('');
     const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
     const { register, handleSubmit, watch, setValue } = useForm();
+    const { lat: userLat, lng: userLng } = useGeolocationStore();
     const [governorates, setGovernorates] = useState<any[]>([]);
     const [areas, setAreas] = useState<any[]>([]);
     const maxMaintenanceImages = 3;
@@ -64,6 +71,9 @@ export default function SubmitPage() {
     const selectedLat = watch('lat');
     const selectedLng = watch('lng');
     const googleMapsUrlValue = watch('googleMapsUrl');
+    const selectedCoordinates = validateCoordinates({ lat: toOptionalNumber(selectedLat), lng: toOptionalNumber(selectedLng) });
+    const userCoordinates = validateCoordinates({ lat: userLat ?? undefined, lng: userLng ?? undefined });
+    const mapInitialCoordinates = selectedCoordinates || userCoordinates || null;
     const entityTitle = entityType === 'imam'
         ? (locale === 'ar' ? 'إضافة إمام' : 'Add Imam')
         : entityType === 'halqa'
@@ -151,15 +161,10 @@ export default function SubmitPage() {
         setSubmitError('');
         setFormErrors({});
         try {
-            const toNum = (value: unknown) => {
-                if (value === '' || value === null || value === undefined) return undefined;
-                const parsed = Number(value);
-                return Number.isFinite(parsed) ? parsed : undefined;
-            };
             const payload = {
                 ...data,
-                lat: toNum(data.lat),
-                lng: toNum(data.lng),
+                lat: toOptionalNumber(data.lat),
+                lng: toOptionalNumber(data.lng),
             };
             const normalizedCoordinates = validateCoordinates({ lat: payload.lat, lng: payload.lng });
             if (normalizedCoordinates) {
@@ -658,9 +663,9 @@ export default function SubmitPage() {
                                         >
                                             {locale === 'ar' ? 'اختيار الموقع من الخريطة' : 'Select location from map'}
                                         </button>
-                                        {validateCoordinates({ lat: Number(selectedLat), lng: Number(selectedLng) }) && (
+                                        {selectedCoordinates && (
                                             <span className="text-[11px] font-bold text-primary">
-                                                {`${Number(selectedLat).toFixed(6)}, ${Number(selectedLng).toFixed(6)}`}
+                                                {`${selectedCoordinates.lat.toFixed(6)}, ${selectedCoordinates.lng.toFixed(6)}`}
                                             </span>
                                         )}
                                     </div>
@@ -801,7 +806,7 @@ export default function SubmitPage() {
             <MapPickerModal
                 isOpen={isMapPickerOpen}
                 locale={locale}
-                initialCoordinates={validateCoordinates({ lat: Number(selectedLat), lng: Number(selectedLng) })}
+                initialCoordinates={mapInitialCoordinates}
                 onClose={() => setIsMapPickerOpen(false)}
                 onConfirm={(coords) => {
                     applyManualCoordinates(coords);
