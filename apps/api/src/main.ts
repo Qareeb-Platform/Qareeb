@@ -14,6 +14,90 @@ export async function createApp() {
     httpAdapter.set('trust proxy', 1);
     httpAdapter.disable('x-powered-by');
 
+    const renderLanding = () => `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Qareeb API</title>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      background: #f7f3ee;
+      color: #1e1e1e;
+    }
+    .wrap {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+    }
+    .card {
+      width: min(720px, 100%);
+      background: #fff;
+      border: 1px solid #e7e0d8;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
+      border-radius: 16px;
+      padding: 28px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: 0.2px;
+    }
+    p {
+      margin: 6px 0 0;
+      line-height: 1.6;
+    }
+    .hint {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #f5efe6;
+      border: 1px solid #e6ddcf;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 14px;
+    }
+    a {
+      color: #1f4b99;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <main class="card">
+      <h1>Qareeb API</h1>
+      <p>This is an API service. There is no public website on the root path.</p>
+      <p>Use the versioned routes under <strong>/v1</strong>.</p>
+      <div class="hint">
+        Health check: <a href="/v1/health">/v1/health</a> or <a href="/v1/healthz">/v1/healthz</a>
+      </div>
+    </main>
+  </div>
+</body>
+</html>`;
+
+    httpAdapter.get('/', (_req, res) => {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.status(200).send(renderLanding());
+    });
+
+    httpAdapter.get('/v1', (_req, res) => {
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.status(200).send({
+            message: 'Qareeb API root. Use /v1/{resource}.',
+            health: ['/v1/health', '/v1/healthz'],
+        });
+    });
+
     // Global prefix
     app.setGlobalPrefix('v1');
 
