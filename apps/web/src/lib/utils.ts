@@ -46,3 +46,14 @@ export function normalizeArabicSearch(input: string): string {
         .replace(/[ة]/g, 'ه')
         .trim();
 }
+
+export function formatOmrAmount(value: number | string | null | undefined, locale: string): string {
+    if (value === null || value === undefined || value === '') return '';
+    const num = Number(value);
+    if (Number.isNaN(num)) return '';
+
+    return new Intl.NumberFormat(locale === 'ar' ? 'ar-OM' : 'en-OM', {
+        minimumFractionDigits: 3,
+        maximumFractionDigits: 3,
+    }).format(num);
+}

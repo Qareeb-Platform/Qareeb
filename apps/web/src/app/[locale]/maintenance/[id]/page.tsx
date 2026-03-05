@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { getWhatsAppUrl } from '@/lib/utils';
+import { formatOmrAmount, getWhatsAppUrl } from '@/lib/utils';
 import { extractLatLngFromGoogleMaps, getGoogleMapsEmbedUrl } from '@/lib/maps';
 import { formatLocationParts } from '@/lib/location';
 import LocationMapSection from '@/components/public/LocationMapSection';
@@ -136,7 +136,7 @@ export default async function MaintenanceDetailPage({ params }: { params: { id: 
                                             {locale === 'ar' ? 'التكلفة التقديرية' : 'Estimated Cost'}
                                         </h3>
                                         <p className="text-dark font-black text-2xl">
-                                            {item.estimatedCostMin} - {item.estimatedCostMax}
+                                            {formatOmrAmount(item.estimatedCostMin, locale)} - {formatOmrAmount(item.estimatedCostMax, locale)}
                                             <span className="text-sm ms-2 font-bold text-text-muted">{locale === 'ar' ? COUNTRY_CONFIG.currency : COUNTRY_CONFIG.currencyEn}</span>
                                         </p>
                                     </div>

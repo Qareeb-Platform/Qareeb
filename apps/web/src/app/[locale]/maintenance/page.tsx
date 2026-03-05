@@ -14,7 +14,7 @@ import { useGeolocationStore } from '@/lib/store';
 import UnifiedCard from '@/components/public/UnifiedCard';
 import { useRouter } from 'next/navigation';
 import { formatLocationParts } from '@/lib/location';
-import { normalizeArabicSearch } from '@/lib/utils';
+import { formatOmrAmount, normalizeArabicSearch } from '@/lib/utils';
 import { AppIconName } from '@/components/ui/AppIcon';
 import { COUNTRY_CONFIG } from '@/lib/countryConfig';
 
@@ -154,7 +154,7 @@ export default function MaintenancePage() {
                                     note: item.description ? String(item.description) : undefined,
                                     meta: (item.estimated_cost_min || item.estimatedCostMin) ? {
                                         label: locale === 'ar' ? 'التكلفة التقديرية' : 'Est. Cost',
-                                        value: `${item.estimated_cost_min || item.estimatedCostMin} - ${item.estimated_cost_max || item.estimatedCostMax} ${locale === 'ar' ? COUNTRY_CONFIG.currency : COUNTRY_CONFIG.currencyEn}`
+                                        value: `${formatOmrAmount(item.estimated_cost_min || item.estimatedCostMin, locale)} - ${formatOmrAmount(item.estimated_cost_max || item.estimatedCostMax, locale)} ${locale === 'ar' ? COUNTRY_CONFIG.currency : COUNTRY_CONFIG.currencyEn}`
                                     } : undefined,
                                     raw: item,
                                 };
@@ -186,8 +186,8 @@ export default function MaintenancePage() {
                                                     {locale === 'ar' ? 'التكلفة التقديرية' : 'Est. Cost'}
                                                 </span>
                                                 <span className="text-sm font-black text-primary">
-                                                    {item.estimated_cost_min || item.estimatedCostMin} -{' '}
-                                                    {item.estimated_cost_max || item.estimatedCostMax}
+                                                    {formatOmrAmount(item.estimated_cost_min || item.estimatedCostMin, locale)} -{' '}
+                                                    {formatOmrAmount(item.estimated_cost_max || item.estimatedCostMax, locale)}
                                                     <span className="text-[10px] ms-1">
                                                         {locale === 'ar' ? COUNTRY_CONFIG.currency : COUNTRY_CONFIG.currencyEn}
                                                     </span>
