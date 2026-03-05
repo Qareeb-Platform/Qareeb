@@ -147,7 +147,7 @@ export default function NotificationsPage() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <span className="text-xs font-black uppercase text-primary">{entityLabel(n.type)}</span>
-                                        <span className="text-xs text-text-muted">{new Date(n.createdAt).toLocaleString(locale === 'ar' ? 'ar-EG' : 'en-US')}</span>
+                                        <span className="text-xs text-text-muted">{new Date(n.createdAt).toLocaleString(locale === 'ar' ? 'ar-OM' : 'en-US')}</span>
                                         {!n.read && <span className="inline-flex px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-700 rounded-full">{locale === 'ar' ? 'جديد' : 'New'}</span>}
                                     </div>
                                     <p className="font-semibold text-dark mt-1 line-clamp-2">{n.title}</p>
@@ -176,3 +176,4 @@ export default function NotificationsPage() {
         </div>
     );
 }
+

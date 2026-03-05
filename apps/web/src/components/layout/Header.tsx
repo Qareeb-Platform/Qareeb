@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -75,7 +75,7 @@ export default function Header() {
                             <div className="flex flex-col">
                                 <span className="text-xl font-black text-primary leading-tight">{tc('appName')}</span>
                                 <span className="text-[11px] text-text-muted -mt-0.5">
-                                    {locale === 'ar' ? 'دليل المسلمين في مصر' : 'Muslims Guide in Egypt'}
+                                    {locale === 'ar' ? 'دليل المسلمين في سلطنة عُمان' : 'Muslims Guide in Oman'}
                                 </span>
                             </div>
                         </Link>
@@ -271,7 +271,7 @@ export default function Header() {
                                     <div className="flex flex-col">
                                         <span className="text-lg font-black text-primary">{tc('appName')}</span>
                                         <span className="text-xs text-text-muted">
-                                            {locale === 'ar' ? 'دليل المسلمين في مصر' : 'Muslims Guide in Egypt'}
+                                            {locale === 'ar' ? 'دليل المسلمين في سلطنة عُمان' : 'Muslims Guide in Oman'}
                                         </span>
                                     </div>
                                 </div>
@@ -308,3 +308,4 @@ export default function Header() {
         </>
     );
 }
+

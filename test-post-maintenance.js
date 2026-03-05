@@ -1,4 +1,4 @@
-const http = require('http');
+﻿const http = require('http');
 
 const postData = JSON.stringify({
     mosque_name: "Test Mosque",
@@ -8,7 +8,7 @@ const postData = JSON.stringify({
     lng: 31.2357,
     maintenance_types: ["Plumbing"],
     description: "Test description",
-    whatsapp: "+201000000000"
+    whatsapp: "96891230000"
 });
 
 const options = {
@@ -39,3 +39,4 @@ req.on('error', (error) => {
 
 req.write(postData);
 req.end();
+

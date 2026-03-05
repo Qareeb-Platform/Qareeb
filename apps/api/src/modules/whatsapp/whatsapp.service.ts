@@ -27,7 +27,7 @@ export class WhatsappService {
             return { sent: false, reason: 'WHAPI token missing' };
         }
 
-        const normalizedTo = this.normalizeEgyptianNumber(to);
+        const normalizedTo = this.normalizeOmaniNumber(to);
         if (!normalizedTo) {
             return { sent: false, reason: 'Invalid WhatsApp number' };
         }
@@ -49,22 +49,20 @@ export class WhatsappService {
         return { sent: true };
     }
 
-    private normalizeEgyptianNumber(input: string): string | null {
+    private normalizeOmaniNumber(input: string): string | null {
         const digits = String(input || '').replace(/\D/g, '');
         if (!digits) return null;
 
-        if (digits.startsWith('0')) {
-            const local = digits.slice(1);
-            if (!local.startsWith('1') || local.length !== 10) return null;
-            return `20${local}`;
+        if (/^[29]\d{7}$/.test(digits)) {
+            return `968${digits}`;
         }
 
-        if (digits.startsWith('20')) {
+        if (/^968[29]\d{7}$/.test(digits)) {
             return digits;
         }
 
-        if (digits.startsWith('1') && digits.length === 10) {
-            return `20${digits}`;
+        if (digits.startsWith('0') && /^[29]\d{7}$/.test(digits.slice(1))) {
+            return `968${digits.slice(1)}`;
         }
 
         this.logger.warn(`Could not normalize whatsapp number: ${input}`);

@@ -1,4 +1,4 @@
-# Wait for server to start
+﻿# Wait for server to start
 Start-Sleep -Seconds 20
 
 # Test the API
@@ -19,7 +19,7 @@ $body = @{
     lng = 31.2357
     maintenance_types = @("Plumbing")
     description = "Test"
-    whatsapp = "+201000000000"
+    whatsapp = "96891230000"
 } | ConvertTo-Json
 
 Write-Host "`nTesting POST request..."
@@ -30,3 +30,4 @@ try {
 } catch {
     Write-Host "POST Error: $($_.Exception.Message)"
 }
+

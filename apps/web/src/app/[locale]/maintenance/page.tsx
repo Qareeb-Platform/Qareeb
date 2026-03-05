@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import { formatLocationParts } from '@/lib/location';
 import { normalizeArabicSearch } from '@/lib/utils';
 import { AppIconName } from '@/components/ui/AppIcon';
+import { COUNTRY_CONFIG } from '@/lib/countryConfig';
 
 const maintenanceLabels: Record<string, Record<string, string>> = {
     ar: { Plumbing: 'سباكة', Electrical: 'كهرباء', Carpentry: 'نجارة', Painting: 'دهان', AC_Repair: 'تكييف', Cleaning: 'تنظيف', Other: 'أخرى' },
@@ -104,7 +105,7 @@ export default function MaintenancePage() {
                             disabled={!governorateId}
                             className="px-4 py-2.5 rounded-xl text-sm font-black bg-cream border-2 border-transparent focus:border-primary disabled:opacity-50"
                         >
-                            <option value="">{locale === 'ar' ? 'كل المناطق' : 'All areas'}</option>
+                            <option value="">{locale === 'ar' ? 'كل الولايات' : 'All wilayat'}</option>
                             {areas.map((a) => (
                                 <option key={a.id} value={a.id}>{locale === 'ar' ? a.nameAr : a.nameEn}</option>
                             ))}
@@ -152,8 +153,8 @@ export default function MaintenancePage() {
                                     chips: types.map((type: string) => maintenanceLabels[locale]?.[type] || type),
                                     note: item.description ? String(item.description) : undefined,
                                     meta: (item.estimated_cost_min || item.estimatedCostMin) ? {
-                                        label: locale === 'ar' ? '??????? ?????????' : 'Est. Cost',
-                                        value: `${item.estimated_cost_min || item.estimatedCostMin} - ${item.estimated_cost_max || item.estimatedCostMax} ${locale === 'ar' ? '?.?' : 'EGP'}`
+                                        label: locale === 'ar' ? 'التكلفة التقديرية' : 'Est. Cost',
+                                        value: `${item.estimated_cost_min || item.estimatedCostMin} - ${item.estimated_cost_max || item.estimatedCostMax} ${locale === 'ar' ? COUNTRY_CONFIG.currency : COUNTRY_CONFIG.currencyEn}`
                                     } : undefined,
                                     raw: item,
                                 };
@@ -188,7 +189,7 @@ export default function MaintenancePage() {
                                                     {item.estimated_cost_min || item.estimatedCostMin} -{' '}
                                                     {item.estimated_cost_max || item.estimatedCostMax}
                                                     <span className="text-[10px] ms-1">
-                                                        {locale === 'ar' ? 'ج.م' : 'EGP'}
+                                                        {locale === 'ar' ? COUNTRY_CONFIG.currency : COUNTRY_CONFIG.currencyEn}
                                                     </span>
                                                 </span>
                                             </div>
@@ -216,3 +217,5 @@ export default function MaintenancePage() {
         </div>
     );
 }
+
+

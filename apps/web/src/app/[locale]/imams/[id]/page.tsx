@@ -127,3 +127,4 @@ export default async function ImamDetailPage({ params }: { params: { id: string 
         </div>
     );
 }
+

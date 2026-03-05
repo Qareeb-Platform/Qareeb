@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
@@ -124,7 +124,7 @@ export default function HalaqatPage() {
                             disabled={!governorateId}
                             className="px-4 py-2.5 rounded-xl text-sm font-black bg-cream border-2 border-transparent focus:border-primary disabled:opacity-50"
                         >
-                            <option value="">{locale === 'ar' ? 'كل المناطق' : 'All areas'}</option>
+                            <option value="">{locale === 'ar' ? 'كل الولايات' : 'All wilayat'}</option>
                             {areas.map((a) => (
                                 <option key={a.id} value={a.id}>{locale === 'ar' ? a.nameAr : a.nameEn}</option>
                             ))}
@@ -211,3 +211,4 @@ export default function HalaqatPage() {
         </div>
     );
 }
+

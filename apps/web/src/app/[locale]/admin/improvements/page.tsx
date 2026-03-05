@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
@@ -156,7 +156,7 @@ export default function AdminImprovementsPage() {
                                             <div className="text-sm text-gray-600 space-y-1">
                                                 <p>{locale === 'ar' ? 'الاسم:' : 'Name:'} {item.name || '-'}</p>
                                                 <p>{locale === 'ar' ? 'واتساب/إيميل:' : 'WhatsApp/Email:'} {item.email || '-'}</p>
-                                                <p>{locale === 'ar' ? 'تاريخ الإرسال:' : 'Submitted:'} {new Date(item.createdAt).toLocaleString(locale === 'ar' ? 'ar-EG' : 'en-US')}</p>
+                                                <p>{locale === 'ar' ? 'تاريخ الإرسال:' : 'Submitted:'} {new Date(item.createdAt).toLocaleString(locale === 'ar' ? 'ar-OM' : 'en-US')}</p>
                                             </div>
                                         </div>
 
@@ -208,3 +208,5 @@ export default function AdminImprovementsPage() {
         </div>
     );
 }
+
+

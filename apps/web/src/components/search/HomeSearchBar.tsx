@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -95,7 +95,7 @@ export default function HomeSearchBar() {
                 disabled={!governorateId}
                 className="bg-cream rounded-xl px-4 py-3 min-w-[140px] outline-none border-2 border-transparent focus:border-primary text-sm font-bold cursor-pointer transition-all disabled:opacity-50"
             >
-                <option value="">{locale === 'ar' ? 'كل المناطق' : 'All Areas'}</option>
+                <option value="">{locale === 'ar' ? 'كل الولايات' : 'All Wilayat'}</option>
                 {areas.map((a) => (
                     <option key={a.id} value={a.id}>{locale === 'ar' ? a.nameAr : a.nameEn}</option>
                 ))}
@@ -107,3 +107,4 @@ export default function HomeSearchBar() {
         </form>
     );
 }
+

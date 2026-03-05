@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { useLocale } from 'next-intl';
@@ -498,3 +498,4 @@ export default function AdminImamsPage() {
         </div>
     );
 }
+

@@ -7,30 +7,36 @@ import { usePathname } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { api } from '@/lib/api';
-import EgyptWhatsAppInput from '@/components/form/EgyptWhatsAppInput';
+import OmanWhatsAppInput from '@/components/form/OmanWhatsAppInput';
 import MapPickerModal from '@/components/form/MapPickerModal';
 import { generateGoogleMapsLink, resolveCoordinatesFromGoogleMapsInput, validateCoordinates } from '@/lib/maps';
 import { useGeolocationStore } from '@/lib/store';
+import { COUNTRY_CONFIG } from '@/lib/countryConfig';
 
 type FormStep = 'type' | 'info' | 'contact' | 'review';
 const ALLOWED_MAINTENANCE_TYPES = ['Plumbing', 'Electrical', 'Carpentry', 'Painting', 'AC_Repair', 'Cleaning', 'Other'] as const;
 
-const normalizeEgyptWhatsapp = (value: unknown): string => {
+const normalizeOmanWhatsapp = (value: unknown): string => {
     const digits = String(value ?? '').replace(/\D/g, '');
+    const dialDigits = COUNTRY_CONFIG.dialCode.replace('+', '');
     if (!digits) return '';
 
-    if (digits.startsWith('20')) {
-        return digits.slice(0, 12);
+    if (digits.startsWith(dialDigits)) {
+        return digits.slice(0, dialDigits.length + COUNTRY_CONFIG.phoneDigits);
     }
 
-    if (digits.startsWith('0')) {
-        return `20${digits.slice(1, 11)}`;
+    if (COUNTRY_CONFIG.phoneRegex.test(digits)) {
+        return `${dialDigits}${digits}`;
     }
 
-    return `20${digits.slice(0, 10)}`;
+    if (digits.length === COUNTRY_CONFIG.phoneDigits) {
+        return `${dialDigits}${digits}`;
+    }
+
+    return digits.slice(0, dialDigits.length + COUNTRY_CONFIG.phoneDigits);
 };
 
-const isValidEgyptWhatsapp = (value: string): boolean => /^201\d{9}$/.test(value);
+const isValidOmanWhatsapp = (value: string): boolean => new RegExp(`^${COUNTRY_CONFIG.dialCode.replace('+', '')}[29]\\d{7}$`).test(value);
 const toOptionalNumber = (value: unknown): number | undefined => {
     if (value === '' || value === null || value === undefined) return undefined;
     const parsed = Number(value);
@@ -176,7 +182,7 @@ export default function SubmitPage() {
                 : payload.maintenanceTypes
                     ? [payload.maintenanceTypes]
                     : [];
-            const normalizedWhatsapp = normalizeEgyptWhatsapp(payload.whatsapp);
+            const normalizedWhatsapp = normalizeOmanWhatsapp(payload.whatsapp);
             const isWhatsappRequired = entityType !== 'imam';
             const nextErrors: Record<string, string> = {};
 
@@ -214,7 +220,7 @@ export default function SubmitPage() {
                 nextErrors.whatsapp = t('validation.whatsappRequired');
             }
 
-            if (normalizedWhatsapp && !isValidEgyptWhatsapp(normalizedWhatsapp)) {
+            if (normalizedWhatsapp && !isValidOmanWhatsapp(normalizedWhatsapp)) {
                 nextErrors.whatsapp = t('validation.whatsappInvalid');
             }
 
@@ -492,7 +498,7 @@ export default function SubmitPage() {
                 <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <h1 className="text-4xl font-black text-dark mb-3">{entityTitle || t('title')}</h1>
-                        <p className="text-text-muted font-medium">{locale === 'ar' ? 'ساهم في بناء مجتمعنا المسلم في مصر' : 'Contribute to building our Muslim community in Egypt'}</p>
+                        <p className="text-text-muted font-medium">{locale === 'ar' ? 'ساهم في بناء مجتمعنا المسلم في سلطنة عُمان' : 'Contribute to building our Muslim community in Oman'}</p>
                     </div>
 
                     {/* Step: Info Form */}
@@ -611,7 +617,7 @@ export default function SubmitPage() {
                                         {getErrorMessage('governorateId') && <p className="text-xs text-red-600 mt-1 ms-1">{getErrorMessage('governorateId')}</p>}
                                     </div>
                                     <div className="group">
-                                        <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">{locale === 'ar' ? 'المنطقة' : 'Area'} <span className="text-red-500">*</span></label>
+                                        <label className="block text-sm font-black text-dark mb-2 ms-1 transition-colors group-focus-within:text-primary">{locale === 'ar' ? 'الولاية' : 'Wilaya'} <span className="text-red-500">*</span></label>
                                         <select
                                             {...register('areaId', { required: entityType !== 'halqa' || !isOnline })}
                                             className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold"
@@ -623,7 +629,7 @@ export default function SubmitPage() {
                                                 setValue('city', area?.nameAr || area?.nameEn || '');
                                             }}
                                         >
-                                            <option value="">{locale === 'ar' ? 'اختر المنطقة' : 'Select area'}</option>
+                                            <option value="">{locale === 'ar' ? 'اختر الولاية' : 'Select wilaya'}</option>
                                             {areas.map((a) => (
                                                 <option key={a.id} value={a.id}>{locale === 'ar' ? a.nameAr : a.nameEn}</option>
                                             ))}
@@ -642,7 +648,7 @@ export default function SubmitPage() {
                                         {...register('googleMapsUrl', { required: entityType !== 'halqa' || !isOnline, onChange: () => clearFieldError('googleMapsUrl') })}
                                         type="url"
                                         className="block w-full px-5 py-4 bg-cream border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white transition-all outline-none font-bold"
-                                        placeholder="https://maps.google.com/...?q=30.0444,31.2357"
+                                        placeholder="https://maps.google.com/...?q=23.6139,58.5922"
                                         onBlur={(e) => {
                                             void syncCoordinatesFromLink(e.target.value);
                                         }}
@@ -679,7 +685,7 @@ export default function SubmitPage() {
                                         {t('imamWhatsappNote')}
                                     </div>
                                 )}
-                                <EgyptWhatsAppInput
+                                <OmanWhatsAppInput
                                     label={ti('whatsapp')}
                                     required={entityType !== 'imam'}
                                     value={whatsappValue}
@@ -749,7 +755,7 @@ export default function SubmitPage() {
                                         {t('imamWhatsappNote')}
                                     </div>
                                 )}
-                                <EgyptWhatsAppInput
+                                <OmanWhatsAppInput
                                     label={ti('whatsapp')}
                                     required={entityType !== 'imam'}
                                     value={whatsappValue}
@@ -817,4 +823,7 @@ export default function SubmitPage() {
         </div>
     );
 }
+
+
+
 

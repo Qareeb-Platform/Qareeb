@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -7,13 +7,14 @@ import { useTranslations, useLocale } from 'next-intl';
 import { FaFacebook, FaInstagram, FaWhatsapp, FaXTwitter, FaYoutube } from 'react-icons/fa6';
 import { FaLightbulb } from 'react-icons/fa';
 import AppModal from '@/components/ui/AppModal';
-import EgyptWhatsAppInput from '@/components/form/EgyptWhatsAppInput';
+import OmanWhatsAppInput from '@/components/form/OmanWhatsAppInput';
 import { api } from '@/lib/api';
+import { COUNTRY_CONFIG } from '@/lib/countryConfig';
 
 const socialLinks = [
     { href: 'https://www.instagram.com/qareeb.platform/', icon: FaInstagram, label: 'Instagram' },
     { href: 'https://x.com/qareeb_platform', icon: FaXTwitter, label: 'X' },
-    { href: 'https://wa.me/201551429227', icon: FaWhatsapp, label: 'WhatsApp' },
+    { href: `https://wa.me/${COUNTRY_CONFIG.contactWhatsApp}`, icon: FaWhatsapp, label: 'WhatsApp' },
     { href: 'https://www.youtube.com/@Qareeb-Platform', icon: FaYoutube, label: 'YouTube' },
     { href: 'https://www.facebook.com/', icon: FaFacebook, label: 'Facebook' },
 ];
@@ -86,7 +87,9 @@ export default function Footer() {
                             <span className="text-xl font-bold text-white">{isArabic ? 'قريب' : 'Qareeb'}</span>
                         </div>
                         <p className="text-gray-400 text-sm leading-relaxed">
-                            {isArabic ? 'منصة مجتمعية غير ربحية لخدمة المسلمين.' : 'A non-profit community platform.'}
+                            {isArabic
+                                ? `منصة مجتمعية غير ربحية لخدمة المسلمين في ${COUNTRY_CONFIG.name} ${COUNTRY_CONFIG.flag}.`
+                                : `A non-profit community platform serving Muslims in ${COUNTRY_CONFIG.nameEn} ${COUNTRY_CONFIG.flag}.`}
                         </p>
                         <div className="flex items-center gap-3 mt-4">
                             {socialLinks.map(({ href, icon: Icon, label }) => (
@@ -123,7 +126,7 @@ export default function Footer() {
                     <div>
                         <div className="flex flex-col items-start gap-3">
                             <a
-                                href="https://wa.me/201551429227"
+                                href={`https://wa.me/${COUNTRY_CONFIG.contactWhatsApp}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-2 rounded-xl border border-[#25D366]/60 bg-[#25D366]/15 px-4 py-2.5 text-sm font-black text-[#25D366] shadow-[0_8px_22px_rgba(37,211,102,0.2)] hover:bg-[#25D366]/25 hover:-translate-y-0.5 transition-all"
@@ -181,7 +184,7 @@ export default function Footer() {
                         />
                     </div>
 
-                    <EgyptWhatsAppInput
+                    <OmanWhatsAppInput
                         value={form.whatsapp}
                         onChange={(value) => setForm((s) => ({ ...s, whatsapp: value || '' }))}
                         label={isArabic ? 'رقم الواتساب (اختياري)' : 'WhatsApp number (optional)'}
@@ -212,3 +215,6 @@ export default function Footer() {
         </footer>
     );
 }
+
+
+

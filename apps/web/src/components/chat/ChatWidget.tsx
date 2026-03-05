@@ -260,7 +260,7 @@ export default function ChatWidget() {
             return;
         }
 
-        addMessage('bot', locale === 'ar' ? `هذه أفضل النتائج في ${typeLabel(type)} حسب المنطقة.` : `Here are the top ${typeLabel(type)} results for that area.`);
+        addMessage('bot', locale === 'ar' ? `هذه أفضل النتائج في ${typeLabel(type)} حسب الولاية.` : `Here are the top ${typeLabel(type)} results for that wilaya.`);
     };
 
     const quickSearch = async (type: SearchType, promptLabel: string) => {
@@ -277,7 +277,7 @@ export default function ChatWidget() {
         addMessage(
             'bot',
             locale === 'ar'
-                ? 'حدد موقعك للبحث: اختار الموقع الحالي أو المحافظة والمنطقة.'
+                ? 'حدد موقعك للبحث: اختار الموقع الحالي أو المحافظة والولاية.'
                 : 'Choose location: use current location or select governorate/area.',
         );
     };
@@ -330,7 +330,7 @@ export default function ChatWidget() {
                 addMessage(
                     'bot',
                     locale === 'ar'
-                        ? 'تعذر البحث بالموقع الحالي الآن. حاول مرة أخرى أو اختر المحافظة والمنطقة.'
+                        ? 'تعذر البحث بالموقع الحالي الآن. حاول مرة أخرى أو اختر المحافظة والولاية.'
                         : 'Could not search by current location right now. Please try again or select governorate and area.',
                 );
             }
@@ -339,7 +339,7 @@ export default function ChatWidget() {
             addMessage(
                 'bot',
                 locale === 'ar'
-                    ? 'تعذر تحديد موقعك الحالي تلقائياً. فعّل إذن الموقع/‏GPS من إعدادات الهاتف أو اللابتوب، ثم اعمل تحديث (Refresh) للصفحة وحاول مرة تانية، أو اختر المحافظة والمنطقة.'
+                    ? 'تعذر تحديد موقعك الحالي تلقائياً. فعّل إذن الموقع/‏GPS من إعدادات الهاتف أو اللابتوب، ثم اعمل تحديث (Refresh) للصفحة وحاول مرة تانية، أو اختر المحافظة والولاية.'
                     : 'Could not determine your current location automatically. Enable location permission/GPS from your phone or laptop settings, refresh the page, and try again, or select governorate and area.',
             );
         }
@@ -555,7 +555,7 @@ export default function ChatWidget() {
                                     ))}
                                 </select>
                                 <select value={areaId} onChange={(e) => setAreaId(e.target.value)} disabled={!governorateId} className="px-2 py-2 rounded-lg border border-border bg-white disabled:opacity-50">
-                                    <option value="">{locale === 'ar' ? 'كل المناطق' : 'All areas'}</option>
+                                    <option value="">{locale === 'ar' ? 'كل الولايات' : 'All wilayat'}</option>
                                     {areas.map((a) => (
                                         <option key={a.id} value={a.id}>{locale === 'ar' ? a.nameAr : a.nameEn}</option>
                                     ))}
@@ -601,3 +601,4 @@ export default function ChatWidget() {
         </div>
     );
 }
+

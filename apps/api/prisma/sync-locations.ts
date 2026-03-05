@@ -1,121 +1,62 @@
-import 'dotenv/config';
+﻿import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
-
-type EgyGovernorate = {
-    id: number;
-    code: string;
-    name: string;
-    nameEn: string;
-};
-
-type EgyCity = {
-    id: number;
-    name: string;
-    nameEn: string;
-    governorateCode: string;
-};
-
-const { cities, governorates } = require('egydata') as {
-    cities: { getByGovernorate: (code: string) => EgyCity[] };
-    governorates: { getAll: () => EgyGovernorate[] };
-};
+import { OMAN_GOVERNORATES, OMAN_WILAYAT } from './oman-locations';
 
 const prisma = new PrismaClient();
 
 async function main() {
-    const governoratesCatalog = governorates.getAll();
-    const governorateNames = governoratesCatalog.map((item: EgyGovernorate) => item.name);
-    const cityMap = new Map<string, EgyCity[]>();
-
     let govCount = 0;
     let areaCount = 0;
 
-    for (const governorate of governoratesCatalog) {
-        cityMap.set(governorate.code, cities.getByGovernorate(governorate.code));
-    }
-
-    for (const item of governoratesCatalog) {
+    for (const gov of OMAN_GOVERNORATES) {
         const governorate = await prisma.governorate.upsert({
-            where: { nameAr: item.name },
-            update: { nameEn: item.nameEn },
-            create: { nameAr: item.name, nameEn: item.nameEn },
+            where: { nameAr: gov.name },
+            update: { nameEn: gov.nameEn },
+            create: { nameAr: gov.name, nameEn: gov.nameEn },
         });
         govCount += 1;
 
-        const areas = cityMap.get(item.code) ?? [];
-        const areaNames = areas.map((area) => area.name);
-        for (const area of areas) {
-            const englishCandidates = [
-                area.nameEn.trim(),
-                `${area.nameEn.trim()} (${area.name.trim()})`,
-                `${area.nameEn.trim()} (${item.code}-${area.id})`,
-            ];
-
-            let lastError: unknown;
-            let upserted = false;
-
-            for (const safeEnglishName of englishCandidates) {
-                try {
-                    await prisma.area.upsert({
-                        where: {
-                            governorateId_nameAr: {
-                                governorateId: governorate.id,
-                                nameAr: area.name,
-                            },
-                        },
-                        update: { nameEn: safeEnglishName },
-                        create: {
-                            governorateId: governorate.id,
-                            nameAr: area.name,
-                            nameEn: safeEnglishName,
-                        },
-                    });
-                    upserted = true;
-                    break;
-                } catch (error) {
-                    const isUniqueConflict = typeof error === 'object'
-                        && error !== null
-                        && 'code' in error
-                        && (error as { code?: string }).code === 'P2002';
-
-                    if (!isUniqueConflict) throw error;
-                    lastError = error;
-                }
-            }
-
-            if (!upserted) {
-                throw lastError;
-            }
-
+        const wilayat = OMAN_WILAYAT[gov.id] || [];
+        for (const wilaya of wilayat) {
+            await prisma.area.upsert({
+                where: {
+                    governorateId_nameAr: {
+                        governorateId: governorate.id,
+                        nameAr: wilaya,
+                    },
+                },
+                update: { nameEn: wilaya },
+                create: {
+                    governorateId: governorate.id,
+                    nameAr: wilaya,
+                    nameEn: wilaya,
+                },
+            });
             areaCount += 1;
         }
 
         await prisma.area.deleteMany({
             where: {
                 governorateId: governorate.id,
-                nameAr: { notIn: areaNames },
+                nameAr: { notIn: wilayat },
             },
         });
     }
 
+    const keepGovNames = OMAN_GOVERNORATES.map((g) => g.name);
     const staleGovernorates = await prisma.governorate.findMany({
-        where: { nameAr: { notIn: governorateNames } },
+        where: { nameAr: { notIn: keepGovNames } },
         select: { id: true },
     });
-    const staleGovernorateIds = staleGovernorates.map((item) => item.id);
 
-    if (staleGovernorateIds.length) {
-        await prisma.area.deleteMany({
-            where: { governorateId: { in: staleGovernorateIds } },
-        });
+    const staleIds = staleGovernorates.map((g) => g.id);
+    if (staleIds.length) {
+        await prisma.area.deleteMany({ where: { governorateId: { in: staleIds } } });
+        await prisma.governorate.deleteMany({ where: { id: { in: staleIds } } });
     }
 
-    await prisma.governorate.deleteMany({
-        where: { id: { in: staleGovernorateIds } },
-    });
-
     console.log(`Synced governorates: ${govCount}`);
-    console.log(`Synced areas: ${areaCount}`);
+    console.log(`Synced wilayat: ${areaCount}`);
 }
 
 main()

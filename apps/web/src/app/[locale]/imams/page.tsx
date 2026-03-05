@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
@@ -115,7 +115,7 @@ export default function ImamsPage() {
                             className="bg-cream rounded-xl px-4 py-3 min-w-[200px] outline-none border-2 border-transparent focus:border-primary text-sm font-bold cursor-pointer transition-all"
                             disabled={!governorateId}
                         >
-                            <option value="">{locale === 'ar' ? 'كل المناطق' : 'All areas'}</option>
+                            <option value="">{locale === 'ar' ? 'كل الولايات' : 'All wilayat'}</option>
                             {areas.map((a) => (
                                 <option key={a.id} value={a.id}>{locale === 'ar' ? a.nameAr : a.nameEn}</option>
                             ))}
@@ -207,3 +207,4 @@ export default function ImamsPage() {
         </div>
     );
 }
+

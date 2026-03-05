@@ -7,6 +7,7 @@ import { extractLatLngFromGoogleMaps, getGoogleMapsEmbedUrl } from '@/lib/maps';
 import { formatLocationParts } from '@/lib/location';
 import LocationMapSection from '@/components/public/LocationMapSection';
 import MaintenanceImageGallery from '@/components/public/MaintenanceImageGallery';
+import { COUNTRY_CONFIG } from '@/lib/countryConfig';
 
 export const revalidate = 300;
 
@@ -136,7 +137,7 @@ export default async function MaintenanceDetailPage({ params }: { params: { id: 
                                         </h3>
                                         <p className="text-dark font-black text-2xl">
                                             {item.estimatedCostMin} - {item.estimatedCostMax}
-                                            <span className="text-sm ms-2 font-bold text-text-muted">{locale === 'ar' ? 'ج.م' : 'EGP'}</span>
+                                            <span className="text-sm ms-2 font-bold text-text-muted">{locale === 'ar' ? COUNTRY_CONFIG.currency : COUNTRY_CONFIG.currencyEn}</span>
                                         </p>
                                     </div>
                                 )}
@@ -175,3 +176,5 @@ export default async function MaintenanceDetailPage({ params }: { params: { id: 
         </div>
     );
 }
+
+

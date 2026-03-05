@@ -7,7 +7,7 @@ import PublicCardsTabs from '@/components/public/PublicCardsTabs';
 
 export const metadata = {
     title: 'Search | Qareeb',
-    description: 'Search for imams, quran circles, and mosque maintenance projects in Egypt',
+    description: 'Search for imams, quran circles, and mosque maintenance projects in Oman',
 };
 
 export default async function SearchPage() {

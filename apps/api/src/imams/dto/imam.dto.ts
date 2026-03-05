@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsUrl, IsArray, IsNotEmpty, IsUUID, Min, Max } from 'class-validator';
+﻿import { IsString, IsOptional, IsNumber, IsUrl, IsArray, IsNotEmpty, IsUUID, Min, Max, Matches } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
 export class CreateImamDto {
@@ -54,6 +54,7 @@ export class CreateImamDto {
     lng?: number; // legacy fallback
 
     @IsString()
+    @Matches(/^968[29]\d{7}$/, { message: 'whatsapp must be a valid Omani number (968XXXXXXXX)' })
     whatsapp!: string;
 
     @IsOptional()

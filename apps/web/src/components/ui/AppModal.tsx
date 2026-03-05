@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
 
@@ -101,3 +101,4 @@ export default function AppModal({ isOpen, title, onClose, children }: AppModalP
         </div>
     );
 }
+

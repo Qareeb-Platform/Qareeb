@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsArray, IsEnum, IsNotEmpty, IsUrl, IsUUID, Min, Max } from 'class-validator';
+﻿import { IsString, IsOptional, IsNumber, IsArray, IsEnum, IsNotEmpty, IsUrl, IsUUID, Min, Max, Matches } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
 export enum MaintenanceType {
@@ -78,6 +78,7 @@ export class CreateMaintenanceDto {
 
     @IsString()
     @IsNotEmpty()
+    @Matches(/^968[29]\d{7}$/, { message: 'whatsapp must be a valid Omani number (968XXXXXXXX)' })
     whatsapp!: string;
 
     @IsOptional()

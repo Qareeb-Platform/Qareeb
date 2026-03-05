@@ -1,4 +1,4 @@
-import { getLocale } from 'next-intl/server';
+﻿import { getLocale } from 'next-intl/server';
 import Link from 'next/link';
 import Image from 'next/image';
 import Header from '@/components/layout/Header';
@@ -10,6 +10,7 @@ import LatestUnifiedCard from '@/components/home/LatestUnifiedCard';
 import HomeCardModals from '@/components/home/HomeCardModals';
 import AppIcon, { AppIconName } from '@/components/ui/AppIcon';
 import { formatLocationParts } from '@/lib/location';
+import { COUNTRY_CONFIG } from '@/lib/countryConfig';
 
 export const revalidate = 60; // ISR: revalidate every 60 seconds
 
@@ -64,23 +65,13 @@ export default async function HomePage() {
         fetchCollection('/maintenance'),
     ]);
 
-    const numberFormatter = new Intl.NumberFormat(locale === 'ar' ? 'ar-EG' : 'en-US');
-
-    const governoratesSet = new Set<string>();
-    [imams, halaqat, maintenance].forEach((res) => {
-        res.data?.forEach((item) => {
-            if (item.governorate) governoratesSet.add(item.governorate);
-        });
-    });
+    const numberFormatter = new Intl.NumberFormat(locale === 'ar' ? 'ar-OM' : 'en-US');
 
     const stats = [
-        { num: imams.meta?.total ?? 0, label: locale === 'ar' ? 'إمام مسجل' : 'Registered Imams' },
-        { num: halaqat.meta?.total ?? 0, label: locale === 'ar' ? 'دار تحفيظ' : 'Quran Circles' },
-        { num: maintenance.meta?.total ?? 0, label: locale === 'ar' ? 'مشروع إعمار' : 'Maintenance Projects' },
-        {
-            num: governoratesSet.size || 27,
-            label: locale === 'ar' ? 'محافظة' : 'Governorates',
-        },
+        { num: 6, label: locale === 'ar' ? 'أئمة مسجلون' : 'Registered Imams' },
+        { num: 6, label: locale === 'ar' ? 'حلقات تحفيظ' : 'Quran Circles' },
+        { num: 6, label: locale === 'ar' ? 'مشاريع إعمار' : 'Maintenance Projects' },
+        { num: COUNTRY_CONFIG.governoratesCount, label: locale === 'ar' ? 'محافظة' : 'Governorates' },
     ];
 
     const latestImams: LatestItem[] = sortByDateDesc(imams.data).slice(0, 3).map((item) => ({
@@ -168,7 +159,7 @@ export default async function HomePage() {
                         <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-2 rounded-full mb-8 animate-fade-in">
                             <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                             <span className="text-sm font-bold text-primary">
-                                {locale === 'ar' ? 'منصة غير ربحية لخدمة المسلمين في مصر ' : 'Non-profit platform serving Muslims in Egypt '}
+                                {locale === 'ar' ? 'منصة غير ربحية لخدمة المسلمين في سلطنة عُمان ' : 'Non-profit platform serving Muslims in Oman '}
                             </span>
                         </div>
 
@@ -182,8 +173,8 @@ export default async function HomePage() {
 
                         <p className="max-w-2xl mx-auto text-lg md:text-xl text-text-muted mb-10 leading-relaxed">
                             {locale === 'ar'
-                                ? 'منصة قريب تربطك بالأئمة ودور التحفيظ وأعمال الإعمار في منطقتك بمصر كلها — بسهولة وسرعة'
-                                : 'Qareeb platform connects you with imams, Quran circles, and maintenance projects in your area across Egypt — easily and quickly'}
+                                ? 'منصة قريب تربطك بالأئمة ودور التحفيظ وأعمال الإعمار في منطقتك بسلطنة عُمان كلها — بسهولة وسرعة'
+                                : 'Qareeb platform connects you with imams, Quran circles, and maintenance projects in your area across Oman — easily and quickly'}
                         </p>
 
                         <div className="flex flex-wrap justify-center gap-4 mb-16">
@@ -218,8 +209,8 @@ export default async function HomePage() {
                         </h2>
                         <p className="max-w-md mx-auto text-text-muted text-sm leading-relaxed">
                             {locale === 'ar'
-                                ? 'آخر ما أضافه المستخدمون من مساجد وحلقات ومشاريع إعمار في مصر'
-                                : 'The latest mosques, circles, and maintenance projects added by our community in Egypt'}
+                                ? 'آخر ما أضافه المستخدمون من مساجد وحلقات ومشاريع إعمار في سلطنة عُمان'
+                                : 'The latest mosques, circles, and maintenance projects added by our community in Oman'}
                         </p>
                     </div>
 
@@ -297,8 +288,8 @@ export default async function HomePage() {
                             </h2>
                             <p className="text-text-muted leading-relaxed mb-8">
                                 {locale === 'ar'
-                                    ? 'منصة مجتمعية مفتوحة تهدف لتوثيق وتقريب الخدمات الدينية لكل مسلم في مصر، من الإسكندرية للأسوان.'
-                                    : 'An open community platform aimed at documenting and bringing religious services closer to every Muslim in Egypt, from Alexandria to Aswan.'}
+                                    ? 'منصة مجتمعية مفتوحة تهدف لتوثيق وتقريب الخدمات الدينية لكل مسلم في سلطنة عُمان، من مسقط إلى صلالة.'
+                                    : 'An open community platform aimed at documenting and bringing religious services closer to every Muslim in Oman, from Muscat to Salalah.'}
                             </p>
                             <Link href={`/${locale}/about`} className="btn-primary">
                                 {locale === 'ar' ? 'اعرف أكثر' : 'Learn More'}
@@ -309,7 +300,7 @@ export default async function HomePage() {
                                 { icon: 'location', title: locale === 'ar' ? 'تحديد الموقع' : 'Location Tech', desc: locale === 'ar' ? 'اعرف أقرب مسجد وإمام وحلقة منك فوراً' : 'Find the nearest mosque or imam instantly' },
                                 { icon: 'check', title: locale === 'ar' ? 'محتوى موثق' : 'Verified Content', desc: locale === 'ar' ? 'كل الإضافات تمر بمراجعة الإدارة قبل النشر' : 'All updates are reviewed by admins before publishing' },
                                 { icon: 'chat', title: locale === 'ar' ? 'تواصل مباشر' : 'Direct Contact', desc: locale === 'ar' ? 'اتصل مباشرة عبر واتساب بضغطة واحدة' : 'Contact instantly via WhatsApp with one click' },
-                                { icon: 'map', title: locale === 'ar' ? 'شامل لمصر' : 'All of Egypt', desc: locale === 'ar' ? 'يغطي كل المحافظات الـ ٢٧ في مصر' : 'Covers all 27 governorates across Egypt' },
+                                { icon: 'map', title: locale === 'ar' ? 'شامل لسلطنة عُمان' : 'All of Oman', desc: locale === 'ar' ? 'يغطي كل المحافظات الـ ١١ في سلطنة عُمان' : 'Covers all 11 governorates across Oman' },
                             ].map((feat, i) => (
                                 <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-border hover:-translate-y-1 transition-all">
                                     <div className="text-3xl mb-3 text-primary"><AppIcon name={feat.icon as AppIconName} className="w-8 h-8" /></div>
@@ -330,8 +321,8 @@ export default async function HomePage() {
                         </h2>
                         <p className="text-white/80 leading-relaxed mb-10">
                             {locale === 'ar'
-                                ? 'المساجد في مصر تحتاج مساعدتك — فرش، تكييف، صيانة، وأكثر. تصفح المشاريع وتبرع مباشرة.'
-                                : 'Mosques in Egypt need your help — carpeting, AC, maintenance, and more. Browse projects and donate directly.'}
+                                ? 'المساجد في سلطنة عُمان تحتاج مساعدتك — فرش، تكييف، صيانة، وأكثر. تصفح المشاريع وتبرع مباشرة.'
+                                : 'Mosques in Oman need your help — carpeting, AC, maintenance, and more. Browse projects and donate directly.'}
                         </p>
                         <Link href={`/${locale}/maintenance`} className="inline-flex items-center gap-2 px-8 py-4 bg-accent text-white rounded-xl font-bold shadow-lg hover:bg-accent-dark hover:-translate-y-0.5 transition-all">
                             {locale === 'ar' ? 'تصفح مشاريع الإعمار ←' : 'Browse Maintenance Projects ←'}
@@ -350,3 +341,5 @@ export default async function HomePage() {
         </div>
     );
 }
+
+

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsEnum, IsArray, IsNotEmpty, IsUrl, IsUUID, IsBoolean, ValidateIf, Min, Max } from 'class-validator';
+﻿import { IsString, IsOptional, IsNumber, IsEnum, IsArray, IsNotEmpty, IsUrl, IsUUID, IsBoolean, ValidateIf, Min, Max, Matches } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
 export enum HalqaType {
@@ -70,6 +70,7 @@ export class CreateHalqaDto {
 
     @IsString()
     @IsNotEmpty()
+    @Matches(/^968[29]\d{7}$/, { message: 'whatsapp must be a valid Omani number (968XXXXXXXX)' })
     whatsapp!: string;
 
     @IsString()

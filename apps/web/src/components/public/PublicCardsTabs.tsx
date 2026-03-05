@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import Pagination from '@/components/ui/Pagination';
@@ -273,3 +273,4 @@ export default function PublicCardsTabs() {
         </section>
     );
 }
+

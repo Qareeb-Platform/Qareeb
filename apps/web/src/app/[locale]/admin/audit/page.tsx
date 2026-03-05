@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useLocale } from 'next-intl';
@@ -70,7 +70,7 @@ export default function AuditPage() {
         setLoading(false);
     };
 
-    const formatDate = (d: string) => new Date(d).toLocaleString(locale === 'ar' ? 'ar-EG' : 'en-US');
+    const formatDate = (d: string) => new Date(d).toLocaleString(locale === 'ar' ? 'ar-OM' : 'en-US');
 
     const filteredData = data.filter((log: any) => {
         if (!searchTerm) return true;
@@ -215,3 +215,4 @@ export default function AuditPage() {
         </div>
     );
 }
+

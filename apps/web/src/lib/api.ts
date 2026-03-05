@@ -1,4 +1,4 @@
-const API_URL =
+﻿const API_URL =
     typeof window !== 'undefined'
         ? '/api/v1'
         : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/v1');
@@ -193,3 +193,4 @@ export const adminApi = {
     markAllNotificationsRead: (token: string) =>
         fetchAPI<any>('/notifications/read-all', { method: 'PATCH', token }),
 };
+

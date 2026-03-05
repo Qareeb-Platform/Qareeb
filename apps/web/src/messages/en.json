@@ -58,7 +58,7 @@
     "mosqueName": "Mosque Name",
     "governorate": "Governorate",
     "city": "City",
-    "district": "District",
+    "district": "Wilaya",
     "whatsapp": "WhatsApp Number",
     "recitation": "Listen to Recitation",
     "distance": "Distance",
@@ -124,11 +124,11 @@
       "maintenanceTypeInvalid": "One or more selected maintenance types are invalid.",
       "descriptionRequired": "Please enter a maintenance description.",
       "whatsappRequired": "WhatsApp number is required on this page.",
-      "whatsappInvalid": "Invalid WhatsApp number. Enter 10 digits after +20.",
+      "whatsappInvalid": "Invalid WhatsApp number. Enter 8 digits starting with 9 or 2 after +968.",
       "submitGeneric": "Could not submit your request. Please check your data and try again.",
       "submitMaintenanceTypes": "Please select at least one maintenance type from the list.",
       "submitMapsInvalid": "Google Maps link is invalid. Please provide a valid link.",
-      "submitWhatsappInvalid": "WhatsApp number is invalid. Enter a valid number after +20."
+      "submitWhatsappInvalid": "WhatsApp number is invalid. Enter a valid Omani number after +968."
     },
     "successTitle": "Submitted Successfully!",
     "successMessage": "Thank you! Your submission will be reviewed by our team and published soon."
@@ -201,3 +201,5 @@
     }
   }
 }
+
+

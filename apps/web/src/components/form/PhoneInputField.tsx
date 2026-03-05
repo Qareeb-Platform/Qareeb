@@ -33,7 +33,7 @@ async function reverseGeocodeCountry(lat: number, lng: number): Promise<CountryC
 export default function PhoneInputField({
     value,
     onChange,
-    defaultCountry = 'EG',
+    defaultCountry = 'OM',
     detectCountryFromIP = false,
     label,
     required = false,

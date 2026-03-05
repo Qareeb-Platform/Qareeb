@@ -1,4 +1,4 @@
-import { getLocale } from 'next-intl/server';
+﻿import { getLocale } from 'next-intl/server';
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -8,7 +8,7 @@ import AppIcon, { AppIconName } from '@/components/ui/AppIcon';
 
 export const metadata = {
     title: 'About | Qareeb',
-    description: 'Learn about Qareeb - A non-profit platform serving Muslims in Egypt',
+    description: 'Learn about Qareeb - A non-profit platform serving Muslims in the Sultanate of Oman',
 };
 
 export default async function AboutPage() {
@@ -20,15 +20,15 @@ export default async function AboutPage() {
             icon: 'target',
             titleAr: 'رؤيتنا',
             titleEn: 'Our Vision',
-            descAr: 'منصة إلكترونية غير ربحية تهدف إلى ربط المسلمين بالخدمات الدينية القريبة منهم جغرافياً في جميع أنحاء مصر — من الإسكندرية إلى أسوان.',
-            descEn: 'A non-profit digital platform aimed at connecting Muslims with religious services near them geographically across all of Egypt — from Alexandria to Aswan.',
+            descAr: 'منصة إلكترونية غير ربحية تهدف إلى ربط المسلمين بالخدمات الدينية القريبة منهم جغرافياً في جميع أنحاء سلطنة عُمان — من مسقط إلى صلالة.',
+            descEn: 'A non-profit digital platform aimed at connecting Muslims with religious services near them geographically across all of Oman — from Muscat to Salalah.',
         },
         {
             icon: 'rocket',
             titleAr: 'مهمتنا',
             titleEn: 'Our Mission',
-            descAr: 'نؤمن أن كل مسلم في مصر يستحق أن يجد بسهولة مسجداً يصلي فيه، وإماماً يتعلم منه، وحلقة لتحفيظ أولاده — بضغطة واحدة.',
-            descEn: 'We believe every Muslim in Egypt deserves to easily find a mosque to pray in, an imam to learn from, and a Quran circle for their children — with just one click.',
+            descAr: 'نؤمن أن كل مسلم في سلطنة عُمان يستحق أن يجد بسهولة مسجداً يصلي فيه، وإماماً يتعلم منه، وحلقة لتحفيظ أولاده — بضغطة واحدة.',
+            descEn: 'We believe every Muslim in the Sultanate of Oman deserves to easily find a mosque to pray in, an imam to learn from, and a Quran circle for their children — with just one click.',
         },
         {
             icon: 'handshake',
@@ -58,12 +58,12 @@ export default async function AboutPage() {
                             {isAr ? 'عن المنصة' : 'About the Platform'}
                         </div>
                         <h1 className="text-4xl md:text-5xl font-black text-dark mb-6">
-                            {isAr ? 'قريب — دليل المسلمين في مصر ' : 'Qareeb — Guide for Muslims in Egypt '}
+                            {isAr ? 'قريب — دليل المسلمين في سلطنة عُمان ' : 'Qareeb — Guide for Muslims in Oman '}
                         </h1>
                         <p className="text-lg text-text-muted leading-relaxed">
                             {isAr
-                                ? 'منصة مجتمعية غير ربحية تربط المسلمين بالخدمات الدينية القريبة منهم، من الإسكندرية إلى أسوان.'
-                                : 'A non-profit community platform connecting Muslims with nearby religious services across Egypt.'}
+                                ? 'منصة مجتمعية غير ربحية تربط المسلمين بالخدمات الدينية القريبة منهم، من مسقط إلى صلالة.'
+                                : 'A non-profit community platform connecting Muslims with nearby religious services across Oman.'}
                         </p>
                     </div>
                 </section>
@@ -125,3 +125,4 @@ export default async function AboutPage() {
         </div>
     );
 }
+

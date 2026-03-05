@@ -1,0 +1,45 @@
+export const OMAN_GOVERNORATES = [
+    { id: 'muscat', name: 'مسقط', nameEn: 'Muscat' },
+    { id: 'dhofar', name: 'ظفار', nameEn: 'Dhofar' },
+    { id: 'musandam', name: 'مسندم', nameEn: 'Musandam' },
+    { id: 'alburaymi', name: 'البريمي', nameEn: 'Al Buraymi' },
+    { id: 'adDakhiliyah', name: 'الداخلية', nameEn: 'Ad Dakhiliyah' },
+    { id: 'northAlBatinah', name: 'شمال الباطنة', nameEn: 'North Al Batinah' },
+    { id: 'southAlBatinah', name: 'جنوب الباطنة', nameEn: 'South Al Batinah' },
+    { id: 'northAlSharqiyah', name: 'شمال الشرقية', nameEn: 'North Al Sharqiyah' },
+    { id: 'southAlSharqiyah', name: 'جنوب الشرقية', nameEn: 'South Al Sharqiyah' },
+    { id: 'adDhahirah', name: 'الظاهرة', nameEn: 'Ad Dhahirah' },
+    { id: 'alWusta', name: 'الوسطى', nameEn: 'Al Wusta' },
+] as const;
+
+export const OMAN_WILAYAT: Record<string, string[]> = {
+    muscat: ['مطرح', 'بوشر', 'العامرات', 'قريات', 'السيب', 'مسقط'],
+    dhofar: ['صلالة', 'طاقة', 'ظفار', 'رخيوت', 'مرباط', 'سدح', 'شليم وجزر الحلانيات', 'الدهاريز', 'المزيونة', 'ضلكوت'],
+    musandam: ['خصب', 'بخاء', 'دبا', 'مدحاء'],
+    alburaymi: ['البريمي', 'محضة', 'ينقل'],
+    adDakhiliyah: ['نزوى', 'بهلاء', 'منح', 'عبري', 'الحمراء', 'إزكي', 'سمائل', 'الجبل الأخضر', 'بدبد'],
+    northAlBatinah: ['صحار', 'شناص', 'لوى', 'صحم', 'الخابورة', 'السويق'],
+    southAlBatinah: ['الرستاق', 'العوابي', 'نخل', 'وادي المعاول', 'بركاء', 'مسقط'],
+    northAlSharqiyah: ['إبراء', 'المضيبي', 'دما والطائيين', 'الكامل والوافي', 'بدية', 'وادي بني خالد'],
+    southAlSharqiyah: ['صور', 'جعلان بني بو علي', 'جعلان بني بو حسن', 'مصيرة', 'سناو'],
+    adDhahirah: ['عبري', 'ينقل', 'المحضة', 'دنك'],
+    alWusta: ['هيما', 'محوت', 'الجازر', 'الدقم'],
+};
+
+export const COUNTRY_CONFIG = {
+    name: 'سلطنة عُمان',
+    nameEn: 'Sultanate of Oman',
+    flag: '🇴🇲',
+    dialCode: '+968',
+    phoneDigits: 8,
+    phoneRegex: /^[29]\d{7}$/,
+    waBase: 'https://wa.me/968',
+    contactWhatsApp: '96898906703',
+    currency: 'ر.ع',
+    currencyEn: 'OMR',
+    governoratesCount: 11,
+    mosquesCount: 5000,
+    population: '4.6M',
+    mapCenter: { lat: 23.6139, lng: 58.5922 },
+    mapZoom: 7,
+} as const;

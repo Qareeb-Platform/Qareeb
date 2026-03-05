@@ -7,7 +7,7 @@ export class GeoController {
         const headerCountry = req.headers['x-vercel-ip-country']
             || req.headers['cf-ipcountry']
             || req.headers['cloudfront-viewer-country'];
-        const country = (headerCountry || 'EG').toString().toUpperCase();
+        const country = (headerCountry || 'OM').toString().toUpperCase();
         return { country };
     }
 }
