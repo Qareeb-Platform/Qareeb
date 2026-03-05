@@ -15,6 +15,7 @@ const knownTopLevelRoutes = new Set([
     'halaqat',
     'imams',
     'maintenance',
+    'presentation',
     'search',
     'submit',
 ]);
