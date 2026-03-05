@@ -121,7 +121,7 @@ export async function createApp() {
     app.use(cookieParser());
 
     // CORS
-    const allowedOrigins = (process.env.CORS_ORIGIN || 'https://qareeb-web.vercel.app')
+    const allowedOrigins = (process.env.CORS_ORIGIN || 'https://qareeb-web-three.vercel.app')
         .split(',')
         .map((o) => o.trim())
         .filter(Boolean);

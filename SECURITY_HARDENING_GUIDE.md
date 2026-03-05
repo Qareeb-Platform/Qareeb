@@ -107,7 +107,7 @@ Use the currently committed files as source-of-truth examples:
 
 ```bash
 NODE_ENV=production
-CORS_ORIGIN=https://qareeb-web.vercel.app
+CORS_ORIGIN=https://qareeb-web-three.vercel.app
 ALLOW_VERCEL_PREVIEW=false
 REQUEST_BODY_LIMIT=1mb
 THROTTLE_LIMIT_PER_MINUTE=60

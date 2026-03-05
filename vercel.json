@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://qareeb-api.vercel.app/:path*" },
-    { "source": "/:path*", "destination": "https://qareeb-web.vercel.app/:path*" }
+    { "source": "/api/:path*", "destination": "https://qareeb-api-sigma.vercel.app/:path*" },
+    { "source": "/:path*", "destination": "https://qareeb-web-three.vercel.app/:path*" }
   ]
 }
