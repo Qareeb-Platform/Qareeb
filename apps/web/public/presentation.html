@@ -1,0 +1,488 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>قريب × وزارة الأوقاف — عُمان</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --g:#1B6B45;--gl:#2D8A5E;--gp:#E8F5EE;
+  --gold:#C9962A;--gold2:#F5E6C0;
+  --oman:#DB0B2B;--oman2:#FEE2E6;
+  --dark:#0F1923;--dark2:#1A2633;
+  --text:#2D3748;--muted:#718096;--border:#E2E8F0;
+  --cream:#FAF8F3;
+  --shadow:0 4px 24px rgba(0,0,0,.10);
+  --shadow-lg:0 16px 48px rgba(0,0,0,.18);
+}
+body{font-family:'Cairo',sans-serif;background:#0F1923;color:#fff;overflow:hidden;height:100vh}
+
+.slides{width:100%;height:100vh;position:relative}
+.slide{
+  display:none;width:100%;height:100vh;
+  position:absolute;inset:0;
+  flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 40px;overflow:hidden;
+  animation:fadeIn .4s ease;
+}
+.slide.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+#nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(15,25,35,.92);backdrop-filter:blur(12px);
+  border-top:1px solid rgba(255,255,255,.08);
+  padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;
+}
+.nav-btn{
+  padding:9px 22px;border-radius:10px;border:none;
+  font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;transition:all .2s;
+}
+.nav-prev{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7)}
+.nav-prev:hover{background:rgba(255,255,255,.15);color:#fff}
+.nav-next{background:var(--g);color:#fff;box-shadow:0 4px 16px rgba(27,107,69,.4)}
+.nav-next:hover{background:var(--gl);transform:translateY(-1px)}
+.slide-counter{font-size:13px;color:rgba(255,255,255,.4);font-weight:600;letter-spacing:1px}
+.dots{display:flex;gap:6px;align-items:center}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:all .2s}
+.dot.active{background:var(--g);width:20px;border-radius:3px}
+
+#s1{background:linear-gradient(135deg,#0F1923 0%,#1B2E20 50%,#0F1923 100%);text-align:center}
+#s1 .orb1{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(27,107,69,.2),transparent 70%);top:-150px;right:-100px}
+#s1 .orb2{position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(219,11,43,.1),transparent 70%);bottom:-100px;left:-80px}
+.cover-flags{display:flex;align-items:center;gap:16px;justify-content:center;margin-bottom:28px}
+.flag{font-size:40px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.3))}
+.cover-logo{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:20px}
+.cover-logo-icon{width:56px;height:56px;background:linear-gradient(135deg,var(--g),var(--gl));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 8px 24px rgba(27,107,69,.4)}
+.cover-logo-text{font-size:32px;font-weight:900;color:#fff}
+.cover-title{font-size:clamp(22px,3.5vw,40px);font-weight:900;line-height:1.25;margin-bottom:14px}
+.cover-title span{color:var(--gold)}
+.cover-sub{font-size:15px;color:rgba(255,255,255,.55);line-height:1.8;max-width:520px;margin:0 auto 32px}
+.cover-badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.cbadge{padding:7px 16px;border-radius:50px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7)}
+
+#s2{background:linear-gradient(135deg,#0F1923,#1C1010)}
+.slide-tag{display:inline-block;padding:5px 16px;border-radius:50px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:18px}
+.slide-title{font-size:clamp(22px,3vw,36px);font-weight:900;margin-bottom:10px;line-height:1.25}
+.slide-sub{font-size:14px;color:rgba(255,255,255,.5);margin-bottom:32px;line-height:1.8}
+.problem-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:760px}
+.prob-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px;transition:all .3s}
+.prob-card:hover{background:rgba(255,255,255,.07);border-color:rgba(219,11,43,.3)}
+.prob-icon{font-size:28px;margin-bottom:10px}
+.prob-title{font-size:15px;font-weight:800;margin-bottom:6px}
+.prob-desc{font-size:12px;color:rgba(255,255,255,.45);line-height:1.7}
+
+#s3{background:linear-gradient(135deg,#0D1F15,#0F1923)}
+.sol-wrap{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;width:100%;max-width:820px}
+.sol-card{background:rgba(27,107,69,.12);border:1px solid rgba(27,107,69,.25);border-radius:16px;padding:22px;text-align:center;transition:all .3s}
+.sol-card:hover{background:rgba(27,107,69,.2);transform:translateY(-4px)}
+.sol-icon{font-size:36px;margin-bottom:12px}
+.sol-title{font-size:15px;font-weight:800;margin-bottom:8px;color:#fff}
+.sol-desc{font-size:12px;color:rgba(255,255,255,.5);line-height:1.7}
+
+#s4{background:linear-gradient(135deg,#0F1923,#1A1A0F)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;width:100%;max-width:820px;margin-bottom:28px}
+.stat-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px;text-align:center}
+.stat-num{font-size:42px;font-weight:900;background:linear-gradient(135deg,var(--g),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+.stat-lbl{font-size:12px;color:rgba(255,255,255,.45);margin-top:6px;font-weight:600}
+.timeline{width:100%;max-width:700px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:20px 24px}
+.tl-row{display:flex;align-items:center;gap:14px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.tl-row:last-child{border-bottom:none}
+.tl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.tl-label{font-size:12px;color:rgba(255,255,255,.4);width:80px;flex-shrink:0}
+.tl-bar-wrap{flex:1;background:rgba(255,255,255,.06);border-radius:50px;height:6px;overflow:hidden}
+.tl-bar{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--g),var(--gl))}
+.tl-val{font-size:13px;font-weight:700;color:#fff;width:30px;text-align:left}
+
+#s5{background:linear-gradient(135deg,#0F1923,#131B22)}
+.steps-wrap{display:flex;gap:0;width:100%;max-width:820px;position:relative}
+.step-arrow{display:flex;align-items:center;color:rgba(255,255,255,.15);font-size:22px;padding:0 6px;margin-top:-20px}
+.step{flex:1;text-align:center;padding:24px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;transition:all .3s}
+.step:hover{background:rgba(255,255,255,.07);border-color:rgba(27,107,69,.3)}
+.step-num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--gl));display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;margin:0 auto 12px}
+.step-icon{font-size:28px;margin-bottom:10px}
+.step-title{font-size:13px;font-weight:800;margin-bottom:6px}
+.step-desc{font-size:11px;color:rgba(255,255,255,.4);line-height:1.6}
+
+#s6{background:linear-gradient(135deg,#1A0A10,#0F1923)}
+.oman-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:800px}
+.oman-card{border-radius:16px;padding:22px;border:1px solid}
+.oman-card.phase1{background:rgba(27,107,69,.1);border-color:rgba(27,107,69,.25)}
+.oman-card.phase2{background:rgba(201,150,42,.08);border-color:rgba(201,150,42,.2)}
+.oman-card.phase3{background:rgba(219,11,43,.08);border-color:rgba(219,11,43,.2)}
+.oman-card.phase4{background:rgba(100,100,255,.08);border-color:rgba(100,100,255,.2)}
+.phase-badge{display:inline-block;padding:3px 12px;border-radius:50px;font-size:10px;font-weight:700;margin-bottom:12px}
+.ph1-b{background:rgba(27,107,69,.3);color:#7EE8A2}
+.ph2-b{background:rgba(201,150,42,.3);color:#F5C842}
+.ph3-b{background:rgba(219,11,43,.3);color:#FF8FA3}
+.ph4-b{background:rgba(100,100,255,.3);color:#A5B4FF}
+.oman-card h4{font-size:15px;font-weight:800;margin-bottom:8px}
+.oman-card ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+.oman-card ul li{font-size:12px;color:rgba(255,255,255,.55);display:flex;gap:7px;align-items:flex-start;line-height:1.5}
+.oman-card ul li::before{content:"←";color:rgba(255,255,255,.2);flex-shrink:0}
+
+#s7{background:linear-gradient(135deg,#0D1F15,#0F1923)}
+.partner-wrap{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:center;width:100%;max-width:800px;margin-bottom:24px}
+.partner-side{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:24px}
+.partner-logo{font-size:36px;margin-bottom:8px}
+.partner-name{font-size:16px;font-weight:900;margin-bottom:16px}
+.partner-gives{display:flex;flex-direction:column;gap:8px}
+.give-item{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.6)}
+.give-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.partner-mid{text-align:center}
+.mid-icon{font-size:32px;margin-bottom:8px}
+.mid-text{font-size:11px;color:rgba(255,255,255,.35);font-weight:600}
+.value-strip{width:100%;max-width:800px;background:rgba(27,107,69,.1);border:1px solid rgba(27,107,69,.25);border-radius:14px;padding:16px 24px;display:flex;justify-content:space-around;gap:12px;flex-wrap:wrap}
+.value-item{text-align:center}
+.value-num{font-size:22px;font-weight:900;color:var(--gold)}
+.value-lbl{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+
+#s8{background:linear-gradient(135deg,#0D1F15 0%,#0F1923 50%,#1A0A10 100%);text-align:center}
+.cta-icon{font-size:64px;margin-bottom:20px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.cta-title{font-size:clamp(24px,4vw,42px);font-weight:900;margin-bottom:14px;line-height:1.2}
+.cta-sub{font-size:15px;color:rgba(255,255,255,.5);line-height:1.8;max-width:500px;margin:0 auto 32px}
+.cta-info{display:flex;gap:28px;justify-content:center;flex-wrap:wrap}
+.cta-item{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,.6)}
+.cta-item strong{color:#fff}
+
+.text-center{text-align:center}
+.w-full{width:100%}
+.max-w{max-width:820px;width:100%}
+
+@media(max-width:700px){
+  .slide{padding:28px 16px 70px}
+  .problem-grid,.sol-wrap,.stats-grid,.oman-grid{grid-template-columns:1fr}
+  .steps-wrap{flex-direction:column}
+  .step-arrow{display:none}
+  .partner-wrap{grid-template-columns:1fr}
+  .partner-mid{display:none}
+  .stats-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="slides">
+
+<div class="slide active" id="s1">
+  <div class="orb1"></div>
+  <div class="orb2"></div>
+  <div class="cover-flags">
+    <span class="flag">🇴🇲</span>
+  </div>
+  <div class="cover-logo">
+    <div class="cover-logo-icon">🕌</div>
+    <div class="cover-logo-text">قريب</div>
+  </div>
+  <div class="cover-title">
+    شراكة استراتيجية مع<br/>
+    <span>وزارة الأوقاف والشؤون الدينية</span><br/>
+    سلطنة عُمان
+  </div>
+  <div class="cover-sub">منصة رقمية غير ربحية تربط المواطنين بالخدمات الدينية القريبة منهم — أئمة، حلقات تحفيظ، ومشاريع إعمار المساجد</div>
+  <div class="cover-badges">
+    <span class="cbadge">🆓 مجانية 100%</span>
+    <span class="cbadge">✅ محتوى موثق</span>
+    <span class="cbadge">📍 بحث جغرافي</span>
+    <span class="cbadge">💬 تواصل فوري</span>
+  </div>
+</div>
+
+<div class="slide" id="s2">
+  <div class="slide-tag" style="background:rgba(219,11,43,.15);color:#FF8FA3">التحدي</div>
+  <div class="slide-title text-center">المواطن العُماني يواجه صعوبة<br/>في إيجاد الخدمات الدينية 🔍</div>
+  <div class="slide-sub text-center">رغم وجود آلاف المساجد والأئمة في عُمان، لا توجد منصة موحدة تسهّل الوصول إليهم</div>
+  <div class="problem-grid">
+    <div class="prob-card">
+      <div class="prob-icon">🗺️</div>
+      <div class="prob-title">غياب الدليل الجغرافي</div>
+      <div class="prob-desc">لا يوجد خريطة موحدة للمساجد والأئمة في كل ولاية ومحافظة عُمانية</div>
+    </div>
+    <div class="prob-card">
+      <div class="prob-icon">📖</div>
+      <div class="prob-title">صعوبة إيجاد حلقات التحفيظ</div>
+      <div class="prob-desc">الآباء يبحثون يدوياً عن حلقات تحفيظ مناسبة لأبنائهم دون مرجع موحد</div>
+    </div>
+    <div class="prob-card">
+      <div class="prob-icon">🏗️</div>
+      <div class="prob-title">ضياع فرص الإعمار</div>
+      <div class="prob-desc">مساجد تحتاج صيانة وإعماراً لا تصل إلى المتبرعين الراغبين في المساعدة</div>
+    </div>
+    <div class="prob-card">
+      <div class="prob-icon">📡</div>
+      <div class="prob-title">تشتت المعلومات</div>
+      <div class="prob-desc">البيانات موزعة بين جهات متعددة دون تكامل رقمي يخدم المواطن مباشرة</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="s3">
+  <div class="slide-tag" style="background:rgba(27,107,69,.2);color:#7EE8A2">الحل</div>
+  <div class="slide-title text-center">منصة قريب — دليل المسلمين<br/>الرقمي الموحد 🕌</div>
+  <div class="slide-sub text-center">ثلاثة أقسام رئيسية تغطي كل احتياجات المواطن الديني بضغطة واحدة</div>
+  <div class="sol-wrap">
+    <div class="sol-card">
+      <div class="sol-icon">🕌</div>
+      <div class="sol-title">الأئمة والمساجد</div>
+      <div class="sol-desc">دليل شامل بأئمة المساجد مع بيانات التواصل المباشر والموقع الجغرافي الدقيق</div>
+    </div>
+    <div class="sol-card">
+      <div class="sol-icon">📖</div>
+      <div class="sol-title">حلقات التحفيظ</div>
+      <div class="sol-desc">دور وحلقات تحفيظ القرآن الكريم مصنّفة حسب الفئة العمرية والمنطقة والمواعيد</div>
+    </div>
+    <div class="sol-card">
+      <div class="sol-icon">🏗️</div>
+      <div class="sol-title">إعمار المساجد</div>
+      <div class="sol-desc">منصة لعرض احتياجات المساجد من صيانة وتجديد وربطها بالمتبرعين مباشرة</div>
+    </div>
+  </div>
+  <div style="margin-top:24px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+    <div style="display:flex;align-items:center;gap:8px;background:rgba(27,107,69,.15);padding:10px 18px;border-radius:10px;border:1px solid rgba(27,107,69,.25)">
+      <span>📍</span><span style="font-size:13px;color:rgba(255,255,255,.7)">بحث جغرافي حسب الولاية</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;background:rgba(27,107,69,.15);padding:10px 18px;border-radius:10px;border:1px solid rgba(27,107,69,.25)">
+      <span>💬</span><span style="font-size:13px;color:rgba(255,255,255,.7)">تواصل فوري عبر واتساب</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;background:rgba(27,107,69,.15);padding:10px 18px;border-radius:10px;border:1px solid rgba(27,107,69,.25)">
+      <span>✅</span><span style="font-size:13px;color:rgba(255,255,255,.7)">محتوى مراجع ومعتمد</span>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="s4">
+  <div class="slide-tag" style="background:rgba(201,150,42,.15);color:#F5C842">الأرقام</div>
+  <div class="slide-title text-center">قريب في سلطنة عُمان — النتائج الحالية 📊</div>
+  <div class="slide-sub text-center">نسخة سلطنة عُمان تعمل حالياً ببيانات موثقة وقابلة للنمو مع الإطلاق الرسمي</div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-num">٦</div>
+      <div class="stat-lbl">إمام مسجل</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">٦</div>
+      <div class="stat-lbl">دار تحفيظ</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">٦</div>
+      <div class="stat-lbl">مشروع إعمار</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">١١</div>
+      <div class="stat-lbl">محافظة عُمانية</div>
+    </div>
+  </div>
+  <div class="timeline max-w">
+    <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:14px;letter-spacing:.5px">نمو الإضافات الشهري</div>
+    <div class="tl-row">
+      <div class="tl-dot" style="background:#3B82F6"></div>
+      <div class="tl-label" style="font-size:11px;color:rgba(255,255,255,.3)">يناير</div>
+      <div class="tl-bar-wrap"><div class="tl-bar" style="width:30%"></div></div>
+      <div class="tl-val">٢</div>
+    </div>
+    <div class="tl-row">
+      <div class="tl-dot" style="background:#8B5CF6"></div>
+      <div class="tl-label" style="font-size:11px;color:rgba(255,255,255,.3)">فبراير</div>
+      <div class="tl-bar-wrap"><div class="tl-bar" style="width:55%"></div></div>
+      <div class="tl-val">٤</div>
+    </div>
+    <div class="tl-row">
+      <div class="tl-dot" style="background:var(--g)"></div>
+      <div class="tl-label" style="font-size:11px;color:rgba(255,255,255,.3)">مارس</div>
+      <div class="tl-bar-wrap"><div class="tl-bar" style="width:80%"></div></div>
+      <div class="tl-val">٦</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="s5">
+  <div class="slide-tag" style="background:rgba(27,107,69,.2);color:#7EE8A2">آلية العمل</div>
+  <div class="slide-title text-center">كيف تعمل منصة قريب؟ ⚙️</div>
+  <div class="slide-sub text-center">نظام بسيط وشفاف — أي مواطن يضيف، والإدارة تراجع، والجميع يستفيد</div>
+  <div class="steps-wrap max-w">
+    <div class="step">
+      <div class="step-num">١</div>
+      <div class="step-icon">✏️</div>
+      <div class="step-title">الإضافة</div>
+      <div class="step-desc">أي مواطن يضيف بيانات إمام أو حلقة أو مشروع إعمار عبر نموذج بسيط</div>
+    </div>
+    <div class="step-arrow">←</div>
+    <div class="step">
+      <div class="step-num">٢</div>
+      <div class="step-icon">🔍</div>
+      <div class="step-title">المراجعة</div>
+      <div class="step-desc">فريق الإدارة يراجع كل إضافة ويتحقق من صحة البيانات قبل النشر</div>
+    </div>
+    <div class="step-arrow">←</div>
+    <div class="step">
+      <div class="step-num">٣</div>
+      <div class="step-icon">✅</div>
+      <div class="step-title">النشر</div>
+      <div class="step-desc">بعد الموافقة تُنشر الخدمة وتظهر في نتائج البحث للمستخدمين</div>
+    </div>
+    <div class="step-arrow">←</div>
+    <div class="step">
+      <div class="step-num">٤</div>
+      <div class="step-icon">💬</div>
+      <div class="step-title">التواصل</div>
+      <div class="step-desc">المستخدم يجد ما يريد ويتواصل مباشرة عبر واتساب أو الخريطة</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="s6">
+  <div class="orb1" style="background:radial-gradient(circle,rgba(219,11,43,.12),transparent 70%);top:-120px;left:-80px"></div>
+  <div class="slide-tag" style="background:rgba(219,11,43,.15);color:#FF8FA3">خطة عُمان 🇴🇲</div>
+  <div class="slide-title text-center">خارطة طريق نسخة عُمان</div>
+  <div class="slide-sub text-center">تطوير نسخة مخصصة لسلطنة عُمان بالتعاون مع وزارة الأوقاف على ٤ مراحل</div>
+  <div class="oman-grid max-w">
+    <div class="oman-card phase1">
+      <div class="phase-badge ph1-b">المرحلة الأولى · شهر ١-٢</div>
+      <h4>🚀 إطلاق النسخة التجريبية</h4>
+      <ul>
+        <li>تخصيص المنصة لمحافظات عُمان الـ ١١</li>
+        <li>إضافة ولايات عُمان في نظام البحث</li>
+        <li>دعم اللهجة العُمانية في الواجهة</li>
+        <li>seed data أولي بأبرز مساجد مسقط</li>
+      </ul>
+    </div>
+    <div class="oman-card phase2">
+      <div class="phase-badge ph2-b">المرحلة الثانية · شهر ٣-٤</div>
+      <h4>🔗 ربط قاعدة بيانات الوزارة</h4>
+      <ul>
+        <li>استيراد بيانات المساجد الرسمية من الوزارة</li>
+        <li>التحقق من الأئمة عبر سجلات وزارة الأوقاف</li>
+        <li>لوحة تحكم خاصة لمسؤولي الوزارة</li>
+        <li>تقارير دورية عن نشاط المنصة</li>
+      </ul>
+    </div>
+    <div class="oman-card phase3">
+      <div class="phase-badge ph3-b">المرحلة الثالثة · شهر ٥-٦</div>
+      <h4>📢 الإطلاق الرسمي</h4>
+      <ul>
+        <li>إطلاق رسمي بدعم الوزارة على مستوى السلطنة</li>
+        <li>حملة توعية في المساجد والمدارس</li>
+        <li>تطبيق جوال مخصص لعُمان</li>
+        <li>تغطية إعلامية رسمية</li>
+      </ul>
+    </div>
+    <div class="oman-card phase4">
+      <div class="phase-badge ph4-b">المرحلة الرابعة · شهر ٧+</div>
+      <h4>📈 التوسع والتطوير</h4>
+      <ul>
+        <li>ميزات ذكاء اصطناعي للتوصية الجغرافية</li>
+        <li>ربط مع منظومة نداء للصلاة</li>
+        <li>توسيع لدول الخليج الأخرى</li>
+        <li>تقرير سنوي للوزارة</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="s7">
+  <div class="slide-tag" style="background:rgba(201,150,42,.15);color:#F5C842">نموذج الشراكة</div>
+  <div class="slide-title text-center">ماذا نقدم وماذا نطلب؟ 🤝</div>
+  <div class="slide-sub text-center">شراكة متوازنة تخدم المواطن العُماني وتدعم رؤية الوزارة الرقمية</div>
+  <div class="partner-wrap max-w">
+    <div class="partner-side">
+      <div class="partner-logo">🕌</div>
+      <div class="partner-name" style="color:var(--gl)">منصة قريب تقدم</div>
+      <div class="partner-gives">
+        <div class="give-item"><div class="give-dot" style="background:var(--g)"></div>المنصة الرقمية كاملة مجاناً</div>
+        <div class="give-item"><div class="give-dot" style="background:var(--g)"></div>فريق تقني متخصص</div>
+        <div class="give-item"><div class="give-dot" style="background:var(--g)"></div>صيانة ودعم مستمر</div>
+        <div class="give-item"><div class="give-dot" style="background:var(--g)"></div>تخصيص كامل لعُمان</div>
+        <div class="give-item"><div class="give-dot" style="background:var(--g)"></div>تقارير وتحليلات دورية</div>
+      </div>
+    </div>
+    <div class="partner-mid">
+      <div class="mid-icon">⚖️</div>
+      <div class="mid-text">شراكة<br/>متوازنة</div>
+    </div>
+    <div class="partner-side">
+      <div class="partner-logo">🇴🇲</div>
+      <div class="partner-name" style="color:#FF8FA3">الوزارة تقدم</div>
+      <div class="partner-gives">
+        <div class="give-item"><div class="give-dot" style="background:var(--oman)"></div>بيانات المساجد والأئمة الرسمية</div>
+        <div class="give-item"><div class="give-dot" style="background:var(--oman)"></div>الدعم المؤسسي والاعتماد الرسمي</div>
+        <div class="give-item"><div class="give-dot" style="background:var(--oman)"></div>التوزيع عبر قنوات الوزارة</div>
+        <div class="give-item"><div class="give-dot" style="background:var(--oman)"></div>إمكانية الإطلاق الرسمي</div>
+        <div class="give-item"><div class="give-dot" style="background:var(--oman)"></div>دعم حملات التوعية</div>
+      </div>
+    </div>
+  </div>
+  <div class="value-strip max-w">
+    <div class="value-item"><div class="value-num">١١</div><div class="value-lbl">محافظة عُمانية</div></div>
+    <div class="value-item"><div class="value-num">+٥٠٠٠</div><div class="value-lbl">مسجد في عُمان</div></div>
+    <div class="value-item"><div class="value-num">٤.٦م</div><div class="value-lbl">مواطن مستفيد</div></div>
+    <div class="value-item"><div class="value-num">٠ ر.ع</div><div class="value-lbl">تكلفة على الوزارة</div></div>
+  </div>
+</div>
+
+<div class="slide" id="s8">
+  <div class="orb1" style="background:radial-gradient(circle,rgba(27,107,69,.15),transparent 70%);top:-100px;right:-80px"></div>
+  <div class="orb2" style="background:radial-gradient(circle,rgba(219,11,43,.1),transparent 70%);bottom:-80px;left:-60px"></div>
+  <div class="cta-icon">🤝</div>
+  <div class="cta-title">
+    لنبني معاً<br/>
+    <span style="color:var(--gold)">دليل المسلمين في سلطنة عُمان</span>
+  </div>
+  <div class="cta-sub">نتطلع إلى شرف لقائكم لعرض المنصة بشكل مباشر ومناقشة آفاق التعاون لخدمة المواطن العُماني</div>
+  <div class="cta-info">
+    <div class="cta-item">🌐 <strong>qareeb-web-three.vercel.app/ar</strong></div>
+    <div class="cta-item">💬 <strong>واتساب: +968 9890 6703</strong></div>
+    <div class="cta-item">📧 <strong>qareeb.platform@gmail.com</strong></div>
+  </div>
+</div>
+
+</div>
+
+<div id="nav">
+  <button class="nav-btn nav-prev" onclick="prevSlide()">→ السابق</button>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+    <div class="dots" id="dots"></div>
+    <div class="slide-counter" id="counter">١ / ٨</div>
+  </div>
+  <button class="nav-btn nav-next" onclick="nextSlide()">التالي ←</button>
+</div>
+
+<script>
+var cur=0,total=8;
+var arNums=['١','٢','٣','٤','٥','٦','٧','٨'];
+
+var dotsEl=document.getElementById('dots');
+for(var i=0;i<total;i++){
+  var d=document.createElement('div');
+  d.className='dot'+(i===0?' active':'');
+  d.setAttribute('data-i',i);
+  d.onclick=function(){goTo(parseInt(this.getAttribute('data-i')));};
+  dotsEl.appendChild(d);
+}
+
+function goTo(n){
+  document.querySelectorAll('.slide')[cur].classList.remove('active');
+  document.querySelectorAll('.dot')[cur].classList.remove('active');
+  cur=n;
+  document.querySelectorAll('.slide')[cur].classList.add('active');
+  document.querySelectorAll('.dot')[cur].classList.add('active');
+  document.getElementById('counter').textContent=arNums[cur]+' / '+arNums[total-1];
+  document.querySelector('.nav-prev').style.opacity=cur===0?'.3':'1';
+  document.querySelector('.nav-prev').style.pointerEvents=cur===0?'none':'auto';
+  document.querySelector('.nav-next').textContent=cur===total-1?'إنهاء ✓':'التالي ←';
+}
+function nextSlide(){if(cur<total-1)goTo(cur+1);}
+function prevSlide(){if(cur>0)goTo(cur-1);}
+
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowLeft'||e.key==='ArrowDown')nextSlide();
+  if(e.key==='ArrowRight'||e.key==='ArrowUp')prevSlide();
+});
+
+document.querySelector('.nav-prev').style.opacity='.3';
+document.querySelector('.nav-prev').style.pointerEvents='none';
+</script>
+</body>
+</html>
